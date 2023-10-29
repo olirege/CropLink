@@ -27,6 +27,9 @@ module.exports = {
   rules: {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
-    "indent": ["error", 2],
+    "indent": "off",
+    "object-curly-spacing": ["error", "always"],
+    "linebreak-style": "off",
+    "max-len": "off",
   },
 };
