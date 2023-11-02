@@ -1,5 +1,19 @@
 import { db } from "./main";
-import { collection, getDocs, query, where, getDoc, setDoc, addDoc, doc, Timestamp, deleteDoc, orderBy, startAfter, limit  } from "firebase/firestore";
+import { 
+    collection,
+    collectionGroup,
+    getDocs,
+    query,
+    where,
+    getDoc,
+    setDoc,
+    addDoc,
+    doc,
+    Timestamp,
+    deleteDoc,
+    orderBy,
+    startAfter,
+    limit  } from "firebase/firestore";
 
 interface Document {
     [key: string]: any;
@@ -17,7 +31,7 @@ const onError = (error:any) => {
 export const getDocuments = async (collectionName: string): Promise<Document[]> => {
     try {
         const querySnapshot = await getDocs(collection(db, collectionName));
-        const docs = querySnapshot.docs.map((doc) => doc.data());
+        const docs = querySnapshot.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
         return docs as Document[];
     } catch (error:any) {
         onError(error);
@@ -42,13 +56,13 @@ export const getPaginatedDocuments = async (collectionName: string, field: strin
         if(!startAfterDocument) {
             const first = query(collection(db,collectionName), orderBy(field), limit(docLimit));
             const querySnapshots = await getDocs(first);
-            const docs = querySnapshots.docs.map((doc) => doc.data());
+            const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
             const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
             return {lastVisible: lastVisible as Document, docs: docs as Document[]}
         } else {
             const next = query(collection(db,collectionName), orderBy(field), startAfter(startAfterDocument), limit(docLimit));
             const querySnapshots = await getDocs(next);
-            const docs = querySnapshots.docs.map((doc) => doc.data());
+            const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
             const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
             return {lastVisible: lastVisible as Document, docs: docs as Document[]}
         }
@@ -57,11 +71,32 @@ export const getPaginatedDocuments = async (collectionName: string, field: strin
         return {lastVisible: {}, docs: []}
     }
 }
-    
+export const getPaginatedCollectionGroupWhere = async (collectionName: string, field: string, operator: any, value: any, orderField: any, docLimit: number, startAfterDocument?: Document): Promise<PaginatedDocuments> => {
+    try {
+        if(!startAfterDocument) {
+            const first = query(collectionGroup(db,collectionName), where(field, operator, value), orderBy(orderField), limit(docLimit));
+            const querySnapshots = await getDocs(first);
+            const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
+            const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
+            return {lastVisible: lastVisible as Document, docs: docs as Document[]}
+        } else {
+            const next = query(collection(db,collectionName), where(field, operator, value), orderBy(field), startAfter(startAfterDocument), limit(docLimit));
+            const querySnapshots = await getDocs(next);
+            const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
+            const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
+            return {lastVisible: lastVisible as Document, docs: docs as Document[]}
+        }
+    } catch (error:any) {
+        onError(error);
+        return {lastVisible: {}, docs: []}
+    }
+}
 export const getDocument = async (collectionName: string, documentId: string): Promise<Document> => {
     try {
+        console.log("getDocument", collectionName, documentId)
         const docRef = doc(db, collectionName, documentId);
         const docSnap = await getDoc(docRef);
+        console.log("getDocument data", docSnap.data())
         return docSnap.data() as Document;
     } catch(error:any) {
         onError(error);

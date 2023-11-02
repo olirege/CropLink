@@ -32,5 +32,7 @@ module.exports = {
     "linebreak-style": "off",
     "max-len": "off",
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-var-requires": "off",
+    "guard-for-in": "off",
   },
 };
