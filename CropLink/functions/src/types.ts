@@ -1,28 +1,40 @@
 export type Ad = {
+    uid?: string;
     id?: string;
     type: string;
+    adType: string;
     yieldTonnage: number;
     price: number;
     live: boolean;
     createdAt: Date;
     postedBy?: string;
     postedOn?: string;
+    images?: string[];
+    resizedImages?: string[];
+    updatedAt?: string;
 };
 export type SellerAd = {
+    uid?: string;
     id?: string;
+    adType: string;
     type: string;
     variety: string;
     yieldTonnage: number;
     expectedHarvestDate: string;
     price: number;
     images: string[];
+    resizedImages: string[];
     live: boolean;
     createdAt: Date;
     postedBy?: string;
     postedOn?: string;
+    expiryDate?: string;
+    updatedAt?: string;
 };
 export type BuyerAd = {
+    uid?: string;
     id?: string;
+    adType: string;
     type: string;
     yieldTonnage: number;
     requestDate: string;
@@ -31,4 +43,13 @@ export type BuyerAd = {
     createdAt: Date;
     postedBy?: string;
     postedOn?: string;
+    updatedAt?: string;
+};
+export type Bid = {
+    id?: string;
+    buyerId: string;
+    price: number;
+    createdAt: Date;
+    updatedAt: Date;
+    status: string;
 };

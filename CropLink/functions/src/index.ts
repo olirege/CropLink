@@ -6,10 +6,11 @@ import * as admin from "firebase-admin";
 import { ERROR_CODES } from "./errors";
 import { isAdmin } from "./utils";
 import type { Ad } from "./types";
+import * as sharp from "sharp";
 const service = require("../service/service.json");
 admin.initializeApp({
     credential: admin.credential.cert(service as admin.ServiceAccount),
-    storageBucket: "croplink-30e3c.appspot.com",
+    storageBucket: process.env.BUCKETURL,
 });
 const callableOptions: CallableOptions = {
     memory: "512MB" as MemoryOption,
@@ -79,9 +80,10 @@ export const createAd = onCall(callableOptions, async (request:CallableRequest) 
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
     try {
-        const BUCKET_PREFIX = "gs://croplink-30e3c.appspot.com/";
+        const BUCKET_PREFIX = process.env.BUCKETURL;
         const adId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const signedUrls = [];
+        const resizedSignedUrls = [];
         const bucket = getStorage().bucket();
         logger.info("image", request.data.images);
         if (request.data.images && request.data.images.length > 0) {
@@ -102,20 +104,214 @@ export const createAd = onCall(callableOptions, async (request:CallableRequest) 
                     expires: "03-17-2030",
                 });
                 signedUrls.push(signedUrl);
+                const resizedImageFilename = `${imageId}_resized.jpg`;
+                const resizedImageBucketPath= `${`ads/${uid}/ads/${adId}/` + resizedImageFilename}`;
+                const resizedImageFile = bucket.file(resizedImageBucketPath);
+                const resizedImageBuffer = await sharp(imageBuffer)
+                .resize(500, 500, {
+                    fit: "contain",
+                    background: { r: 0, g: 0, b: 0, alpha: 1 },
+                })
+                .jpeg()
+                .toBuffer();
+                await resizedImageFile.save(resizedImageBuffer, { contentType: "image/jpeg" });
+                const resizedImagePath = `${BUCKET_PREFIX + `ads/${uid}/ads/${adId}/` + resizedImageFilename}`;
+                const _resizedImageUrl = new URL(resizedImagePath);
+                const resizedImageUrl = _resizedImageUrl.pathname.substring(1);
+                const resizedImageRef = bucket.file(resizedImageUrl);
+                const [resizedSignedUrl] = await resizedImageRef.getSignedUrl({
+                    action: "read",
+                    expires: "03-17-2030",
+                });
+                resizedSignedUrls.push(resizedSignedUrl);
             }
         }
         logger.info(typeof request.data, JSON.stringify(request.data));
         const ad = {
+            uid: uid,
+            id: adId,
             ...request.data,
             images: signedUrls,
+            resizedImages: resizedSignedUrls,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             live: false,
         };
+        if (request.data.adType === "seller") {
+            ad["bids"] = [];
+        }
         await admin.firestore().collection("ads").doc(uid).collection("ads").doc(adId).set(ad);
-        return { id: adId, ...ad };
+        return { ...ad };
     } catch (error:any) {
         logger.error(error);
         throw new HttpsError("internal", error);
+    }
+});
+export const removeAd = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("removeAd", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    // fetch ad
+    const adId = request.data.adId;
+    if (!adId) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const adRef = admin.firestore().collection("ads").doc(uid).collection("ads").doc(adId);
+    const adDoc = await adRef.get();
+    if (!adDoc.exists) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const ad = adDoc.data() as Ad;
+    if (ad.live) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["ad-already-live"]);
+    } else {
+        try {
+            await adRef.delete();
+            // delete images
+            const bucket = getStorage().bucket();
+            if (ad.adType === "seller" && ad.images && ad.resizedImages) {
+                const BUCKET_PREFIX = process.env.BUCKETPARSEDURL as string;
+                for (const image of ad.images) {
+                    const _imageUrl = new URL(image);
+                    let imageUrl = _imageUrl.pathname.substring(1);
+                    if (imageUrl.startsWith(BUCKET_PREFIX)) {
+                        imageUrl = imageUrl.replace(BUCKET_PREFIX, "");
+                    }
+                    const imageRef = bucket.file(imageUrl);
+                    await imageRef.delete();
+                }
+                for (const image of ad.resizedImages) {
+                    const _imageUrl = new URL(image);
+                    let imageUrl = _imageUrl.pathname.substring(1);
+                    if (imageUrl.startsWith(BUCKET_PREFIX)) {
+                        imageUrl = imageUrl.replace(BUCKET_PREFIX, "");
+                    }
+                    const imageRef = bucket.file(imageUrl);
+                    await imageRef.delete();
+                }
+            }
+            return { success: true };
+        } catch (error:any) {
+            logger.error(error);
+            throw new HttpsError("internal", error);
+        }
+    }
+});
+async function deleteImageFromBucket(image: string, bucket: any, BUCKET_PREFIX: string) {
+    const _imageUrl = new URL(image);
+    let imageUrl = _imageUrl.pathname.substring(1);
+    if (imageUrl.startsWith(BUCKET_PREFIX)) {
+        imageUrl = imageUrl.replace(BUCKET_PREFIX, "");
+    }
+    const imageRef = bucket.file(imageUrl);
+    await imageRef.delete();
+}
+export const editAd = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("editAd", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    // fetch ad
+    const adId = request.data.adId;
+    if (!adId) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const adRef = admin.firestore().collection("ads").doc(uid).collection("ads").doc(adId);
+    const adDoc = await adRef.get();
+    if (!adDoc.exists) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const ad = adDoc.data() as Ad;
+    if (ad.live) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["ad-already-live"]);
+    } else {
+        try {
+            if (request.data.changes.resizedImages && ad.resizedImages && ad.images && ad.images.length > 0 && ad.resizedImages.length > 0) {
+                const bucket = getStorage().bucket();
+                const BUCKET_PREFIX = process.env.BUCKETPARSEDURL as string;
+                const resizedImagesToDelete = ad.resizedImages.filter((image) => !request.data.changes.resizedImages.includes(image));
+                const originalImagesToDelete = resizedImagesToDelete.map((image:string) => {
+                    const resizedImageNameWithoutResized = image.replace("_resized", "");
+                    return resizedImageNameWithoutResized;
+                });
+                request.data.changes.images = request.data.changes.resizedImages.map((image:string) => {
+                    const originalImageNameWithoutResized = image.replace("_resized", "");
+                    return originalImageNameWithoutResized;
+                });
+                for (const image of resizedImagesToDelete) {
+                    await deleteImageFromBucket(image, bucket, BUCKET_PREFIX);
+                }
+                for (const image of originalImagesToDelete) {
+                    await deleteImageFromBucket(image, bucket, BUCKET_PREFIX);
+                }
+            }
+            if (request.data.changes.newImages && request.data.changes.newImages.length > 0) {
+                const BUCKET_PREFIX = process.env.BUCKETURL;
+                const signedUrls = [];
+                const resizedSignedUrls = [];
+                const bucket = getStorage().bucket();
+                logger.info("image", request.data.changes.newImages);
+                for (const image of request.data.changes.newImages) {
+                    const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                    const filename = `${imageId}.jpg`;
+                    const bucketPath= `${`ads/${uid}/ads/${adId}/` + filename}`;
+                    const file = bucket.file(bucketPath);
+                    const base64EncodedImageString = image.replace(/^data:image\/\w+;base64,/, "");
+                    const imageBuffer = Buffer.from(base64EncodedImageString, "base64");
+                    await file.save(imageBuffer, { contentType: "image/jpeg" });
+                    const imagePath = `${BUCKET_PREFIX + `ads/${uid}/ads/${adId}/` + filename}`;
+                    const _imageUrl = new URL(imagePath);
+                    const imageUrl = _imageUrl.pathname.substring(1);
+                    const imageRef = bucket.file(imageUrl);
+                    const [signedUrl] = await imageRef.getSignedUrl({
+                        action: "read",
+                        expires: "03-17-2030",
+                    });
+                    signedUrls.push(signedUrl);
+                    const resizedImageFilename = `${imageId}_resized.jpg`;
+                    const resizedImageBucketPath= `${`ads/${uid}/ads/${adId}/` + resizedImageFilename}`;
+                    const resizedImageFile = bucket.file(resizedImageBucketPath);
+                    const resizedImageBuffer = await sharp(imageBuffer)
+                    .resize(500, 500, {
+                        fit: "contain",
+                        background: { r: 0, g: 0, b: 0, alpha: 1 },
+                    })
+                    .jpeg()
+                    .toBuffer();
+                    await resizedImageFile.save(resizedImageBuffer, { contentType: "image/jpeg" });
+                    const resizedImagePath = `${BUCKET_PREFIX + `ads/${uid}/ads/${adId}/` + resizedImageFilename}`;
+                    const _resizedImageUrl = new URL(resizedImagePath);
+                    const resizedImageUrl = _resizedImageUrl.pathname.substring(1);
+                    const resizedImageRef = bucket.file(resizedImageUrl);
+                    const [resizedSignedUrl] = await resizedImageRef.getSignedUrl({
+                        action: "read",
+                        expires: "03-17-2030",
+                    });
+                    resizedSignedUrls.push(resizedSignedUrl);
+                }
+                request.data.changes.images = [...request.data.changes.images, ...signedUrls];
+                request.data.changes.resizedImages = [...request.data.changes.resizedImages, ...resizedSignedUrls];
+            }
+            await adRef.set({ ...request.data.changes, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            return { success: true };
+        } catch (error:any) {
+            logger.error(error);
+            throw new HttpsError("internal", error);
+        }
     }
 });
 export const postAd = onCall(callableOptions, async (request:CallableRequest) => {
@@ -153,4 +349,86 @@ export const postAd = onCall(callableOptions, async (request:CallableRequest) =>
         }
     }
 });
-
+export const placeBid = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("placeBid", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    // fetch ad
+    const adId = request.data.adId;
+    if (!adId) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const adRef = admin.firestore().collectionGroup("ads").where("id", "==", adId).where("live", "==", true);
+    if (!adRef) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["ad-not-found"]);
+    }
+    // fetch other bids by same user
+    const userBidRef = admin.firestore().collectionGroup("bids").where("buyerId", "==", uid).where("status", "==", "pending");
+    const userBidDoc = await userBidRef.get();
+    if (userBidDoc.docs.length > 0) {
+        for (const bidDoc of userBidDoc.docs) {
+            await bidDoc.ref.set({ status: "cancelled", updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        }
+    }
+    try {
+        const bidId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const bid = {
+            adId: adId,
+            id: bidId,
+            buyerId: uid,
+            price: request.data.price,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            status: "pending",
+        };
+        await admin.firestore().collection("bids").doc(adId).collection("bids").doc(bidId).set(bid);
+        return bid;
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const cancelBid = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("cancelBid", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    // fetch bid
+    const bidId = request.data.bidId;
+    if (!bidId) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const bidRef = admin.firestore().collectionGroup("bids").where("id", "==", bidId).where("buyerId", "==", uid);
+    if (!bidRef) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["bid-not-found"]);
+    }
+    const bidDoc = await bidRef.get();
+    if (!bidDoc.docs[0].exists) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["bid-not-found"]);
+    }
+    if (bidDoc.docs[0].data().status === "cancelled") {
+        throw new HttpsError("invalid-argument", ERROR_CODES["bid-already-cancelled"]);
+    }
+    try {
+        await bidDoc.docs[0].ref.set({ status: "cancelled", updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        return { success: true };
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});

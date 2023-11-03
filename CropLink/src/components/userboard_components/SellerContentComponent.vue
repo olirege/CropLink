@@ -1,8 +1,8 @@
 <template>
-     <span>
+     <span class="grid grid-flow-col space-x-4">
         <div v-for="(ad,index) in ads" :key="index" class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300">
             <div class="w-full h-48 object-cover rounded-lg">
-                <ImageCarousel :images="ad.images" />
+                <ImageCarousel :images="ad.resizedImages" />
             </div>
             <h3 class="text-xl font-semibold mb-2">
                 {{ ad.type }}
@@ -24,19 +24,26 @@
             </p>
             <div class="flex justify-end mt-2 space-x-4">
                 <button 
+                @click="onEditAd(ad.id as string)"
+                class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
+                    Edit
+                </button>
+                <button 
                 :disabled="ad.live"
                 @click="onPostAd(ad.id as string)"
                 class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                     Post
                 </button>
-                <button 
-               :disabled="!ad.live"
-               @click="removeAd(ad.id as string)"
+                <ButtonWithLoading 
+                :disabled="ad.live"
+                :isLoading="isRemovingAd == ad.id"
+               @click="onRemoveAd(ad.id as string)"
                class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                >
                    Remove
-               </button>
+               </ButtonWithLoading>
             </div>
         </div>
     </span>
@@ -44,8 +51,10 @@
 <script setup lang="ts">
 import type { SellerAd } from '@/types';
 import ImageCarousel from '@/components/props/ImageCarousel.vue';
-import { type PropType } from 'vue';
-const emits = defineEmits(['post','remove'])
+import { ref, type PropType } from 'vue';
+import { useMainStore } from '@/stores/main';
+import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
+const emits = defineEmits(['post','remove','edit'])
 const props = defineProps({
     ads: {
         type: Array as PropType<SellerAd[]>,
@@ -56,8 +65,16 @@ const onPostAd = (adId:string) => {
     if(!adId) return;
     emits('post', adId);
 }
-const removeAd = (adId:string) => {
+const isRemovingAd = ref("");
+const onRemoveAd = async (adId:string) => {
     if(!adId) return;
-    emits('remove', adId);
+    isRemovingAd.value = adId;
+    console.log("removeAd", adId);
+    await useMainStore().removeUserAd(adId);
+    isRemovingAd.value = "";
+}
+const onEditAd = (adId:string) => {
+    if(!adId) return;
+    emits('edit', adId);
 }
 </script>

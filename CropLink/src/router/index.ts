@@ -36,6 +36,13 @@ const router = createRouter({
       component: () => import('../views/FeedView.vue')
     },
     {
+      path: '/ad/:adId',
+      name: 'ad',
+      component: () => import('../views/AdView.vue'),
+      props: true,
+      meta: {requiresAuth: true}
+    },
+    {
       path: '/userboard',
       name: 'userboard',
       component: () => import('../views/UserBoardView.vue'),

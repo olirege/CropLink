@@ -8,7 +8,7 @@
       </div>
       <nav class="space-x-4">
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 0}" to="/" @click="selectedPage = 0">Home</RouterLink>
-        <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 1}" to="/userboard" v-if="profile" @click="selectedPage = 1">Menu</RouterLink>
+        <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 1}" to="/userboard" v-if="profile" @click="selectedPage = 1">Dashboard</RouterLink>
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 2}" to="/signup" v-if="!profile" @click="selectedPage = 2">Signin</RouterLink>
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 3}" to="/profile" v-if="profile" @click="selectedPage = 3">Profile</RouterLink>
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 4}" to="/feed" v-if="profile" @click="selectedPage = 4">Feed</RouterLink>
@@ -18,6 +18,8 @@
     </div>
   </header>
   <AddAdModal v-if="modals['addad']"/>
+  <EditAdModal v-if="modals['editad']"/>
+  <AddBidModal v-if="modals['addbid']"/>
   <div class="w-full">
     <RouterView />
   </div>
@@ -28,6 +30,8 @@ import { storeToRefs } from 'pinia';
 import { useMainStore } from '@/stores/main';
 import { useModalStore } from '@/stores/modals';
 import AddAdModal from '@/components/modals/AddAdModal.vue';
+import EditAdModal from '@/components/modals/EditAdModal.vue'
+import AddBidModal from '@/components/modals/AddBidModal.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 const { profile } = storeToRefs(useMainStore());

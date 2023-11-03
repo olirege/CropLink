@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import { getDocument } from "../firebase/utils";
 import { ref, type Ref } from 'vue'
-import { createUserProfileCallable, createAdCallable, postAdCallable } from '@/firebase/callables';
+import { createUserProfileCallable, createAdCallable, postAdCallable, placeBidCallable, cancelBidCallable, removeAdCallable, editAdCallable } from '@/firebase/callables';
 import type { User, Profile, BuyerAd, SellerAd } from '@/types';
 import { getAuth } from 'firebase/auth';
 export const useMainStore = defineStore('MainStore', () => {
@@ -13,7 +13,11 @@ export const useMainStore = defineStore('MainStore', () => {
     EMPLOYEE:'employee',
     BANKER:'bank',
   }
-
+  const BID_STATUSES = {
+    PENDING:'pending',
+    ACCEPTED:'accepted',
+    REJECTED:'rejected',
+  }
   const user:null|User = ref(null)
   const isNewUser = ref(false)
 
@@ -92,12 +96,65 @@ export const useMainStore = defineStore('MainStore', () => {
       throw new Error(error);
     }
   }
+  const removeAd = removeAdCallable();
+  const removeUserAd = async (adId:string) => {
+    try {
+      console.log("removeUserAd start", adId);
+      console.log("createAd", createAd)
+      const ad = await removeAd({adId});
+      console.log("removeUserAd res", ad);
+      return ad;
+    } catch (error:any) {
+      console.log("removeUserAd error", error);
+      throw new Error(error);
+    }
+  }
+  const editAd = editAdCallable();
+  const editUserAd = async (changeData:object) => {
+    try {
+      console.log("editUserAd start", changeData);
+      console.log("editUserAd", editAd)
+      const ad = await editAd({...changeData});
+      console.log("editUserAd res", ad);
+      return ad;
+    } catch (error:any) {
+      console.log("editUserAd error", error);
+      throw new Error(error);
+    }
+  }
   const signout = async () => {
     const auth = getAuth()
     console.log("signout")
     await auth.signOut()
     setUser(null)
     setProfile(null)
+  }
+  const placeBid = placeBidCallable();
+  const placeNewBid = async (bidData:object) => {
+    console.log("placeBid", bidData)
+    try {
+      console.log("placeBid start", bidData);
+      console.log("placeBid", placeBid)
+      const bid = await placeBid(bidData);
+      console.log("placeBid res", bid);
+      return bid;
+    } catch (error:any) {
+      console.log("placeBid error", error);
+      throw new Error(error);
+    }
+  }
+  const cancelBid = cancelBidCallable();
+  const cancelUserBid = async (bidId:string) => {
+    try {
+      console.log("cancelBid start", bidId);
+      console.log("cancelBid", cancelBid)
+      const bid = await cancelBid({bidId});
+      console.log("cancelBid res", bid);
+      return bid;
+    } catch (error:any) {
+      console.log("cancelBid error", error);
+      throw new Error(error);
+    }
   }
   return { 
     user,
@@ -112,6 +169,11 @@ export const useMainStore = defineStore('MainStore', () => {
     ACCOUNT_TYPES,
     createUserAd,
     postNewAd,
-    signout
+    signout,
+    BID_STATUSES,
+    placeNewBid,
+    cancelUserBid,
+    removeUserAd,
+    editUserAd,
    }
 })

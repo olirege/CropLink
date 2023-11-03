@@ -71,16 +71,39 @@ export const getPaginatedDocuments = async (collectionName: string, field: strin
         return {lastVisible: {}, docs: []}
     }
 }
-export const getPaginatedCollectionGroupWhere = async (collectionName: string, field: string, operator: any, value: any, orderField: any, docLimit: number, startAfterDocument?: Document): Promise<PaginatedDocuments> => {
+export const getPaginatedCollectionGroupWhere = async (collectionName: string, field: string, operator: any, value: any, orderField: array, docLimit: number, startAfterDocument?: Document): Promise<PaginatedDocuments> => {
+    console.log("getPaginatedCollectionGroupWhere", collectionName, field, operator, value, orderField, docLimit, startAfterDocument)
     try {
         if(!startAfterDocument) {
-            const first = query(collectionGroup(db,collectionName), where(field, operator, value), orderBy(orderField), limit(docLimit));
+            const first = query(collectionGroup(db,collectionName), where(field, operator, value), orderBy(...orderField), limit(docLimit));
+            const querySnapshots = await getDocs(first);
+            const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
+            const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
+            console.log("getPaginatedCollectionGroupWhere", "first", docs, lastVisible)
+            return {lastVisible: lastVisible as Document, docs: docs as Document[]}
+        } else {
+            const next = query(collection(db,collectionName), where(field, operator, value), orderBy(field), startAfter(startAfterDocument), limit(docLimit));
+            const querySnapshots = await getDocs(next);
+            const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
+            const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
+            console.log("getPaginatedCollectionGroupWhere", "next", docs, lastVisible)
+            return {lastVisible: lastVisible as Document, docs: docs as Document[]}
+        }
+    } catch (error:any) {
+        onError(error);
+        return {lastVisible: {}, docs: []}
+    }
+}
+export const getPaginatedCollectionGroupWhereWhere = async (collectionName: string, field: string, operator: any, value: any, field2: string, operator2: any, value2: any, orderField: array, docLimit: number, startAfterDocument?: Document): Promise<PaginatedDocuments> => {
+    try {
+        if(!startAfterDocument) {
+            const first = query(collectionGroup(db,collectionName), where(field, operator, value), where(field2, operator2, value2), orderBy(...orderField), limit(docLimit));
             const querySnapshots = await getDocs(first);
             const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
             const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
             return {lastVisible: lastVisible as Document, docs: docs as Document[]}
         } else {
-            const next = query(collection(db,collectionName), where(field, operator, value), orderBy(field), startAfter(startAfterDocument), limit(docLimit));
+            const next = query(collection(db,collectionName), where(field, operator, value), where(field2, operator2, value2), orderBy(field), startAfter(startAfterDocument), limit(docLimit));
             const querySnapshots = await getDocs(next);
             const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
             const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
@@ -129,3 +152,28 @@ export const deleteDocument = async (collectionName: string, documentId: string)
         onError(error);
     }
 };
+export const queryForCollectionGroupDocumentById = async (collectionName: string, docId: string): Promise<Document | null> => {
+    console.log("queryForCollectionGroupDocumentById", collectionName, docId)
+    try {
+        const q = query(collectionGroup(db, collectionName), where('id', '==', docId));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            console.log("queryForCollectionGroupDocumentById", "No matching documents.");
+            return null;  
+        }
+        const doc = querySnapshot.docs[0];
+        console.log("queryForCollectionGroupDocumentById", doc.data())
+        return { id: doc.id, ...doc.data() } as Document;
+
+    } catch (error:any) {
+        onError(error);
+        return null;
+    }
+};
+export const isFirestoreTimestamp = (timestamp: any): boolean => {
+    return timestamp instanceof Timestamp;
+};
+
+export const convertTimestampToDate = (timestamp: any): Date => {
+    return timestamp.toDate();
+}

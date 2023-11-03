@@ -17,7 +17,13 @@
                <strong>Price:</strong> {{ ad.price }}
            </p>
            <div class="flex justify-end mt-2 space-x-4">
-               <button 
+                <button 
+               @click="onEditAd(ad.id as string)"
+               class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+               >
+                   Edit
+               </button>
+                <button 
                :disabled="ad.live"
                @click="onPostAd(ad.id as string)"
                class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
@@ -26,7 +32,7 @@
                </button>
                <button 
                :disabled="!ad.live"
-               @click="removeAd(ad.id as string)"
+               @click="onRemoveAd(ad.id as string)"
                class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                >
                    Remove
@@ -38,7 +44,7 @@
 <script setup lang="ts">
 import type { BuyerAd } from '@/types';
 import { type PropType } from 'vue';
-const emits = defineEmits(['post','remove'])
+const emits = defineEmits(['post','remove','edit'])
 const props = defineProps({
    ads: {
        type: Array as PropType<BuyerAd[]>,
@@ -49,8 +55,12 @@ const onPostAd = (adId:string) => {
     if(!adId) return;
     emits('post',adId);
 }
-const removeAd = (adId:string) => {
+const onRemoveAd = (adId:string) => {
     if(!adId) return;
     emits('remove',adId);
+}
+const onEditAd = (adId:string) => {
+    if(!adId) return;
+    emits('edit',adId);
 }
 </script>

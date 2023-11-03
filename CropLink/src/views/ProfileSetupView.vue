@@ -39,8 +39,8 @@ const continueSignup = async () => {
 }
 const options = [
     {
-        name: "Farmer",
-        value: "farmer"
+        name: "Seller",
+        value: "seller"
     }, {
         name: "Buyer",
         value: "buyer"  

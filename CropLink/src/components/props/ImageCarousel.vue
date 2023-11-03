@@ -2,7 +2,7 @@
     <div class="carousel">
       <div class="carousel-inner" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
         <div class="carousel-item" v-for="(image, index) in images" :key="index">
-          <img :src="image" class="w-full h-48 object-cover rounded-lg" />
+          <img :src="image" class="w-full h-48 object-cover rounded-lg" v-if="image"/>
         </div>
       </div>
       <ChevronLeftIcon v-if="images.length > 1" @click="prev" class="carousel-prev"/>
