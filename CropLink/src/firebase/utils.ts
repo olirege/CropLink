@@ -171,9 +171,16 @@ export const queryForCollectionGroupDocumentById = async (collectionName: string
     }
 };
 export const isFirestoreTimestamp = (timestamp: any): boolean => {
-    return timestamp instanceof Timestamp;
+    if(timestamp instanceof Timestamp)
+        return true;
+    else
+        return false;
 };
 
 export const convertTimestampToDate = (timestamp: any): Date => {
     return timestamp.toDate();
+}
+
+export const convertDateToTimestamp = (date: Date): Timestamp => {
+    return Timestamp.fromDate(date);
 }

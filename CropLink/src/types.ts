@@ -10,6 +10,7 @@ export type Bid = {
     adId:string;
     updatedAt: Date;
     status: string;
+    endedAt: Date;
 };
 export type SellerAd = {
     uid?: string;
@@ -26,6 +27,9 @@ export type SellerAd = {
     createdAt: Date;
     adType: string;
     updatedAt?: string;
+    biddingEndTime?: Date;
+    status?: string;
+    endedAt?: Date;
 };
 export type BuyerAd = {
     uid?: string;
@@ -39,6 +43,8 @@ export type BuyerAd = {
     createdAt: Date;
     adType: string;
     updatedAt?: string;
+    status?: string;
+    endedAt?: Date;
 };
 export type Profile = {
     name: string;

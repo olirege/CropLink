@@ -18,6 +18,8 @@
         <input class="mt-1 p-2 w-full rounded-md border" type="date" id="expectedHarvestDate" v-model="newCrop.expectedHarvestDate">
         <label class="block text-sm font-medium text-gray-700" for="price">Price</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="number" id="price" v-model="newCrop.price">
+        <label class="block text-sm font-medium text-gray-700" for="biddingEndTime">Bidding End Time (Bidding ends at 17:00 EST)</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="date" id="biddingEndTime" v-model="newCrop.biddingEndTime">
     </div>
     <div class="flex justify-end space-x-2 mt-4">
         <button 
@@ -41,7 +43,6 @@ import { ref, reactive } from 'vue';
 import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
-
 const emits = defineEmits(["close"]);
 const { profile } = storeToRefs(useMainStore());
 const images = ref([]);
@@ -73,7 +74,8 @@ const newCrop = reactive({
     variety: "",
     yieldTonnage: 0,
     expectedHarvestDate: today,
-    price: 0
+    price: 0,
+    biddingEndTime: today,
 });
 const isLoading = ref(false);
 const onConfirm = async () => {
@@ -82,8 +84,10 @@ const onConfirm = async () => {
         const base64Images = images.value.map((imageObj) => {
             return imageObj.url.split(",")[1]; // Extract the base64 part of the DataURL
         });
-        console.log("base64Images", base64Images[0])
-        await useMainStore().createUserAd({images:base64Images,...newCrop, adType:profile.value.accountType});
+        const deepAdCopy = JSON.parse(JSON.stringify(newCrop));
+        deepAdCopy.biddingEndTime = new Date(deepAdCopy.biddingEndTime).toISOString();
+        deepAdCopy.expectedHarvestDate = new Date(deepAdCopy.expectedHarvestDate).toISOString();
+        await useMainStore().createUserAd({images:base64Images,...deepAdCopy, adType:profile.value.accountType});
         isLoading.value = false;
         emits("close")
     } else {
@@ -91,7 +95,7 @@ const onConfirm = async () => {
     }
 }
 const validateCrop = ()=>{
-    if(newCrop.type === "" || newCrop.variety === "" || newCrop.yieldTonnage === 0 || !newCrop.expectedHarvestDate || newCrop.price === 0 || images.value.length === 0) {
+    if(newCrop.type === "" || newCrop.variety === "" || newCrop.yieldTonnage === 0 || !newCrop.expectedHarvestDate || newCrop.price === 0 || images.value.length === 0 || !newCrop.biddingEndTime) {
         return false;
     }
     return true;

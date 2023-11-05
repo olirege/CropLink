@@ -12,6 +12,8 @@ export type Ad = {
     images?: string[];
     resizedImages?: string[];
     updatedAt?: string;
+    status?: string;
+    endedAt?: string;
 };
 export type SellerAd = {
     uid?: string;
@@ -30,6 +32,8 @@ export type SellerAd = {
     postedOn?: string;
     expiryDate?: string;
     updatedAt?: string;
+    status?: string;
+    endedAt?: string;
 };
 export type BuyerAd = {
     uid?: string;
@@ -44,6 +48,8 @@ export type BuyerAd = {
     postedBy?: string;
     postedOn?: string;
     updatedAt?: string;
+    status?: string;
+    endedAt?: string;
 };
 export type Bid = {
     id?: string;
@@ -52,4 +58,5 @@ export type Bid = {
     createdAt: Date;
     updatedAt: Date;
     status: string;
+    endedAt: Date;
 };

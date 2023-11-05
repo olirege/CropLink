@@ -31,7 +31,6 @@ import { ref, reactive } from 'vue';
 import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
-
 const emits = defineEmits(["close"]);
 const { profile } = storeToRefs(useMainStore());
 let today = new Date().toISOString().split("T")[0].split("-").reverse().join("-");
@@ -45,7 +44,9 @@ const isLoading = ref(false);
 const onConfirm = async () => {
     isLoading.value = true;
     if(validateRequest() && profile.value) {
-        await useMainStore().createUserAd({...newRequest, adType:profile.value.accountType});
+        const deepAdCopy = JSON.parse(JSON.stringify(newRequest));
+        deepAdCopy.requestDate = new Date(deepAdCopy.requestDate).toISOString();
+        await useMainStore().createUserAd({...deepAdCopy, adType:profile.value.accountType});
         isLoading.value = false;
         emits("close")
     } else {

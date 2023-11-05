@@ -1,4 +1,5 @@
 import { onCall, HttpsError, CallableOptions, CallableRequest } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getStorage } from "firebase-admin/storage";
 import { MemoryOption } from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
@@ -136,8 +137,12 @@ export const createAd = onCall(callableOptions, async (request:CallableRequest) 
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             live: false,
         };
-        if (request.data.adType === "seller") {
-            ad["bids"] = [];
+        if (ad.adType === "seller") {
+            ad.biddingEndTime = admin.firestore.Timestamp.fromDate(new Date(ad.biddingEndTime));
+            ad.expectedHarvestDate = admin.firestore.Timestamp.fromDate(new Date(ad.expectedHarvestDate));
+        }
+        if (ad.adType === "buyer") {
+            ad.requestDate = admin.firestore.Timestamp.fromDate(new Date(ad.requestDate));
         }
         await admin.firestore().collection("ads").doc(uid).collection("ads").doc(adId).set(ad);
         return { ...ad };
@@ -432,3 +437,49 @@ export const cancelBid = onCall(callableOptions, async (request:CallableRequest)
         throw new HttpsError("internal", error);
     }
 });
+export const terminateBidSession = onSchedule({
+    schedule: "every day 17:00",
+    region: "northamerica-northeast1",
+    timeZone: "America/Toronto",
+    memory: "1GB" as MemoryOption,
+    }, async () => {
+        // fetch all ads that are live and have a bidding end time of today
+        logger.info("terminateBidSession");
+        const adsRef = admin.firestore().collectionGroup("ads").where("live", "==", true).where("adType", "==", "seller").where("biddingEndTime", "<=", admin.firestore.Timestamp.now());
+        const ads = await adsRef.get();
+        if (ads.empty) {
+            logger.info("terminateBidSession", "no ads found");
+            return;
+        }
+        // for each ad, fetch all bids
+        const bidsRef = admin.firestore().collectionGroup("bids").where("status", "==", "pending").where("adId", "in", ads.docs.map((ad) => ad.id)).orderBy("price", "desc");
+        const bids = await bidsRef.get();
+        if (bids.empty) {
+            logger.info("terminateBidSession", "no bids found");
+            return;
+        }
+        // for each ad, fetch the highest bid
+        const highestBids = [];
+        for (const ad of ads.docs) {
+            const highestBid = bids.docs.filter((bid) => bid.data().adId === ad.id)[0];
+            if (highestBid) {
+                highestBids.push(highestBid);
+            }
+        }
+        // set all bids to cancelled except the highest bid
+        for (const bid of bids.docs) {
+            if (!highestBids.includes(bid)) {
+                await bid.ref.set({ status: "cancelled", endedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            }
+        }
+        // set all highest bids to accepted
+        for (const highestBid of highestBids) {
+            await highestBid.ref.set({ status: "accepted", endedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        }
+        // set all ads to not live and set its status to sold
+        for (const ad of ads.docs) {
+            await ad.ref.set({ live: false, endedAt: admin.firestore.FieldValue.serverTimestamp(), status: "sold" }, { merge: true });
+        }
+        logger.info("terminateBidSession", "success");
+    }
+);

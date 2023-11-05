@@ -23,41 +23,51 @@
                >
                    Edit
                </button>
-                <button 
-               :disabled="ad.live"
-               @click="onPostAd(ad.id as string)"
-               class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-               >
+                <ButtonWithLoading
+                :isLoading="isPostingAd"
+                :disabled="ad.live"
+                @click="onPostAd(ad.id as string)"
+                class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
                    Post
-               </button>
-               <button 
+               </ButtonWithLoading>
+               <ButtonWithLoading
+                :isLoading="isRemovingAd == ad.id"
                :disabled="!ad.live"
                @click="onRemoveAd(ad.id as string)"
                class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                >
                    Remove
-               </button>
+               </ButtonWithLoading>
            </div>
        </div>
    </span>
 </template>
 <script setup lang="ts">
 import type { BuyerAd } from '@/types';
-import { type PropType } from 'vue';
-const emits = defineEmits(['post','remove','edit'])
+import ButtonWithLoading from '../props/ButtonWithLoading.vue';
+import { useMainStore } from '@/stores/main';
+import { type PropType, ref } from 'vue';
+const emits = defineEmits(['edit'])
 const props = defineProps({
    ads: {
        type: Array as PropType<BuyerAd[]>,
        required: true
    }
 })
-const onPostAd = (adId:string) => {
+const isPostingAd = ref(false);
+const onPostAd = async (adId:string) => {
     if(!adId) return;
-    emits('post',adId);
+    isPostingAd.value = true;
+    await useMainStore().postNewAd(adId);
+    isPostingAd.value = false;
 }
-const onRemoveAd = (adId:string) => {
+const isRemovingAd = ref("");
+const onRemoveAd = async (adId:string) => {
     if(!adId) return;
-    emits('remove',adId);
+    isRemovingAd.value = adId;
+    useMainStore().removeUserAd(adId);
+    isRemovingAd.value = "";
 }
 const onEditAd = (adId:string) => {
     if(!adId) return;

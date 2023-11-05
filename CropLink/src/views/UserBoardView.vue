@@ -44,8 +44,8 @@
                 <TabPanel>
                     <button @click="onAddAd" class="mt-2 mb-2 w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Add an ad</button>
                     <div v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <SellerContentComponent :ads="(ads.docs ? ads.docs : [] as SellerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.SELLER" @post="postAd" @edit="editAd"/>
-                        <BuyerContentComponent :ads="(ads.docs ? ads.docs : [] as BuyerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.BUYER" @post="postAd" @remove="removeAd" @edit="editAd"/>
+                        <SellerContentComponent :ads="(ads.docs ? ads.docs : [] as SellerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.SELLER" @edit="editAd"/>
+                        <BuyerContentComponent :ads="(ads.docs ? ads.docs : [] as BuyerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.BUYER" @edit="editAd"/>
                     </div>
                     <div v-else-if="isLoadingAds">
                         <LoadingSpinner :isLoading ="isLoadingAds"/>
@@ -78,7 +78,6 @@ import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
 import { ref, type Ref, watch, onMounted } from 'vue';
 import { TabGroup, TabList, Tab, TabPanel } from '@headlessui/vue'
-import { getDocuments } from '@/firebase/utils';
 import { useModalStore } from '@/stores/modals';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import type { SellerAd, BuyerAd, Bid } from '@/types';
@@ -156,14 +155,6 @@ onMounted( async ()=>{
     console.log("mounted");
     await loadAds();
 })
-const postAd = async (adId:string) => {
-    console.log("postAd", adId);
-    await useMainStore().postNewAd(adId);
-}
-const removeAd = async (adId:string) => {
-    console.log("removeAd", adId);
-    await useMainStore().removeUserAd(adId);
-}
 const editAd = async (adId:string) => {
     console.log("removeAd", adId);
     modals.value['editad'] = true;
