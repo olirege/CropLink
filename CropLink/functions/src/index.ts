@@ -472,10 +472,11 @@ export const terminateBidSession = onSchedule({
             await ad.ref.set({ live: false, endedAt: admin.firestore.FieldValue.serverTimestamp(), status: "sold" }, { merge: true });
         }
         // TODO: send email notifications to all users
-        // TODO: create chat room for buyer and seller
+        // TODO: create chat room and contract for buyer and seller
         for (const highestBid of highestBids) {
-            const chatroomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             const adId = highestBid.data().adId;
+            const chatroomId = `${adId}_${Math.random().toString(36).substring(2, 15)}`;
+            const contractId = `${adId}_${Math.random().toString(36).substring(2, 15)}`;
             const adRef = admin.firestore().collectionGroup("ads").where("id", "==", adId);
             const ad = await adRef.get();
             if (ad.empty) {
@@ -490,8 +491,21 @@ export const terminateBidSession = onSchedule({
                 buyerId: buyerId,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
             };
+            const contractData = {
+                id: contractId,
+                adId: adId,
+                sellerId: sellerId,
+                buyerId: buyerId,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                clauses: [],
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                status: "pending",
+                endedAt: "",
+            };
             logger.info("terminateBidSession", "chatRoomData", chatRoomData);
             await admin.firestore().collection("chatrooms").doc(chatroomId).set(chatRoomData);
+            logger.info("terminateBidSession", "contractData", contractData);
+            await admin.firestore().collection("contracts").doc(contractId).set(contractData);
         }
         logger.info("terminateBidSession", "success");
     }

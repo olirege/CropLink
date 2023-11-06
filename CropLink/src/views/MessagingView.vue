@@ -1,29 +1,62 @@
 <template>
-    <div v-if="chatRoom && !isLoadingChatRoom" class="p-4 max-w-lg mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4">
-        <h1 class="text-xl font-semibold border-b pb-2">Messaging</h1>
-        <div v-if="messages.length > 0" class="flex flex-col space-y-2 overflow-y-auto max-h-96">
-            <span v-for="(message,index) in messages" class="break-words">
-                <div class="flex justify-between mb-2" v-if="showIfPreviousMessageIsDifferent(index)">
-                    <p class="text-sm font-medium">{{ message.senderId.substring(0,5) }} says:</p>
-                    <p class="text-sm font-medium">{{ fromNow(message.createdAt) }}</p>
+    <div class="grid grid-cols-2 gap-x-4 p-2">
+        <template v-if="chatRoom && !isLoadingChatRoom && user && profile">
+            <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4">
+                <h1 class="text-xl font-semibold border-b pb-2">Messaging</h1>
+                <div v-if="messages.length > 0 && !isLoadingMessages" class="flex flex-col space-y-2 overflow-y-auto max-h-96">
+                    <span v-for="(message,index) in messages" class="break-words">
+                        <div class="flex justify-between mb-2" v-if="showIfPreviousMessageIsDifferent(index)">
+                            <p class="text-sm font-medium">{{ message.senderId.substring(0,5) }} says:</p>
+                            <p class="text-sm font-medium">{{ fromNow(message.createdAt) }}</p>
+                        </div>
+                        <div :class="[message.senderId != user.uid ? 'justify-end' : 'justify-start', 'flex']">
+                            <p :class="[message.senderId === user.uid ? 'bg-blue-500 text-white' : 'bg-gray-100', 'rounded-md p-2 max-w-xs md:max-w-md']">
+                                {{ message.text }}
+                            </p>
+                        </div>
+                    </span>
                 </div>
-                <p :class="
-                [message.senderId === user.value.uid ? 'bg-blue-100 ml-auto' : 'bg-gray-100', 'rounded-md p-2 inline-block']
-                ">
-                {{ message.text }}
-            </p>
-            </span>
+                <div v-else-if="messages.length == 0 && !isLoadingMessages" class="flex justify-center items-center h-32">
+                    <p class="text-gray-500">No messages yet</p>
+                </div>
+                <div v-else-if="isLoadingMessages" class="flex justify-center items-center h-32">
+                    <LoadingSpinner :isLoading="isLoadingMessages"/>
+                </div>
+                <span class="flex items-end space-x-2">
+                    <textarea v-model="message.text" class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" placeholder="Type your message here..." rows="1"></textarea>
+                    <button @click="onSendMessage" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out">Send</button>
+                </span>
+            </div>
+        </template>
+        <template v-else-if="isLoadingChatRoom">
+            <div>
+                <LoadingSpinner :isLoading="isLoadingChatRoom"/>
+            </div>
+        </template>
+        <template v-else>
+            <div class="flex justify-center items-center h-32">
+                <p class="text-gray-500">No chatroom found</p>
+            </div>
+        </template>
+        <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4">
+            <h1 class="text-xl font-semibold border-b pb-2">Contract Draft</h1>
+            <button @click="onAddClauseDraft">Add Clause</button>
+            <div v-if="contract && contract.clauses.length > 0 && !isLoadingContract">
+                <div v-for="clause in contract.clauses" class="relative break-words">
+                    <textarea class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" v-model="clause.text"></textarea>
+                    <div class="flex space-x-1 absolute top-1 right-1">
+                        <XCircleIcon class="h-5 w-5 text-red-400" @click="onRemoveClause(clause.id)" />
+                        <CheckCircleIcon class="h-5 w-5 text-green-400" @click="onConfirmClauseDraft(clause.id)" />
+                    </div>
+                </div>
+            </div>
+            <div v-else-if="contract && contract.clauses.length == 0 && !isLoadingContract">
+                <p>No clauses yet</p>
+            </div>
+            <div v-else>
+                <LoadingSpinner :isLoading="isLoadingContract"/>
+            </div>
         </div>
-        <div v-else class="flex justify-center items-center h-32">
-            <p class="text-gray-500">No messages yet</p>
-        </div>
-        <span class="flex items-end space-x-2">
-            <textarea v-model="message.text" class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" placeholder="Type your message here..." rows="1"></textarea>
-            <button @click="onSendMessage" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out">Send</button>
-        </span>
-    </div>
-    <div v-if="isLoadingChatRoom">
-        <LoadingSpinner :isLoading="isLoadingChatRoom"/>
     </div>
 </template>
 <script setup lang="ts">
@@ -32,9 +65,10 @@ import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
 import { db } from '@/firebase/main';
-import { onSnapshot, query, orderBy, collection, addDoc, Timestamp } from 'firebase/firestore';
-import { convertTimestampToDate, getDocsFromCollectionWhere } from '@/firebase/utils';
-import type { ChatRoom, Message } from '@/types';
+import { onSnapshot, query, orderBy, collection, addDoc, Timestamp, where, doc, setDoc } from 'firebase/firestore';
+import { getDocsFromCollectionWhere } from '@/firebase/utils';
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/vue/20/solid';
+import type { ChatRoom, Message, Contract } from '@/types';
 const props = defineProps({
     adId: {
         type: String,
@@ -43,10 +77,15 @@ const props = defineProps({
 })
 const { user, profile } = storeToRefs(useMainStore());
 const isLoadingChatRoom = ref(false);
+const isLoadingMessages = ref(false);
+const isLoadingContract = ref(false);
 const chatRoom = ref({} as ChatRoom);
+const contract = ref({} as Contract);
 const message = ref({} as Message);
 const messages = ref([] as Message[])
+const CLAUSE_STATUSES = useMainStore().CLAUSE_STATUSES;
 let stopChatRoomMessagesSubscription:any;
+let stopContractSubscription:any;
 const loadChatroom = async () => {
     // fetch chatroom with adid as adid
     isLoadingChatRoom.value = true;
@@ -59,11 +98,22 @@ const loadChatroom = async () => {
     isLoadingChatRoom.value = false;
     // subscribe to chatroom messages
     stopChatRoomMessagesSubscription = onSnapshot(query(collection(db, `chatrooms/${chatroom.id}/messages`), orderBy('createdAt','asc')), (snapshot) => {
+        isLoadingMessages.value = true;
         messages.value = snapshot.docs.map((doc) => {
             return {
                 ...doc.data()
             } as Message;
         })
+        isLoadingMessages.value = false;
+    })
+    stopContractSubscription = onSnapshot(query(collection(db, `contracts`),where('adId','==', props.adId), orderBy('createdAt','asc')), (snapshot) => {
+        isLoadingContract.value = true;
+        contract.value = snapshot.docs.map((doc) => {
+            return {
+                ...doc.data()
+            } as Contract;
+        })
+        isLoadingContract.value = false;
     })
 
 }
@@ -71,7 +121,8 @@ onMounted(async () => {
     await loadChatroom();
 })
 onBeforeUnmount(()=>{
-    if(stopChatRoomMessagesSubscription) stopChatRoomMessagesSubscription()
+    if(stopChatRoomMessagesSubscription) stopChatRoomMessagesSubscription();
+    if(stopContractSubscription) stopContractSubscription();
 })
 const isSendingMessage = ref(false);
 const onSendMessage = async () => {
@@ -87,8 +138,6 @@ const onSendMessage = async () => {
     isSendingMessage.value = false
 }
 const fromNow = (date:Timestamp) => {
-    // return when the message was sent
-    // a second ago, a minute ago, x minutes ago, etc..
     const now = new Date();
     const messageDate = date.toDate();
     const diff = now.getTime() - messageDate.getTime();
@@ -114,10 +163,38 @@ const showIfPreviousMessageIsDifferent = (index:number) => {
     const currentMessage = messages.value[index];
     if(previousMessage.senderId !== currentMessage.senderId) return true;
     return false;
-} 
-</script>
-<style scoped>
-textarea{
-    resize:none;
 }
-</style>
+
+const onAddClauseDraft = async () => {
+    const contractRef = doc(db, 'contracts', contract.value.id);
+    const clause = {
+        id: Math.random().toString(36).substring(7),
+        text: '',
+        draft: true,
+        state: CLAUSE_STATUSES.PENDING
+    }
+    await setDoc(contractRef, {
+        clauses: [...contract.value.clauses, clause]
+    }, {merge:true})
+}
+const onRemoveClause = async (id:string) => {
+    const contractRef = doc(db, 'contracts', contract.value.id);
+    await setDoc(contractRef, {
+        clauses: contract.value.clauses.filter((clause) => clause.id !== id)
+    }, {merge:true})
+}
+const onConfirmClauseDraft = async (id:string) => {
+    const contractRef = doc(db, 'contracts', contract.value.id);
+    await setDoc(contractRef, {
+        clauses: contract.value.clauses.map((clause) => {
+            if(clause.id === id) {
+                return {
+                    ...clause,
+                    draft: false
+                }
+            }
+            return clause;
+        })
+    }, {merge:true})
+}
+</script>

@@ -1,3 +1,4 @@
+import { Timestamp } from "@firebase/firestore";
 export type Ad = {
     uid?: string;
     id?: string;
@@ -75,4 +76,21 @@ export type Message = {
     text:string,
     createdAt:Date,
     read:boolean,
+};
+export type Clause = {
+    id: string;
+    text: string;
+    draft: boolean;
+    state: "pending" | "accepted" | "rejected";
+};
+export type Contract = {
+    id: string;
+    clauses: Clause[];
+    adId: string,
+    sellerId: string,
+    buyerId: string,
+    createdAt: Timestamp,
+    updatedAt: Timestamp,
+    status: "pending" | "accepted" | "rejected",
+    endedAt?: Timestamp,
 };

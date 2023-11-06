@@ -18,13 +18,16 @@ export const useMainStore = defineStore('MainStore', () => {
     ACCEPTED:'accepted',
     REJECTED:'rejected',
   }
-
   const AD_STATUSES = {
     POSTED:'posted',
     REJECTED:'rejected',
     SOLD:'sold',
   }
-
+  const CLAUSE_STATUSES = {
+    PENDING:'pending',
+    ACCEPTED:'accepted',
+    REJECTED:'rejected',
+  }
   const user:null|User = ref(null)
   const isNewUser = ref(false)
 
@@ -183,5 +186,6 @@ export const useMainStore = defineStore('MainStore', () => {
     cancelUserBid,
     removeUserAd,
     editUserAd,
+    CLAUSE_STATUSES,
    }
 })

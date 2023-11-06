@@ -51,19 +51,36 @@ export type Profile = {
     name: string;
     accountType: string;
 };
+export type Clause = {
+    id: string;
+    text: string;
+    draft: boolean;
+    state: "pending" | "accepted" | "rejected";
+};
+export type Contract = {
+    id: string;
+    clauses: Clause[];
+    adId: string,
+    sellerId: string,
+    buyerId: string,
+    createdAt: Timestamp,
+    updatedAt: Timestamp,
+    status: "pending" | "accepted" | "rejected",
+    endedAt?: Timestamp, 
+};
 export type ChatRoom = {
     id: string,
     adId: string,
     sellerId: string,
     buyerId: string,
-    createdAt: Date,
+    createdAt: Timestamp,
     lastMessage?: string,
-    lastMessageAt?: Date,
+    lastMessageAt?: Timestamp,
     unreadCount?:number,
 }
 export type Message = {
     senderId:string,
     text:string,
-    createdAt:Timestamp,
+    createdAt:Timestamp | Date,
     read:boolean,
 }
