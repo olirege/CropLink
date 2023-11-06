@@ -47,6 +47,13 @@ const router = createRouter({
       name: 'userboard',
       component: () => import('../views/UserBoardView.vue'),
       meta: {requiresAuth: true}
+    },
+    {
+      path: '/messaging/:adId',
+      name: 'messaging',
+      component: () => import('../views/MessagingView.vue'),
+      meta: {requiresAuth: true},
+      props: true,
     }
   ]
 })

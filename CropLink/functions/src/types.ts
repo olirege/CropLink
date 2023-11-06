@@ -60,3 +60,19 @@ export type Bid = {
     status: string;
     endedAt: Date;
 };
+export type ChatRoom = {
+    id: string,
+    adId: string,
+    sellerId: string,
+    buyerId: string,
+    createdAt: Date,
+    lastMessage?: string,
+    lastMessageAt?: Date,
+    unreadCount?:number,
+};
+export type Message = {
+    senderId:string,
+    text:string,
+    createdAt:Date,
+    read:boolean,
+};

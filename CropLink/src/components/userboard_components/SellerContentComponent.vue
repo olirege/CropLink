@@ -8,6 +8,9 @@
                 {{ ad.type }}
             </h3>
             <p class="text-sm mb-2">
+                <strong>Status:</strong> {{ ad.status }}
+            </p>
+            <p class="text-sm mb-2">
                 <strong>Id:</strong> {{ ad.id }}
             </p>
             <p class="text-sm mb-2">
@@ -28,18 +31,26 @@
             <div class="flex justify-end mt-2 space-x-4">
                 <button 
                 @click="onEditAd(ad.id as string)"
+                v-if="!ad.live && ad.status != AD_STATUSES.SOLD"
                 class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                     Edit
+                </button>
+                <button 
+                @click="onContactWinner(ad.id as string)"
+                v-if="!ad.live && ad.status == AD_STATUSES.SOLD"
+                class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
+                    Contact Winner
                 </button>
                 <ButtonWithLoading 
                 :disabled="ad.live"
                 :isLoading="isPostingAd"
                 @click="onPostAd(ad.id as string)"
                 class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                v-if="!ad.live"
+                v-if="!ad.live && ad.status != AD_STATUSES.SOLD"
                 >
-                    Post
+                    Post {{ ad.status  }}
                 </ButtonWithLoading>
                 <button 
                 @click="onViewAd(ad.id as string)"
@@ -50,6 +61,7 @@
                 <ButtonWithLoading 
                 :disabled="ad.live"
                 :isLoading="isRemovingAd == ad.id"
+                v-if="!ad.live && ad.status != AD_STATUSES.SOLD"
                @click="onRemoveAd(ad.id as string)"
                class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                >
@@ -67,6 +79,8 @@ import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { useRouter } from 'vue-router';
 import { convertTimestampToDate, isFirestoreTimestamp } from '@/firebase/utils';
+
+const AD_STATUSES = useMainStore().AD_STATUSES;
 const router = useRouter()
 const emits = defineEmits(['edit'])
 const props = defineProps({
@@ -98,5 +112,10 @@ const onEditAd = (adId:string) => {
 const onViewAd = (adId:string) => {
     if(!adId) return;
     router.push({name: 'ad', params: {adId: adId},});
+}
+
+const onContactWinner = (adId:string) => {
+    if(!adId) return;
+    router.push({name: 'messaging', params: {adId: adId}});
 }
 </script>

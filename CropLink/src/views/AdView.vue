@@ -8,6 +8,9 @@
                 {{ ad.type }}
             </h3>
             <p class="text-sm mb-2">
+                <strong>Status:</strong> {{ ad.status }}
+            </p>
+            <p class="text-sm mb-2">
                 <strong>Id:</strong> {{ ad.id }}
             </p>
             <p class="text-sm mb-2">
@@ -23,7 +26,7 @@
                 <strong>Price:</strong> {{ ad.price }}
             </p>
         </div>
-        <div v-if="ad.live">
+        <div v-if="ad.live || ad.status == AD_STATUSES.SOLD">
             <button v-if="(profile?.accountType == ACCOUNT_TYPES.BUYER)" @click="onPlaceBid" class="mt-2 mb-2 w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Place a bid</button>
             <div v-if="biddingTimeLeft">
                 Time left for bidding: {{ biddingTimeLeft }}
@@ -33,6 +36,9 @@
             </span>
             <span v-if="bids && bids.length > 0">
                 <div v-for="bid in bids" class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 mb-4">
+                    <div class="flex flex-row space-x-4" v-if="bid.status == BID_STATUSES.ACCEPTED ">
+                        <p class="text-sm text-green-400">{{ bid.status == BID_STATUSES.ACCEPTED ? "Winning Bid" : bid.status  }}</p>
+                    </div>
                     <div class="flex flex-row space-x-4">
                         <label class="block text-sm font-medium text-gray-700">Buyer</label>
                         <p class="text-sm">{{ bid.buyerId.substring(0,5) }}</p>
@@ -44,6 +50,9 @@
                     <div class="flex flex-row space-x-4">
                         <label class="block text-sm font-medium text-gray-700">Time</label>
                         <p class="text-sm">{{ isFirestoreTimestamp(bid.createdAt) ? convertTimestampToDate(bid.createdAt) : bid.createdAt  }}</p>
+                    </div>
+                    <div class="flex flex-row justify-end" v-if="bid.status == BID_STATUSES.ACCEPTED">
+                        <button @click="onContactWinner" class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Contact</button>
                     </div>
                 </div>
             </span>
@@ -67,7 +76,7 @@
 </template>
 <script setup lang="ts">
 import type { SellerAd, Bid } from '@/types';
-import { ref, onMounted, onBeforeUnmount, type Ref, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, type Ref } from 'vue';
 import { queryForCollectionGroupDocumentById } from '@/firebase/utils';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import ImageCarousel from '@/components/props/ImageCarousel.vue';
@@ -78,9 +87,13 @@ import { storeToRefs } from 'pinia';
 import { db } from '@/firebase/main';
 import { onSnapshot, collectionGroup, query, where, orderBy } from 'firebase/firestore';
 import { isFirestoreTimestamp, convertTimestampToDate, getPaginatedCollectionGroupWhereWhere } from '@/firebase/utils';
+import { useRouter } from 'vue-router';
 const { modals } = storeToRefs(useModalStore());
 const { profile } = storeToRefs(useMainStore());
+const router = useRouter();
+const BID_STATUSES = useMainStore().BID_STATUSES;
 const ACCOUNT_TYPES = useMainStore().ACCOUNT_TYPES;
+const AD_STATUSES = useMainStore().AD_STATUSES;
 const props = defineProps({
     adId: {
         type: String,
@@ -96,9 +109,19 @@ const loadAd = async () => {
     isLoadingAd.value = true;
     ad.value = await queryForCollectionGroupDocumentById('ads', props.adId) as SellerAd;
     if(!ad.value) return;
-    if (ad.value.live) {
+    if (ad.value.live || ad.value.status != AD_STATUSES.SOLD) {
         bids.value = await getPaginatedCollectionGroupWhereWhere('bids', 'adId', '==', props.adId, 'status', '==', 'pending', ['createdAt','desc'], 10); 
         stopSubscription = onSnapshot(query(collectionGroup(db, 'bids'), where('adId', '==', props.adId), where('status', '==', 'pending'), orderBy('createdAt','desc')), (snapshot) => {
+            bids.value = snapshot.docs.map((doc) => {
+                return {
+                    id: doc.id,
+                    ...doc.data()
+                } as Bid;
+            })
+        })
+    } else if (!ad.value.live && ad.value.status == AD_STATUSES.SOLD) {
+        bids.value = await getPaginatedCollectionGroupWhereWhere('bids', 'adId', '==', props.adId, 'status', '==', 'accepted', ['createdAt','desc'], 10); 
+        stopSubscription = onSnapshot(query(collectionGroup(db, 'bids'), where('adId', '==', props.adId), where('status', '==', 'accepted'), orderBy('createdAt','desc')), (snapshot) => {
             bids.value = snapshot.docs.map((doc) => {
                 return {
                     id: doc.id,
@@ -161,5 +184,9 @@ const onPostAd = async (adId:string) => {
     console.log("postAd", adId);
     await useMainStore().postNewAd(adId);
     isPostingAd.value = false;
+}
+const onContactWinner = (bidId:string) => {
+    console.log("contactWinner", bidId);
+    router.push({name: 'messaging', params: {adId: ad.value.id}});
 }
 </script>

@@ -1,3 +1,4 @@
+import { Timestamp } from "@firebase/firestore";
 export type User = {
     [key: string]: any;
   };
@@ -50,3 +51,19 @@ export type Profile = {
     name: string;
     accountType: string;
 };
+export type ChatRoom = {
+    id: string,
+    adId: string,
+    sellerId: string,
+    buyerId: string,
+    createdAt: Date,
+    lastMessage?: string,
+    lastMessageAt?: Date,
+    unreadCount?:number,
+}
+export type Message = {
+    senderId:string,
+    text:string,
+    createdAt:Timestamp,
+    read:boolean,
+}

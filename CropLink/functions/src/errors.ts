@@ -7,7 +7,7 @@ export const ERROR_CODES:ERROR_CODES = {
     "unauthenticated": "You must be logged in to perform this action.",
     "already-exists": "This document already exists.",
     "ad-already-live": "This ad is already live.",
-    "ad-not-found": "This ad was not found.",
+    "ad-not-live": "This ad was not live.",
     "bid-not-found": "This bid was not found.",
     "bid-already-cancelled": "This bid has already been cancelled.",
     "bid-already-accepted": "This bid has already been accepted.",

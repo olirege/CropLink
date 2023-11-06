@@ -5,7 +5,7 @@ import { MemoryOption } from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { ERROR_CODES } from "./errors";
-import { isAdmin } from "./utils";
+import { isAdmin, deleteImageFromBucket } from "./utils";
 import type { Ad } from "./types";
 import * as sharp from "sharp";
 const service = require("../service/service.json");
@@ -174,7 +174,7 @@ export const removeAd = onCall(callableOptions, async (request:CallableRequest) 
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
     const ad = adDoc.data() as Ad;
-    if (ad.live) {
+    if (ad.live || ad.status == "sold") {
         throw new HttpsError("invalid-argument", ERROR_CODES["ad-already-live"]);
     } else {
         try {
@@ -209,15 +209,6 @@ export const removeAd = onCall(callableOptions, async (request:CallableRequest) 
         }
     }
 });
-async function deleteImageFromBucket(image: string, bucket: any, BUCKET_PREFIX: string) {
-    const _imageUrl = new URL(image);
-    let imageUrl = _imageUrl.pathname.substring(1);
-    if (imageUrl.startsWith(BUCKET_PREFIX)) {
-        imageUrl = imageUrl.replace(BUCKET_PREFIX, "");
-    }
-    const imageRef = bucket.file(imageUrl);
-    await imageRef.delete();
-}
 export const editAd = onCall(callableOptions, async (request:CallableRequest) => {
     logger.info("editAd", request);
     if (!request.auth) {
@@ -241,7 +232,7 @@ export const editAd = onCall(callableOptions, async (request:CallableRequest) =>
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
     const ad = adDoc.data() as Ad;
-    if (ad.live) {
+    if (ad.live || ad.status == "sold") {
         throw new HttpsError("invalid-argument", ERROR_CODES["ad-already-live"]);
     } else {
         try {
@@ -373,7 +364,7 @@ export const placeBid = onCall(callableOptions, async (request:CallableRequest) 
     }
     const adRef = admin.firestore().collectionGroup("ads").where("id", "==", adId).where("live", "==", true);
     if (!adRef) {
-        throw new HttpsError("invalid-argument", ERROR_CODES["ad-not-found"]);
+        throw new HttpsError("invalid-argument", ERROR_CODES["ad-not-live"]);
     }
     // fetch other bids by same user
     const userBidRef = admin.firestore().collectionGroup("bids").where("buyerId", "==", uid).where("status", "==", "pending");
@@ -479,6 +470,28 @@ export const terminateBidSession = onSchedule({
         // set all ads to not live and set its status to sold
         for (const ad of ads.docs) {
             await ad.ref.set({ live: false, endedAt: admin.firestore.FieldValue.serverTimestamp(), status: "sold" }, { merge: true });
+        }
+        // TODO: send email notifications to all users
+        // TODO: create chat room for buyer and seller
+        for (const highestBid of highestBids) {
+            const chatroomId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            const adId = highestBid.data().adId;
+            const adRef = admin.firestore().collectionGroup("ads").where("id", "==", adId);
+            const ad = await adRef.get();
+            if (ad.empty) {
+                throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+            }
+            const sellerId = ad.docs[0].data().uid;
+            const buyerId = highestBid.data().buyerId;
+            const chatRoomData = {
+                id: chatroomId,
+                adId: adId,
+                sellerId: sellerId,
+                buyerId: buyerId,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            logger.info("terminateBidSession", "chatRoomData", chatRoomData);
+            await admin.firestore().collection("chatrooms").doc(chatroomId).set(chatRoomData);
         }
         logger.info("terminateBidSession", "success");
     }

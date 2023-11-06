@@ -41,6 +41,7 @@ export const getDocuments = async (collectionName: string): Promise<Document[]> 
 
 export const getDocsFromCollectionWhere = async (collectionName: string, field: string, operator: any, value: any): Promise<Document[]> => {
     try {
+        console.log("getDocsFromCollectionWhere", collectionName, field, operator, value)
         const q = query(collection(db, collectionName), where(field, operator, value));
         const querySnapshot = await getDocs(q);
         const docs = querySnapshot.docs.map((doc) => doc.data());
@@ -50,7 +51,6 @@ export const getDocsFromCollectionWhere = async (collectionName: string, field: 
         return [];
     }
 };
-
 export const getPaginatedDocuments = async (collectionName: string, field: string, docLimit: number, startAfterDocument?: Document): Promise<PaginatedDocuments> => {
     try {
         if(!startAfterDocument) {
