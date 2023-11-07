@@ -1,6 +1,5 @@
 # CropLink
-
-<h1><strong>Marketplace for the Farming Sector</strong></h1>
+<h3><strong>Marketplace for the Farming Sector</strong></h3>
 <ul>
   <li>*real-time bidding</li>
   <li>*real-time contract negotiation</li>
