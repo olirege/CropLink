@@ -44,8 +44,8 @@
                 <TabPanel>
                     <button @click="onAddAd" class="mt-2 mb-2 w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Add an ad</button>
                     <div v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <SellerContentComponent :ads="(ads.docs ? ads.docs : [] as SellerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.SELLER" @edit="editAd"/>
-                        <BuyerContentComponent :ads="(ads.docs ? ads.docs : [] as BuyerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.BUYER" @edit="editAd"/>
+                        <SellerContentComponent :ads="(ads.docs ? ads.docs : [] as SellerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.SELLER"/>
+                        <BuyerContentComponent :ads="(ads.docs ? ads.docs : [] as BuyerAd[])" v-if="profile.accountType == ACCOUNT_TYPES.BUYER"/>
                     </div>
                     <div v-else-if="isLoadingAds">
                         <LoadingSpinner :isLoading ="isLoadingAds"/>
@@ -102,7 +102,7 @@ const TAB_CATEGORIES = {
     MESSAGES: "Messages",
 }
 
-const ads: Ref<{lastvisible:SellerAd    |BuyerAd, docs:SellerAd[]|BuyerAd[]}> = ref([]);
+const ads: Ref<{lastvisible:SellerAd|BuyerAd, docs:SellerAd[]|BuyerAd[]}> = ref([]);
 const bids: Ref<{lastvisible:Bid, docs:Bid[]}> = ref([]);
 const isLoadingAds = ref(false);
 const loadAds = async () => {
@@ -155,9 +155,4 @@ onMounted( async ()=>{
     console.log("mounted");
     await loadAds();
 })
-const editAd = async (adId:string) => {
-    console.log("removeAd", adId);
-    modals.value['editad'] = true;
-    modals.value['context'] = ads.value.docs.find((ad) => ad.id === adId);
-}
 </script>

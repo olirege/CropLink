@@ -27,8 +27,21 @@
                     </div>
                 </span>
             </div>
-            <div class="flex justify-end">
-                <ButtonWithLoading :isLoading="isCancellingBid == bid.id" v-if="bid.status === BID_STATUSES.PENDING" @click="onCancelBid(bid.id as string)" class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Cancel Bid</ButtonWithLoading>
+            <div class="flex justify-end mt-2 space-x-4">
+                <ButtonWithLoading 
+                    :isLoading="isCancellingBid == bid.id" 
+                    v-if="bid.status === BID_STATUSES.PENDING"
+                    @click="onCancelBid(bid.id as string)"
+                    class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    Cancel Bid
+                </ButtonWithLoading>
+                <button
+                @click="onViewAd(bid.adId)"
+                class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
+                    View
+                </button>
+                <button @click="onContact(bid.adId)" class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Contact</button>
             </div>
         </div>
     </span>
@@ -39,7 +52,9 @@ import { useMainStore } from '@/stores/main';
 import { ref, type PropType} from 'vue';
 import ButtonWithLoading from '../props/ButtonWithLoading.vue';
 import type { Bid } from '@/types';
+import { useRouter } from 'vue-router';
 const BID_STATUSES = useMainStore().BID_STATUSES;
+const router = useRouter();
 const props = defineProps({
     bids: {
         type: Array as PropType<Bid[]>,
@@ -52,5 +67,14 @@ const onCancelBid = async (bidId:string) => {
     isCancellingBid.value = bidId;
     await useMainStore().cancelUserBid(bidId);
     isCancellingBid.value = "";
+}
+const onViewAd = (adId:string) => {
+    if(!adId) return;
+    router.push({name: 'ad', params: {adId: adId},});
+}
+const onContact = (adId:string) => {
+    if (!adId) return;
+    console.log("contactWinner", adId);
+    router.push({name: 'messaging', params: {adId: adId}});
 }
 </script>

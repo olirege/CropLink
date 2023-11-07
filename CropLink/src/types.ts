@@ -56,10 +56,12 @@ export type Clause = {
     text: string;
     draft: boolean;
     state: "pending" | "accepted" | "rejected";
+    createdAt: Timestamp,
+    authorId: string,
+    updatedAt: Timestamp,
 };
 export type Contract = {
     id: string;
-    clauses: Clause[];
     adId: string,
     sellerId: string,
     buyerId: string,
