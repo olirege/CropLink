@@ -98,4 +98,5 @@ export type Contract = {
     updatedAt: Timestamp,
     status: "pending" | "accepted" | "rejected",
     endedAt?: Timestamp,
+    ready?:string[],
 };

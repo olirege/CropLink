@@ -98,16 +98,30 @@
                                     'bg-red-200': clause.state == CLAUSE_STATUSES.REJECTED,
                                     }">{{clause.text}}</p>
                                 <div class="w-full flex justify-between">
-                                    <p class="text-xs underline" @click="onMentionClause(clause)">Mention</p>
+                                    <a class="text-xs underline" @click="onMentionClause(clause)">Mention</a>
                                     <div class="flex space-x-2">
-                                        <p class="text-xs font-semibold text-green-400 underline decoration-green-400" @click="onEditStateClause(clause.id,CLAUSE_STATUSES.ACCEPTED)">Approve</p>
-                                        <p class="text-xs font-semibold text-red-400 underline decoration-red-400" @click="onEditStateClause(clause.id,CLAUSE_STATUSES.REJECTED)">Reject</p>
+                                        <a class="text-xs font-semibold text-green-400 underline decoration-green-400" @click="onEditStateClause(clause.id,CLAUSE_STATUSES.ACCEPTED)">Approve</a>
+                                        <a class="text-xs font-semibold text-red-400 underline decoration-red-400" @click="onEditStateClause(clause.id,CLAUSE_STATUSES.REJECTED)">Reject</a>
                                     </div>
                                 </div>
                             </div>
                         </span>
                     </span>
                 </span>
+                <div class="w-full flex justify-end">
+                    <button
+                        @click="onReadyToProceed"
+                        v-if="!contract.ready.includes(user.uid)" 
+                        class="bg-blue-500 text-white px-4 h-8 rounded-md hover:bg-blue-400 transition duration-300 ease-in-out"
+                        >Ready to Proceed
+                    </button>
+                    <button
+                        @click="onCancelReadyToProceed"
+                        v-if="contract.ready.includes(user.uid)"
+                        class="bg-red-500 text-white px-4 h-8 rounded-md hover:bg-red-400 transition duration-300 ease-in-out"
+                        >Cancel
+                    </button>
+                </div>
             </div>
             <div v-else>
                 <LoadingSpinner :isLoading="isLoadingClauses"/>
@@ -127,7 +141,7 @@ import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
 import { db } from '@/firebase/main';
-import { onSnapshot, query, orderBy, collection, addDoc, Timestamp, where, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { onSnapshot, query, orderBy, collection, addDoc, Timestamp, where, setDoc, doc, deleteDoc, arrayUnion, arrayRemove, updateDoc } from 'firebase/firestore';
 import { getDocsFromCollectionWhere } from '@/firebase/utils';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/vue/20/solid';
 import { PencilSquareIcon, TrashIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline';
@@ -322,5 +336,17 @@ const onConfirmClauseDraft = async (clause:Clause) => {
     clause.draft = false;
     const clauseRef = collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`);
     await setDoc(doc(clauseRef, clause.id), clause, {merge:true})
+}
+const onReadyToProceed = async () => {
+    if(!contract.value.id || user.value.uid) return
+    if(contract.value.ready.includes(user.value.uid)) return
+    const contractRef = collection(db, CONTRACTS_COLLECTION);
+    await updateDoc(doc(contractRef,contract.value.id),{ready:arrayUnion(user.value.uid)})
+}
+const onCancelReadyToProceed = async () => {
+    if(!contract.value.id || user.value.uid) return
+    if(!contract.value.ready.includes(user.value.uid)) return
+    const contractRef = collection(db, CONTRACTS_COLLECTION);
+    await updateDoc(doc(contractRef,contract.value.id),{ready:arrayRemove(user.value.uid)})
 }
 </script>

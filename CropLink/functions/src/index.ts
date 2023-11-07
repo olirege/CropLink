@@ -501,6 +501,7 @@ export const terminateBidSession = onSchedule({
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                 status: "pending",
                 endedAt: "",
+                ready: [],
             };
             logger.info("terminateBidSession", "chatRoomData", chatRoomData);
             await admin.firestore().collection("chatrooms").doc(chatroomId).set(chatRoomData);

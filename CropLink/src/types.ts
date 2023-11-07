@@ -68,7 +68,8 @@ export type Contract = {
     createdAt: Timestamp,
     updatedAt: Timestamp,
     status: "pending" | "accepted" | "rejected",
-    endedAt?: Timestamp, 
+    endedAt?: Timestamp,
+    ready?:string[],
 };
 export type ChatRoom = {
     id: string,
