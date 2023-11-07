@@ -1,18 +1,23 @@
 <template>
     <div class="grid grid-cols-2 gap-x-4 p-2">
-        <template v-if="chatRoom && !isLoadingChatRoom && user && profile">
+        <template v-if="chatRoom.id && !isLoadingChatRoom && user && profile">
             <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4">
                 <h1 class="text-xl font-semibold border-b pb-2">Messaging</h1>
-                <div v-if="messages.length > 0 && !isLoadingMessages" class="flex flex-col space-y-2 overflow-y-auto max-h-96">
+                <div v-if="messages.length > 0 && !isLoadingMessages" class="flex flex-col space-y-2 overflow-y-auto h-full">
                     <span v-for="(message,index) in messages" class="break-words">
                         <div class="flex justify-between mb-2" v-if="showIfPreviousMessageIsDifferent(index)">
                             <p class="text-sm font-medium">{{ message.senderId.substring(0,5) }} says:</p>
                             <p class="text-sm font-medium">{{ fromNow(message.createdAt) }}</p>
                         </div>
                         <div :class="[message.senderId != user.uid ? 'justify-end' : 'justify-start', 'flex']">
-                            <p :class="[message.senderId === user.uid ? 'bg-blue-500 text-white' : 'bg-gray-100', 'rounded-md p-2 max-w-xs md:max-w-md']">
-                                {{ message.text }}
-                            </p>
+                            <div class="flex flex-col space-y-1">
+                                <p v-if="message.quote" 
+                                class="truncate bg-gray-100 rounded-md p-2 max-w-xs md:max-w-md text-xs rounded-md p-1 bg-slate-200">
+                                 <span class="font-bold">clause:</span> <span class="italic">{{ message.quote.text }}</span></p>
+                                <p :class="[message.senderId === user.uid ? 'bg-blue-500 text-white' : 'bg-gray-100', 'rounded-md p-2 max-w-xs md:max-w-md', message.quote ? 'ml-2' : '']">
+                                    {{ message.text }}
+                                </p>
+                            </div>
                         </div>
                     </span>
                 </div>
@@ -23,69 +28,92 @@
                     <LoadingSpinner :isLoading="isLoadingMessages"/>
                 </div>
                 <span class="flex items-end space-x-2">
-                    <textarea v-model="message.text" class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" placeholder="Type your message here..." rows="1"></textarea>
-                    <button @click="onSendMessage" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out">Send</button>
+                    <div class="border rounded-md w-full p-2">
+                        <div v-if="clauseMentionned.id" class="relative w-full truncate bg-gray-100 rounded-md p-2 max-w-xs md:max-w-md text-xs rounded-md p-1 bg-slate-200">
+                            <XCircleIcon class="h-4 w-4 absolute top-1 right-1" @click="onRemoveMentionnedClause"/>
+                            <p class="text-sm text-slate-500 truncate"><span class="font-bold">clause: </span><span class="italic">{{ clauseMentionned.text }}</span></p>
+                        </div>
+                        <textarea v-model="message.text" class="h-full w-full resize-none focus:outline-none" placeholder="Type your message here..."></textarea>
+                    </div>
+                    <div class="h-full flex items-start">
+                        <PaperAirplaneIcon @click="onSendMessage" class="h-6 w-6 text-blue-500" />
+                    </div>
                 </span>
             </div>
         </template>
-        <template v-else-if="isLoadingChatRoom">
-            <div>
-                <LoadingSpinner :isLoading="isLoadingChatRoom"/>
-            </div>
-        </template>
-        <template v-else>
+        <template v-else-if="!chatRoom.id && !isLoadingChatRoom">
             <div class="flex justify-center items-center h-32">
                 <p class="text-gray-500">No chatroom found</p>
             </div>
         </template>
-        <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4" v-if="!isLoadingContract">
+        <template v-else="isLoadingChatRoom">
+            <div>
+                <LoadingSpinner :isLoading="isLoadingChatRoom"/>
+            </div>
+        </template>
+        <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4" v-if="contract.id && !isLoadingContract">
             <h1 class="text-xl font-semibold border-b pb-2">Contract Draft</h1>
             <div>
                 <p>Last Updated: {{ isFirestoreTimestamp(contract.updatedAt) ? convertTimestampToDate(contract.updatedAt) : contract.updatedAt }}</p>
             </div>
             <button @click="onAddClauseDraft" class="w-full border-dashed border-2 border-sky-500 rounded-sm p-1">Add Clause</button>
-            <div v-if="contractClauses && contractClauses.length > 0 && !isLoadingClauses">
-                <span v-if="sellerContractClauses && sellerContractClauses.length > 0">
-                    <label>Seller clauses</label>
-                    <div v-for="clause in sellerContractClauses" class="relative break-words">
-                        <template v-if="contract.sellerId == user.uid">
-                            <textarea class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" :class="[!clause.draft ? 'bg-gray-200' : '']" :disabled="!clause.draft" v-model="clause.text"></textarea>
-                            <div class="flex space-x-1 absolute top-1 right-1">
-                                <XCircleIcon class="h-5 w-5 text-red-400" @click="onRemoveClause(clause.id)" />
-                                <CheckCircleIcon class="h-5 w-5 text-green-400" @click="onConfirmClauseDraft(clause.id)" v-if="clause.draft"/>
-                                <PencilSquareIcon class="h-5 w-5 text-blue-400" v-else @click="onEditClause(clause.id)"/>
+            <div v-if="!isLoadingClauses" class="flex flex-col space-y-4">
+                <span>
+                    <span v-if="userClauses && userClauses.length > 0">
+                        <label class="text-lg font-semibold border-b pb-2">{{ profile && profile.name ? `${profile.name}'s ` : 'My ' }}clauses</label>
+                        <span class="flex flex-col space-y-2">
+                            <div v-for="clause in userClauses" class="relative break-words">
+                                <textarea class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" v-if="clause.draft" v-model="clause.text"></textarea>
+                                <p class="w-full p-2 border rounded-md"
+                                :class="{
+                                    'bg-gray-200': clause.state == CLAUSE_STATUSES.PENDING,
+                                    'bg-green-200': clause.state == CLAUSE_STATUSES.ACCEPTED,
+                                    'bg-red-200': clause.state == CLAUSE_STATUSES.REJECTED,
+                                }"
+                                v-else>{{clause.text}}</p>
+                                <div class="w-full flex justify-between" v-if="clause.state != CLAUSE_STATUSES.PENDING">
+                                    <p class="text-xs underline" @click="onMentionClause(clause)" v-if="!clause.draft">Mention</p>
+                                    <p :class="{
+                                        'text-green-400 text-xs': clause.state == CLAUSE_STATUSES.ACCEPTED,
+                                        'text-red-400 text-xs': clause.state == CLAUSE_STATUSES.REJECTED,
+                                    }">{{ clause.state }}</p>
+                                </div>
+                                <div class="flex items-center space-x-1 absolute top-1 right-1">
+                                    <CheckCircleIcon class="h-4 w-4 text-green-400" @click="onConfirmClauseDraft(clause)" v-if="clause.draft"/>
+                                    <PencilSquareIcon class="h-4 w-4 text-blue-400" v-else @click="onEditDrafClause(clause.id)"/>
+                                    <TrashIcon class="h-4 w-4" @click="onRemoveClause(clause.id)" />
+                                </div>
                             </div>
-                        </template>
-                        <template v-else>
-                            <p class="w-full p-2 border rounded-md " :class="[!clause.draft ? 'bg-gray-200' : '']"></p>
-                        </template>
-                    </div>
+                        </span>
+                    </span>
                 </span>
-                <span v-if="buyerContractClauses && buyerContractClauses.length > 0">
-                    <label>Buyer clauses</label>
-                    <div v-for="clause in buyerContractClauses" class="relative break-words">
-                        <template v-if="contract.sellerId == user.uid">
-                            <textarea class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" :class="[!clause.draft ? 'bg-gray-200' : '']" :disabled="!clause.draft" v-model="clause.text"></textarea>
-                            <div class="flex space-x-1 absolute top-1 right-1">
-                                <XCircleIcon class="h-5 w-5 text-red-400" @click="onRemoveClause(clause.id)" />
-                                <CheckCircleIcon class="h-5 w-5 text-green-400" @click="onConfirmClauseDraft(clause.id)" v-if="clause.draft"/>
-                                <PencilSquareIcon class="h-5 w-5 text-blue-400" v-else @click="onEditClause(clause.id)"/>
+                <span>
+                    <span v-if="otherClauses && otherClauses.length > 0">
+                        <label class="text-lg font-semibold border-b pb-2">{{ user.name == contract.sellerId ? contract.sellerId.substring(0,5) : contract.buyerId.substring(0,5) }}'s clauses</label>
+                        <span class="flex flex-col space-y-2">
+                            <div v-for="clause in otherClauses" class="relative break-words">
+                                <p class="w-full p-2 border rounded-md" :class="{
+                                    'bg-gray-200': clause.state == CLAUSE_STATUSES.PENDING,
+                                    'bg-green-200': clause.state == CLAUSE_STATUSES.ACCEPTED,
+                                    'bg-red-200': clause.state == CLAUSE_STATUSES.REJECTED,
+                                    }">{{clause.text}}</p>
+                                <div class="w-full flex justify-between">
+                                    <p class="text-xs underline" @click="onMentionClause(clause)">Mention</p>
+                                    <div class="flex space-x-2">
+                                        <p class="text-xs font-semibold text-green-400 underline decoration-green-400" @click="onEditStateClause(clause.id,CLAUSE_STATUSES.ACCEPTED)">Approve</p>
+                                        <p class="text-xs font-semibold text-red-400 underline decoration-red-400" @click="onEditStateClause(clause.id,CLAUSE_STATUSES.REJECTED)">Reject</p>
+                                    </div>
+                                </div>
                             </div>
-                        </template>
-                        <template v-else>
-                            <p class="w-full p-2 border rounded-md " :class="[!clause.draft ? 'bg-gray-200' : '']"></p>
-                        </template>
-                    </div>
+                        </span>
+                    </span>
                 </span>
-            </div>
-            <div v-else-if="contractClauses && contractClauses.length == 0 && !isLoadingClauses">
-                <p>No clauses yet</p>
             </div>
             <div v-else>
                 <LoadingSpinner :isLoading="isLoadingClauses"/>
             </div>
         </div>
-        <div v-else-if="!contract && !isLoadingContract">
+        <div v-else-if="!contract.id && !isLoadingContract">
             <p>No Contract Found</p>
         </div>
         <div v-else>
@@ -94,7 +122,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
@@ -102,9 +130,10 @@ import { db } from '@/firebase/main';
 import { onSnapshot, query, orderBy, collection, addDoc, Timestamp, where, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import { getDocsFromCollectionWhere } from '@/firebase/utils';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/vue/20/solid';
-import { PencilSquareIcon } from '@heroicons/vue/24/outline';
+import { PencilSquareIcon, TrashIcon, PaperAirplaneIcon } from '@heroicons/vue/24/outline';
 import type { ChatRoom, Message, Contract, Clause } from '@/types';
 import { convertTimestampToDate, isFirestoreTimestamp } from '@/firebase/utils';
+import router from '@/router';
 const CHATROOMS_COLLECTION = import.meta.env.VITE_CHATROOMS_COLLECTION as string;
 const MESSAGES_COLLECTION = import.meta.env.VITE_MESSAGES_COLLECTION as string;
 const CONTRACTS_COLLECTION = import.meta.env.VITE_CONTRACTS_COLLECTION as string;
@@ -122,19 +151,48 @@ const isLoadingContract = ref(false);
 const isLoadingClauses = ref(false);
 const chatRoom = ref({} as ChatRoom);
 const contract = ref({} as Contract);
-const contractClauses = ref([] as Clause[]);
+const userClauses = ref([] as Clause[]);
+const otherClauses = ref([] as Clause[]);
 const message = ref({} as Message);
+const clauseMentionned = ref({} as Clause);
 const messages = ref([] as Message[])
 const CLAUSE_STATUSES = useMainStore().CLAUSE_STATUSES;
 let stopChatRoomMessagesSubscription:any;
 let stopContractSubscription:any;
-let stopContractClauseSubscription:any;
+let stopUserClauses:any;
+let stopOtherClauses:any;
+
+const stopContractWatch = watch(contract,(newVal,oldVal) => {
+    if(newVal.id) {
+        stopUserClauses = onSnapshot(query(collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`), where('authorId','==', user.value.uid), orderBy('createdAt','asc')), (snapshot) => {
+        isLoadingClauses.value = true;
+        console.log("user clauses changed")
+        userClauses.value = snapshot.docs.map((doc) => {
+            return {
+                ...doc.data()
+            } as Clause;
+        });
+        isLoadingClauses.value = false;
+    })
+        stopOtherClauses = onSnapshot(query(collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`), where('authorId','!=', user.value.uid),where('draft','==', false)), (snapshot) => {
+            isLoadingClauses.value = true;
+            console.log("other clauses changed")
+            otherClauses.value = snapshot.docs.map((doc) => {
+                return {
+                    ...doc.data()
+                } as Clause;
+            });
+            isLoadingClauses.value = false;
+        })
+    }
+})
+
 const loadChatroom = async () => {
     // fetch chatroom with adid as adid
     isLoadingChatRoom.value = true;
     const chatroomDocs = await getDocsFromCollectionWhere(CHATROOMS_COLLECTION, 'adId', '==', props.adId);
     const chatroom = chatroomDocs[0];
-    if(!chatroom) return;
+    if(!chatroom) throw new Error("Chatroom not found");
     chatRoom.value = {
         ...chatroom
     } as ChatRoom;
@@ -155,24 +213,20 @@ const loadChatroom = async () => {
         contract.value = snapshot.docs[0].data() as Contract;
         isLoadingContract.value = false;
     })
-    stopContractClauseSubscription = onSnapshot(query(collection(db, `${CONTRACTS_COLLECTION}/${props.adId}/${CLAUSES_COLLECTION}`), orderBy('createdAt','asc')), (snapshot) => {
-        isLoadingClauses.value = true;
-        console.log("clauses changed")
-        contractClauses.value = snapshot.docs.map((doc) => {
-            return {
-                ...doc.data()
-            } as Clause;
-        });
-        isLoadingClauses.value = false;
-    })
 }
 onMounted(async () => {
-    await loadChatroom();
+    try{
+        await loadChatroom();
+    } catch(e:any) {
+        if(e.message == "Chatroom not found") router.push('/')
+    }
 })
 onBeforeUnmount(()=>{
     if(stopChatRoomMessagesSubscription) stopChatRoomMessagesSubscription();
     if(stopContractSubscription) stopContractSubscription();
-    if(stopContractClauseSubscription) stopContractClauseSubscription();
+    if(stopUserClauses) stopUserClauses();
+    if(stopOtherClauses) stopOtherClauses();
+    stopContractWatch();
 })
 const isSendingMessage = ref(false);
 const onSendMessage = async () => {
@@ -182,9 +236,12 @@ const onSendMessage = async () => {
     if(!user.value) return;
     if(!profile.value) return;
     const messageRef = collection(db, CHATROOMS_COLLECTION, chatRoom.value.id, MESSAGES_COLLECTION);
+    message.value.quote = clauseMentionned.value;
     message.value.createdAt = new Date();
     message.value.senderId = user.value.uid;
     await addDoc(messageRef, message.value);
+    message.value.text = '';
+    clauseMentionned.value = {} as Clause;
     isSendingMessage.value = false
 }
 const fromNow = (date:Timestamp) => {
@@ -215,8 +272,16 @@ const showIfPreviousMessageIsDifferent = (index:number) => {
     return false;
 }
 
+const onMentionClause = (clause:Clause) => {
+    if(!clause || !clause.id || clause.draft) return;
+    clauseMentionned.value = clause;
+}
+const onRemoveMentionnedClause = () => {
+    clauseMentionned.value = {} as Clause;
+}
+
 const onAddClauseDraft = async () => {
-    const contractRef = collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`);
+    const clauseRef = collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`);
     const clause = {
         id: Math.random().toString(36).substring(7),
         text: '',
@@ -226,31 +291,36 @@ const onAddClauseDraft = async () => {
         createdAt: new Date(),
         updatedAt: new Date(),
     }
-    console.log("onAddClauseDraft", contractRef, contract.value.id)
-    await addDoc(contractRef,clause)
+    console.log("onAddClauseDraft", clauseRef, clause.id)
+    await setDoc(doc(clauseRef,clause.id), clause);
 }
 const onRemoveClause = async (id:string) => {
-    const contractRef = collection(db, `${CONTRACTS_COLLECTION}/${props.adId}/${CLAUSES_COLLECTION}`);
-    await deleteDoc(doc(contractRef, contract.value.id));
+    console.log("onRemoveClause", id)
+    if(!id || !contract.value.id) return;
+    const clauseRef = collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`);
+    await deleteDoc(doc(clauseRef, id));
+    if(clauseMentionned.value.id == id) clauseMentionned.value = {} as Clause;
 }
-const onEditClause = async (id:string) => {
+const onEditDrafClause = async (id:string) => {
     console.log("onEditClause", id)
-    const contractRef = collection(db, `${CONTRACTS_COLLECTION}/${props.adId}/${CLAUSES_COLLECTION}`);
-    await setDoc(doc(contractRef, contract.value.id), {draft:true}, {merge:true})
+    if(!id || !contract.value.id) return;
+    const clauseRef = collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`);
+    await setDoc(doc(clauseRef, id), {draft:true}, {merge:true})
+    if(clauseMentionned.value.id == id) clauseMentionned.value = {} as Clause;
 }
-const onConfirmClauseDraft = async (id:string) => {
-    console.log("onEditClause", id)
-    const contractRef = collection(db, `${CONTRACTS_COLLECTION}/${props.adId}/${CLAUSES_COLLECTION}`);
-    await setDoc(doc(contractRef, contract.value.id), {draft:false}, {merge:true})
+const onEditStateClause = async (id:string,state:string) => {
+    console.log("onEditClause", id, state)
+    if(!id || !contract.value.id) return;
+    if(!Object.values(CLAUSE_STATUSES).includes(state)) return;
+    const clauseRef = collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`);
+    await setDoc(doc(clauseRef, id), {state}, {merge:true})
+    if(clauseMentionned.value.id == id) clauseMentionned.value = {} as Clause;
 }
-const sellerContractClauses = computed(() => {
-    if(!contractClauses.value) return [];
-    if(contract.value.sellerId !== user.value.uid) return contractClauses.value.filter((clause) => (clause.authorId === contract.value.sellerId) && !clause.draft); 
-    else contractClauses.value.filter((clause) => clause.authorId === contract.value.sellerId);
-})
-const buyerContractClauses = computed(() => {
-    if(!contractClauses.value) return [];
-    if(contract.value.buyerId !== user.value.uid) return contractClauses.value.filter((clause) => (clause.authorId === contract.value.buyerId) && !clause.draft); 
-    else contractClauses.value.filter((clause) => clause.authorId === contract.value.buyerId);
-})
+const onConfirmClauseDraft = async (clause:Clause) => {
+    console.log("onEditClause", clause)
+    if(!clause || !contract.value.id) return;
+    clause.draft = false;
+    const clauseRef = collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`);
+    await setDoc(doc(clauseRef, clause.id), clause, {merge:true})
+}
 </script>

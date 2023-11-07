@@ -85,4 +85,7 @@ export type Message = {
     text:string,
     createdAt:Timestamp | Date,
     read:boolean,
+    quote?:{
+        text:string,
+    },
 }

@@ -76,6 +76,9 @@ export type Message = {
     text:string,
     createdAt:Date,
     read:boolean,
+    quote?:{
+        text:string,
+    },
 };
 export type Clause = {
     id: string;
