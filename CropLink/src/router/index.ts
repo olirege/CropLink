@@ -54,6 +54,13 @@ const router = createRouter({
       component: () => import('../views/MessagingView.vue'),
       meta: {requiresAuth: true},
       props: true,
+    },
+    {
+      path: '/banking/:adId',
+      name: 'banking',
+      component: () => import('../views/BankingView.vue'),
+      meta: {requiresAuth: true},
+      props: true,
     }
   ]
 })

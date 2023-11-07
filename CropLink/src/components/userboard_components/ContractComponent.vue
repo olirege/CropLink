@@ -74,6 +74,12 @@
                     >Cancel
                 </button>
             </div>
+            <button
+                @click="onProceed"
+                v-if="contract.ready?.includes(contract.sellerId) && contract.ready?.includes(contract.buyerId)"
+                class="bg-yellow-500 text-white px-4 h-8 rounded-md hover:bg-yellow-400 transition duration-300 ease-in-out"
+                >Proceed
+            </button>
         </div>
         <div v-else>
             <LoadingSpinner :isLoading="isLoadingClauses"/>
@@ -97,6 +103,7 @@ import { CheckCircleIcon } from '@heroicons/vue/20/solid';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import type { Contract, Clause } from '@/types';
 import { convertTimestampToDate, isFirestoreTimestamp } from '@/firebase/utils';
+import router from '@/router';
 const emits = defineEmits(['onMentionClause']);
 const props = defineProps({
     adId: {
@@ -198,6 +205,10 @@ const onCancelReadyToProceed = async () => {
     console.log("onCancelReadyToProceed", contract.value.id, user.value.uid)
     const contractRef = collection(db, CONTRACTS_COLLECTION);
     await updateDoc(doc(contractRef,contract.value.id),{ready:arrayRemove(user.value.uid)})
+}
+const onProceed = () => {
+    if(!props.adId) return
+    router.push({name:'banking',params:{adId:props.adId}})
 }
 onMounted(async () => {
     stopContractSubscription = onSnapshot(query(collection(db, CONTRACTS_COLLECTION),where('adId','==', props.adId), orderBy('createdAt','asc')), (snapshot) => {
