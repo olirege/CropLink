@@ -11,9 +11,10 @@
                         </div>
                         <div :class="[message.senderId != user.uid ? 'justify-end' : 'justify-start', 'flex']">
                             <div class="flex flex-col space-y-1">
-                                <p v-if="message.quote" 
+                                <p v-if="message.quote && message.quote.text" 
                                 class="truncate bg-gray-100 rounded-md p-2 max-w-xs md:max-w-md text-xs rounded-md p-1 bg-slate-200">
-                                 <span class="font-bold">clause:</span> <span class="italic">{{ message.quote.text }}</span></p>
+                                 <span class="font-bold">clause:</span> <span class="italic">{{ message.quote.text }}</span>
+                                </p>
                                 <p :class="[message.senderId === user.uid ? 'bg-blue-500 text-white' : 'bg-gray-100', 'rounded-md p-2 max-w-xs md:max-w-md', message.quote ? 'ml-2' : '']">
                                     {{ message.text }}
                                 </p>
@@ -60,7 +61,7 @@
             <div v-if="!isLoadingClauses" class="flex flex-col space-y-4">
                 <span>
                     <span v-if="userClauses && userClauses.length > 0">
-                        <label class="text-lg font-semibold border-b pb-2">{{ profile && profile.name ? `${profile.name}'s ` : 'My ' }}clauses</label>
+                        <label class="text-lg font-semibold border-b pb-2">{{ profile && profile.name ? `${profile.name}'s ` : 'Your ' }}clauses</label>
                         <span class="flex flex-col space-y-2">
                             <div v-for="clause in userClauses" class="relative break-words">
                                 <textarea class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0" v-if="clause.draft" v-model="clause.text"></textarea>
@@ -79,9 +80,9 @@
                                     }">{{ clause.state }}</p>
                                 </div>
                                 <div class="flex items-center space-x-1 absolute top-1 right-1">
-                                    <CheckCircleIcon class="h-4 w-4 text-green-400" @click="onConfirmClauseDraft(clause)" v-if="clause.draft"/>
-                                    <PencilSquareIcon class="h-4 w-4 text-blue-400" v-else @click="onEditDrafClause(clause.id)"/>
-                                    <TrashIcon class="h-4 w-4" @click="onRemoveClause(clause.id)" />
+                                    <CheckCircleIcon class="h-5 w-5 text-green-400" @click="onConfirmClauseDraft(clause)" v-if="clause.draft"/>
+                                    <PencilSquareIcon class="h-5 w-5 text-blue-400" v-else @click="onEditDrafClause(clause.id)"/>
+                                    <TrashIcon class="h-5 w-5" @click="onRemoveClause(clause.id)" />
                                 </div>
                             </div>
                         </span>
@@ -108,7 +109,11 @@
                         </span>
                     </span>
                 </span>
-                <div class="w-full flex justify-end">
+                <div class="w-full flex justify-between">
+                    <p v-if="!contract.ready?.includes(contract.sellerId) || !contract.ready?.includes(contract.buyerId)">
+                        <span v-if="contract.ready?.includes(contract.sellerId)">{{ contract.sellerId.substring(0,5) }} is ready</span>
+                        <span v-if="contract.ready?.includes(contract.buyerId)">{{ contract.buyerId.substring(0,5) }} is ready</span>
+                    </p>
                     <button
                         @click="onReadyToProceed"
                         v-if="!contract.ready.includes(user.uid)" 
@@ -338,14 +343,17 @@ const onConfirmClauseDraft = async (clause:Clause) => {
     await setDoc(doc(clauseRef, clause.id), clause, {merge:true})
 }
 const onReadyToProceed = async () => {
-    if(!contract.value.id || user.value.uid) return
-    if(contract.value.ready.includes(user.value.uid)) return
+    console.log(contract.value)
+    if(!contract.value.id || !user.value.uid) return
+    if(contract.value && contract.value.ready && contract.value.ready.includes(user.value.uid)) return
+    console.log("onReadyToProceed", contract.value.id, user.value.uid)
     const contractRef = collection(db, CONTRACTS_COLLECTION);
     await updateDoc(doc(contractRef,contract.value.id),{ready:arrayUnion(user.value.uid)})
 }
 const onCancelReadyToProceed = async () => {
-    if(!contract.value.id || user.value.uid) return
-    if(!contract.value.ready.includes(user.value.uid)) return
+    if(!contract.value.id || !user.value.uid) return
+    if(contract.value && contract.value.ready && !contract.value.ready.includes(user.value.uid)) return
+    console.log("onCancelReadyToProceed", contract.value.id, user.value.uid)
     const contractRef = collection(db, CONTRACTS_COLLECTION);
     await updateDoc(doc(contractRef,contract.value.id),{ready:arrayRemove(user.value.uid)})
 }

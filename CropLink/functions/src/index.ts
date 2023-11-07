@@ -497,7 +497,6 @@ export const terminateBidSession = onSchedule({
                 sellerId: sellerId,
                 buyerId: buyerId,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                clauses: [],
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                 status: "pending",
                 endedAt: "",
