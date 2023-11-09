@@ -8,12 +8,14 @@ import { ERROR_CODES } from "./errors";
 import { isAdmin, deleteImageFromBucket } from "./utils";
 import type { Ad } from "./types";
 import * as sharp from "sharp";
+import axios from "axios";
 const service = require("../service/service.json");
 admin.initializeApp({
     credential: admin.credential.cert(service as admin.ServiceAccount),
     storageBucket: process.env.BUCKETURL,
 });
 const callableOptions: CallableOptions = {
+    cors: true,
     memory: "512MB" as MemoryOption,
     timeoutSeconds: 60,
     region: "northamerica-northeast1",
@@ -510,3 +512,162 @@ export const terminateBidSession = onSchedule({
         logger.info("terminateBidSession", "success");
     }
 );
+
+export const createTransaction = onCall(callableOptions, async (request:CallableRequest) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    // if (!request.data) {
+    //     throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    // }
+    try {
+        // const response = await new Promise((resolve) => {
+        //     setTimeout(() => {
+        //         resolve({ ...request.data, id: "1234567890" });
+        //     }
+        // , 1000);
+        // });
+        const authB64 = Buffer.from(`${process.env.ESCROW_EMAIL}:${process.env.ESCROW_API_KEY}`).toString("base64");
+        axios.defaults.headers.common["Authorization"] = `Bearer ${authB64}`;
+        const response = await axios.post(process.env.ESCROW_API_PAY_URL as string, {
+            "currency": "usd",
+            "description": "Perfect sedan for the snow",
+            "reference": "test-transact",
+            "return_url": "https://www.escrow.com",
+            "redirect_type": "manual",
+            "items": [
+                {
+                    "extra_attributes": {
+                        "make": "BMW",
+                        "model": "328xi",
+                        "year": "2008",
+                    },
+                    "fees": [
+                        {
+                            "payer_customer": "me",
+                            "split": "1",
+                            "type": "escrow",
+                        },
+                    ],
+                    "inspection_period": 259200,
+                    "quantity": 1,
+                    "schedule": [
+                        {
+                            "amount": 8000,
+                            "payer_customer": "john.wick@test.escrow.com",
+                            "beneficiary_customer": "me",
+                        },
+                    ],
+                    "title": "BMW 328xi",
+                    "type": "motor_vehicle",
+                },
+            ],
+            "parties": [
+                {
+                    "address": {
+                        "line1": "180 Montgomery St",
+                        "line2": "Suite 650",
+                        "city": "San Francisco",
+                        "state": "CA",
+                        "country": "US",
+                        "post_code": "94104",
+                    },
+                    "agreed": true,
+                    "customer": "john.wick@test.escrow.com",
+                    "date_of_birth": "1980-07-18",
+                    "first_name": "John",
+                    "initiator": false,
+                    "last_name": "Wick",
+                    "phone_number": "4155555555",
+                    "lock_email": true,
+                    "role": "buyer",
+                },
+                {
+                    "agreed": true,
+                    "customer": "me",
+                    "initiator": true,
+                    "role": "seller",
+                },
+            ],
+        });
+        return response.data;
+    } catch (error) {
+        logger.error("Error creating transaction:", error);
+        return error;
+    }
+});
+export const createEscrowAccount = onCall(callableOptions, async (request:CallableRequest) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.auth.token.email_verified) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.auth.uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        type Response = {
+            id: string;
+            status: string;
+        };
+        const response = await new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ ...request.data, id: "1234567890", status: "success" });
+            }
+        , 1000);
+        }) as Response;
+        if (response && response.status === "success") {
+            // update user profile
+            const uid = request.auth.uid;
+            await admin.firestore().collection("users").doc(uid).set({ escrowAccountId: response.id, hasEscrow: true }, { merge: true });
+            return response;
+        } else {
+            throw new HttpsError("internal", ERROR_CODES["internal"]);
+        }
+    } catch (error) {
+        logger.error("Error creating transaction:", error);
+        return error;
+    }
+});
+export const linkEscrowAccount = onCall(callableOptions, async (request:CallableRequest) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    logger.info("linkEscrowAccount token", request.auth.token);
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.auth.token.email_verified) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.auth.uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        type Response = {
+            status: string;
+        };
+        // TODO - get escrow account with creds, then update user profile
+        const response = await new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ status: "success" });
+            }
+        , 1000);
+        }) as Response;
+        if (response && response.status === "success") {
+            // update user profile
+            const uid = request.auth.uid;
+            await admin.firestore().collection("users").doc(uid).set({ escrowAuth: { ...request.data }, hasEscrow: true }, { merge: true });
+            return response;
+        } else {
+            throw new HttpsError("internal", ERROR_CODES["internal"]);
+        }
+    } catch (error) {
+        logger.error("Error creating transaction:", error);
+        return error;
+    }
+});

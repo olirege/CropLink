@@ -55,10 +55,22 @@
                     </div>
                 </TabPanel>
                 <TabPanel>
-                    Contract
+                    <ContractContentComponent :contracts="contracts.docs ? contracts.docs : [] " v-if="contracts.docs && contracts.docs.length > 0 && !isLoadingContracts" />
+                    <div v-else-if="isLoadingContracts">
+                        <LoadingSpinner :isLoading ="isLoadingContracts"/>
+                    </div>
+                    <span v-else>
+                        <p>No contracts yet</p>
+                    </span>
                 </TabPanel>
                 <TabPanel>
-                    Messages
+                    <ChatRoomsContentComponent :chatrooms="chatrooms.docs ? chatrooms.docs : [] " v-if="chatrooms.docs && chatrooms.docs.length > 0 && !isLoadingChatRooms" />
+                    <div v-else-if="isLoadingChatRooms">
+                        <LoadingSpinner :isLoading ="isLoadingChatRooms"/>
+                    </div>
+                    <span v-else>
+                        <p>No conversations yet</p>
+                    </span>
                 </TabPanel>
                 <TabPanel>
                     <BidContentComponent :bids="bids.docs ? bids.docs : [] " v-if="bids.docs && bids.docs.length > 0 && !isLoadingBids" />
@@ -80,10 +92,12 @@ import { ref, type Ref, watch, onMounted } from 'vue';
 import { TabGroup, TabList, Tab, TabPanel } from '@headlessui/vue'
 import { useModalStore } from '@/stores/modals';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
-import type { SellerAd, BuyerAd, Bid } from '@/types';
+import type { SellerAd, BuyerAd, Bid, Contract, ChatRoom } from '@/types';
 import SellerContentComponent from '@/components/userboard_components/SellerContentComponent.vue';
 import BuyerContentComponent from '@/components/userboard_components/BuyerContentComponent.vue';
 import BidContentComponent from '@/components/userboard_components/BidContentComponent.vue';
+import ContractContentComponent from '@/components/userboard_components/ContractsContentComponent.vue';
+import ChatRoomsContentComponent from '@/components/userboard_components/ChatRoomsContentComponent.vue';
 import { getPaginatedCollectionGroupWhere }  from '@/firebase/utils';
 import { query, collectionGroup, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/firebase/main';
@@ -102,9 +116,35 @@ const TAB_CATEGORIES = {
     MESSAGES: "Messages",
 }
 
-const ads: Ref<{lastvisible:SellerAd|BuyerAd, docs:SellerAd[]|BuyerAd[]}> = ref([]);
-const bids: Ref<{lastvisible:Bid, docs:Bid[]}> = ref([]);
+const ads: Ref<{lastVisible:SellerAd|BuyerAd, docs:SellerAd[]|BuyerAd[]}> = ref([]);
+const bids: Ref<{lastVisible:Bid, docs:Bid[]}> = ref([]);
+const contracts: Ref<{lastVisible:Contract[], docs:Contract[]}> = ref([]);
+const chatrooms: Ref<{lastVisible:ChatRoom, docs:ChatRoom[]}> = ref([]);
 const isLoadingAds = ref(false);
+const isLoadingContracts = ref(false);
+const isLoadingChatRooms = ref(false);
+const isLoadingBids = ref(false);
+
+let stopSubscription: any;
+
+const loadChatRooms = async () => {
+    isLoadingChatRooms.value = true;
+    const buyerChatrooms = await getPaginatedCollectionGroupWhere('chatrooms', 'sellerId', '==', user.value.uid , ['createdAt','desc'], 10);
+    const sellerChatrooms = await getPaginatedCollectionGroupWhere('chatrooms', 'buyerId', '==', user.value.uid , ['createdAt','desc'], 10);
+    chatrooms.value.docs = [...buyerChatrooms.docs as ChatRoom[], ...sellerChatrooms.docs as ChatRoom[]];
+    chatrooms.value.lastVisible = [buyerChatrooms.lastVisible as ChatRoom, sellerChatrooms.lastVisible as ChatRoom];
+    isLoadingChatRooms.value = false;
+}
+
+const loadContracts = async () => {
+    isLoadingContracts.value = true;
+    const sellerContracts = await getPaginatedCollectionGroupWhere('contracts', 'sellerId', '==', user.value.uid , ['createdAt','desc'], 10);
+    const buyerContracts = await getPaginatedCollectionGroupWhere('contracts', 'buyerId', '==', user.value.uid , ['createdAt','desc'], 10);
+    contracts.value.docs = [...sellerContracts.docs as Contract[], ...buyerContracts.docs as Contract[]];
+    contracts.value.lastVisible = [sellerContracts.lastVisible as Contract, buyerContracts.lastVisible as Contract];
+    isLoadingContracts.value = false;
+}
+
 const loadAds = async () => {
     isLoadingAds.value = true;
     ads.value = await getPaginatedCollectionGroupWhere('ads', 'uid', '==', user.value.uid , ['createdAt','desc'], 10);
@@ -121,7 +161,6 @@ const loadAds = async () => {
     isLoadingAds.value = false;
 }
 
-const isLoadingBids = ref(false);
 const loadBids = async () => {
     isLoadingBids.value = true;
     bids.value = await getPaginatedCollectionGroupWhere('bids', 'buyerId', '==', user.value.uid , ['createdAt','desc'], 10);
@@ -137,14 +176,17 @@ const loadBids = async () => {
     })
     isLoadingBids.value = false;
 }
-let stopSubscription: any;
 watch(selectedTab, async (newVal, oldVal) => {
     if(selectedTab.value == 0) {
-        // fetch user ads
         await loadAds();
     }
+    if(selectedTab.value == 1) {
+        await loadContracts();
+    }
+    if(selectedTab.value == 2) {
+        await loadChatRooms();
+    }
     if(selectedTab.value == 3) {
-        // fetch user bids
         await loadBids();
     }
     if(oldVal == 3 || oldVal == 0) {

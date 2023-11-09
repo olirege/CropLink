@@ -28,3 +28,15 @@ export function cancelBidCallable() {
     console.log("cancelBidCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "cancelBid");
 }
+export function createTransactionCallable() {
+    console.log("createTransactionCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "createTransaction");
+}
+export function createEscrowAccountCallable() {
+    console.log("createEscrowAccountCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "createEscrowAccount");
+}
+export function linkEscrowAccountCallable() {
+    console.log("linkEscrowAccountCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "linkEscrowAccount");
+}

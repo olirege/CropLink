@@ -1,1 +1,0 @@
-import{d as t,e as a,f as r,g as e,t as s,F as o}from"./index-a18e6c1a.js";const i=e("h1",null," Banking ",-1),p=t({__name:"BankingView",props:{adId:{type:String,required:!0}},setup(n){return(l,c)=>(a(),r(o,null,[i,e("p",null,s(n.adId),1)],64))}});export{p as default};

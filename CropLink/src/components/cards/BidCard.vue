@@ -15,14 +15,33 @@
             <label class="block text-sm font-medium text-gray-700">Time</label>
             <p class="text-sm">{{ isFirestoreTimestamp(bid.createdAt) ? convertTimestampToDate(bid.createdAt) : bid.createdAt  }}</p>
         </div>
-        <div class="flex flex-row justify-end" v-if="bid.status == BID_STATUSES.ACCEPTED">
-            <button @click="onContactWinner(bid.adId)" class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Contact</button>
+        <span>
+            <div class="flex flex-row space-x-4">
+                <label class="block text-sm font-medium text-gray-700">Last updated</label>
+                <p class="text-sm">{{ isFirestoreTimestamp(bid.updatedAt) ? convertTimestampToDate(bid.updatedAt) : bid.updatedAt }}</p>
+            </div>
+        </span>
+        <div class="flex justify-end mt-2 space-x-4">
+            <ButtonWithLoading 
+                :isLoading="isCancellingBid == bid.id" 
+                v-if="bid.status === BID_STATUSES.PENDING"
+                @click="onCancelBid(bid.id as string)"
+                class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                Cancel Bid
+            </ButtonWithLoading>
+            <button
+            @click="onViewAd(bid.adId)"
+            class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            >
+                View
+            </button>
+            <button @click="onContact(bid.adId)" class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Contact</button>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { isFirestoreTimestamp, convertTimestampToDate } from '@/firebase/utils';
-import { type PropType } from 'vue';
+import { type PropType, ref } from 'vue';
 import { useMainStore} from '@/stores/main';
 import { useRouter } from 'vue-router';
 import type { Bid } from '@/types';
@@ -34,7 +53,19 @@ const props = defineProps({
 })
 const BID_STATUSES = useMainStore().BID_STATUSES;
 const router = useRouter();
-const onContactWinner = (adId:string) => {
+const isCancellingBid = ref("");
+const onCancelBid = async (bidId:string) => {
+    console.log("Cancelling bid", bidId);
+    isCancellingBid.value = bidId;
+    await useMainStore().cancelUserBid(bidId);
+    isCancellingBid.value = "";
+}
+const onViewAd = (adId:string) => {
+    if(!adId) return;
+    router.push({name: 'ad', params: {adId: adId},});
+}
+const onContact = (adId:string) => {
+    if (!adId) return;
     console.log("contactWinner", adId);
     router.push({name: 'messaging', params: {adId: adId}});
 }

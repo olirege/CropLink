@@ -57,8 +57,8 @@ const props = defineProps({
     }
 })
 
-const ad = ref({} as SellerAd);
 const bids:Ref<Bid[]> = ref([]);
+const ad = ref({} as SellerAd);
 const isLoadingAd = ref(false);
 let stopSubscription: any;
 const loadAd = async () => {

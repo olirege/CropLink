@@ -12,4 +12,5 @@ export const ERROR_CODES:ERROR_CODES = {
     "bid-already-cancelled": "This bid has already been cancelled.",
     "bid-already-accepted": "This bid has already been accepted.",
     "bid-already-rejected": "This bid has already been rejected.",
+    "internal": "An internal error occurred. Please try again later.",
 };

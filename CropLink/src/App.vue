@@ -1,6 +1,6 @@
 
 <template>
-  <header  class="bg-blue-900 text-white p-4">
+  <header  class="relative bg-blue-900 text-white p-4">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center">
         <img src="@/assets/croplink_logo.png" alt="CropLink Logo" class="w-10 h-10 mr-2 rounded-sm">
@@ -16,10 +16,12 @@
         <a class="hover:underline" @click="onSignout">Signout</a>
       </nav>
     </div>
+    <HeaderNotificationDropdown v-show="dropdowns.show"/>
   </header>
   <AddAdModal v-if="modals['addad']"/>
   <EditAdModal v-if="modals['editad']"/>
   <AddBidModal v-if="modals['addbid']"/>
+  <StateNotificationToast v-show="notifications.show"/>
   <div class="w-full">
     <RouterView />
   </div>
@@ -32,10 +34,12 @@ import { useModalStore } from '@/stores/modals';
 import AddAdModal from '@/components/modals/AddAdModal.vue';
 import EditAdModal from '@/components/modals/EditAdModal.vue'
 import AddBidModal from '@/components/modals/AddBidModal.vue';
+import StateNotificationToast from '@/components/toasts/StateNotificationToast.vue';
+import HeaderNotificationDropdown from './components/toasts/HeaderNotificationDropdown.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 const { profile } = storeToRefs(useMainStore());
-const { modals } = storeToRefs(useModalStore());
+const { modals, notifications, dropdowns } = storeToRefs(useModalStore());
 const selectedPage = ref(0);
 
 const router = useRouter();

@@ -7,7 +7,49 @@ export const useModalStore = defineStore('ModalStore', () => {
         editad: false,
         context: {},
     })
+    const NOTIFICATION_TYPES = {
+        SUCCESS: "success",
+        ERROR: "error",
+        INFO: "info",
+        WARNING: "warning",
+    }
+    const notifications = reactive({
+        show: false,
+        message: "",
+        type: "",
+        context: {},
+    })
+    const dropdowns = reactive({
+        show: false,
+        message: "",
+        type: "",
+        context: {},
+    })
+    const resetNotification = () => {
+        notifications.show = false
+        notifications.message = ""
+        notifications.type = ""
+        notifications.context = {}
+    }
+    const resetModals = () => {
+        modals.addad = false
+        modals.addbid = false
+        modals.editad = false
+        modals.context = {}
+    }
+    const resetDropdowns = () => {
+        dropdowns.show = false
+        dropdowns.message = ""
+        dropdowns.type = ""
+        dropdowns.context = {}
+    }
     return {
-        modals, 
+        modals,
+        notifications,
+        dropdowns,
+        NOTIFICATION_TYPES,
+        resetNotification,
+        resetModals,
+        resetDropdowns,
    }
 })

@@ -2,7 +2,17 @@
 import { defineStore } from 'pinia'
 import { getDocument } from "../firebase/utils";
 import { ref, type Ref } from 'vue'
-import { createUserProfileCallable, createAdCallable, postAdCallable, placeBidCallable, cancelBidCallable, removeAdCallable, editAdCallable } from '@/firebase/callables';
+import { 
+  createUserProfileCallable, 
+  createAdCallable, 
+  postAdCallable, 
+  placeBidCallable, 
+  cancelBidCallable, 
+  removeAdCallable, 
+  editAdCallable,
+  createEscrowAccountCallable,
+  linkEscrowAccountCallable,
+ } from '@/firebase/callables';
 import type { User, Profile, BuyerAd, SellerAd } from '@/types';
 import { getAuth } from 'firebase/auth';
 export const useMainStore = defineStore('MainStore', () => {
@@ -166,6 +176,32 @@ export const useMainStore = defineStore('MainStore', () => {
       throw new Error(error);
     }
   }
+  const createEscrowAccount = createEscrowAccountCallable();
+  const createEscrowUserAccount = async (escrowUserAccountData:object) => {
+    try {
+      console.log("createEscrowUserAccount start");
+      console.log("createEscrowAccount", createEscrowAccount)
+      const escrowAccount = await createEscrowAccount(escrowUserAccountData);
+      console.log("createEscrowUserAccount res", escrowAccount);
+      return escrowAccount;
+    } catch (error:any) {
+      console.log("createEscrowUserAccount error", error);
+      throw new Error(error);
+    }
+  }
+  const linkEscrowAccount = linkEscrowAccountCallable();
+  const linkEscrowUserAccount = async (escrowUserAccountData:object) => {
+    try {
+      console.log("linkEscrowUserAccount start");
+      console.log("createEscrowAccount", createEscrowAccount)
+      const escrowAccount = await linkEscrowAccount(escrowUserAccountData);
+      console.log("linkEscrowUserAccount res", escrowAccount);
+      return escrowAccount;
+    } catch (error:any) {
+      console.log("linkEscrowUserAccount error", error);
+      throw new Error(error);
+    }
+  }
   return { 
     user,
     setUser,
@@ -187,5 +223,7 @@ export const useMainStore = defineStore('MainStore', () => {
     removeUserAd,
     editUserAd,
     CLAUSE_STATUSES,
+    createEscrowUserAccount,
+    linkEscrowUserAccount,
    }
 })

@@ -49,7 +49,12 @@ export type BuyerAd = {
 };
 export type Profile = {
     name: string;
+    hasEscrow: boolean;
     accountType: string;
+    escrowAuth?: {
+        email: string;
+        apiKey: string;
+    };
 };
 export type Clause = {
     id: string;
