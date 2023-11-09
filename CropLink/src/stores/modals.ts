@@ -2,6 +2,7 @@ import { reactive } from 'vue'
 import { defineStore } from 'pinia'
 export const useModalStore = defineStore('ModalStore', () => {
     const modals = reactive({
+        addjob: false,
         addad: false,
         addbid: false,
         editad: false,

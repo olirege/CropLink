@@ -10,7 +10,7 @@
                 <p>No bids yet</p>
             </span>
             <span v-if="bids && bids.length > 0">
-                <BidCard v-for="bid in bids" :bid="bid" />
+                <BidCard v-for="bid in bids" :bid="bid" :showViewButton="false"/>
             </span>
         </div>
         <div v-else>

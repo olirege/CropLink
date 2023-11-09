@@ -51,16 +51,17 @@ export const getDocsFromCollectionWhere = async (collectionName: string, field: 
         return [];
     }
 };
-export const getPaginatedDocuments = async (collectionName: string, field: string, docLimit: number, startAfterDocument?: Document): Promise<PaginatedDocuments> => {
+export const getPaginatedDocuments = async (collectionName: string, orderField: array, docLimit: number, startAfterDocument?: Document): Promise<PaginatedDocuments> => {
+    console.log("getPaginatedDocuments", collectionName, orderField, docLimit, startAfterDocument)
     try {
         if(!startAfterDocument) {
-            const first = query(collection(db,collectionName), orderBy(field), limit(docLimit));
+            const first = query(collection(db,collectionName), orderBy(...orderField), limit(docLimit));
             const querySnapshots = await getDocs(first);
             const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
             const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];
             return {lastVisible: lastVisible as Document, docs: docs as Document[]}
         } else {
-            const next = query(collection(db,collectionName), orderBy(field), startAfter(startAfterDocument), limit(docLimit));
+            const next = query(collection(db,collectionName), orderBy(...orderField), startAfter(startAfterDocument), limit(docLimit));
             const querySnapshots = await getDocs(next);
             const docs = querySnapshots.docs.map((doc) => {return {id: doc.id, ...doc.data()}});
             const lastVisible = querySnapshots.docs[querySnapshots.docs.length-1];

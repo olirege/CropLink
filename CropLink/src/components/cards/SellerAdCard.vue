@@ -27,14 +27,15 @@
         <p class="text-sm mb-2">
                 <strong>bidding End time:</strong> {{ isFirestoreTimestamp(ad.biddingEndTime) ? convertTimestampToDate(ad.biddingEndTime) : ad.biddingEndTime }}
         </p>
-        <div class="flex justify-end mt-2 space-x-4" v-if="showButtons">
+        <div class="flex items-center justify-end mt-2 space-x-4" v-if="showButtons">
                 <CardButton 
                 @click="onEditAd(ad.id as string)"
                 v-if="!ad.live && ad.status != AD_STATUSES.SOLD"
                 >
                     Edit
                 </CardButton>
-                <CardButton 
+                <CardButton
+                :classes="'truncate'"
                 @click="onContactWinner(ad.id as string)"
                 v-if="!ad.live && ad.status == AD_STATUSES.SOLD"
                 >

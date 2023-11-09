@@ -1,6 +1,6 @@
 // import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { getDocument } from "../firebase/utils";
+import { getDocument, getDocuments } from "../firebase/utils";
 import { ref, type Ref } from 'vue'
 import { 
   createUserProfileCallable, 
@@ -202,6 +202,11 @@ export const useMainStore = defineStore('MainStore', () => {
       throw new Error(error);
     }
   }
+  const getProduce = async () => {
+    console.log('getProduce')
+    const produceDoc = await getDocuments("produce")
+    return produceDoc
+  }
   return { 
     user,
     setUser,
@@ -225,5 +230,6 @@ export const useMainStore = defineStore('MainStore', () => {
     CLAUSE_STATUSES,
     createEscrowUserAccount,
     linkEscrowUserAccount,
+    getProduce,
    }
 })

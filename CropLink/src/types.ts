@@ -95,3 +95,16 @@ export type Message = {
         text:string,
     },
 }
+export type Produce = {
+    id: string;
+    sub: string[];
+};
+export type Job = {
+    createdAt: Timestamp;
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    salary: string;
+    tasks: string[];
+};

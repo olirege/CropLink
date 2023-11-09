@@ -13,6 +13,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
+const emits = defineEmits(['onClick'])
 const props = defineProps({
     images: {
     type: Array,

@@ -16,16 +16,25 @@
             <label class="block text-sm font-medium text-gray-700">sellerId</label>
             <p class="text-sm">{{ contract.sellerId.substring(0,5) }}</p>
         </div>
+        <div class="w-full flex justify-end gap-4">
+            <CardButton @click="onView(contract.adId)" :classes="'w-20'">View</CardButton>
+        </div>
     </span>
 </template>
 <script setup lang="ts">
 import type { Contract } from '@/types';
 import { type PropType } from 'vue';
 import { isFirestoreTimestamp, convertTimestampToDate } from '@/firebase/utils';
+import CardButton from '@/components/props/CardButton.vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 const props = defineProps({
     contract: {
         type: Object as PropType<Contract>,
         required: true
     }
 })
+const onView = (adId: string) => {
+    router.push({ name: 'messaging', params: { adId } });
+}
 </script>

@@ -30,6 +30,7 @@
                 Cancel Bid
             </ButtonWithLoading>
             <button
+            v-if="showViewButton"
             @click="onViewAd(bid.adId)"
             class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
@@ -41,6 +42,7 @@
 </template>
 <script setup lang="ts">
 import { isFirestoreTimestamp, convertTimestampToDate } from '@/firebase/utils';
+import ButtonWithLoadingVue from '../props/ButtonWithLoading.vue';
 import { type PropType, ref } from 'vue';
 import { useMainStore} from '@/stores/main';
 import { useRouter } from 'vue-router';
@@ -49,6 +51,10 @@ const props = defineProps({
     bid: {
         type: Object as PropType<Bid>,
         required: true
+    },
+    showViewButton: {
+        type: Boolean,
+        default: true
     }
 })
 const BID_STATUSES = useMainStore().BID_STATUSES;

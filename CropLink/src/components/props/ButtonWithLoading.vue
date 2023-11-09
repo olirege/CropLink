@@ -1,5 +1,5 @@
 <template>
-    <button :class="classes" @click="handleClick" style="max-height: 50px; display: flex; align-items: center; justify-content: center;">
+    <button :class="classes" @click="handleClick" style="height: 40px; display: flex; align-items: center; justify-content: center;">
         <LoadingSpinner :isLoading="isLoading" :size="'h-5 w-5'"/>
         <slot v-if="!isLoading"></slot>      
     </button>

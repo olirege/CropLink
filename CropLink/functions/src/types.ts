@@ -3,6 +3,7 @@ export type Ad = {
     uid?: string;
     id?: string;
     type: string;
+    variety?: string;
     adType: string;
     yieldTonnage: number;
     price: number;

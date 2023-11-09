@@ -62,6 +62,7 @@ export const createUserProfile = onCall(callableOptions, async (request:Callable
         try {
             logger.info(typeof request.data, JSON.stringify(request.data));
             await admin.firestore().collection("users").doc(uid).set(request.data);
+            await admin.firestore().collection("ads").doc(uid).set({ id: uid, createdAt: admin.firestore.FieldValue.serverTimestamp(), samples: [], name: request.data.name });
             return request.data;
         } catch (error:any) {
             logger.error(error);
@@ -329,17 +330,21 @@ export const postAd = onCall(callableOptions, async (request:CallableRequest) =>
     if (!adId) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
-    const adRef = admin.firestore().collection("ads").doc(uid).collection("ads").doc(adId);
-    const adDoc = await adRef.get();
-    if (!adDoc.exists) {
+    const adRef = admin.firestore().collection("ads").doc(uid);
+    const adGroupRef = admin.firestore().collection("ads").doc(uid).collection("ads").doc(adId);
+    const adGroupDoc = await adGroupRef.get();
+    if (!adGroupDoc.exists) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
-    const ad = adDoc.data() as Ad;
-    if (ad.live) {
+    const adGroup = adGroupDoc.data() as Ad;
+    if (adGroup.live) {
         throw new HttpsError("invalid-argument", ERROR_CODES["ad-already-live"]);
     } else {
         try {
-            await adRef.set({ live: true, postedOn: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            if (adGroup.adType === "seller" && adGroup.resizedImages && adGroup.resizedImages.length > 0 && adGroup.variety) {
+                await adRef.set({ samples: admin.firestore.FieldValue.arrayUnion({ name: adGroup.variety, image: adGroup.resizedImages[0], adId: adId }) }, { merge: true });
+            }
+            await adGroupRef.set({ live: true, postedOn: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
             return { success: true };
         } catch (error:any) {
             logger.error(error);

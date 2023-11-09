@@ -33,7 +33,13 @@ const router = createRouter({
     {
       path: '/feed',
       name: 'feed',
-      component: () => import('../views/FeedView.vue')
+      component: () => import('../views/FeedView.vue'),
+    },
+    {
+      path: '/seller/:sellerName/:id',
+      name: 'seller-ads',
+      component: () => import('../views/SellerAdsView.vue'),
+      props: true,
     },
     {
       path: '/ad/:adId',

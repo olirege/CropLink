@@ -9,9 +9,19 @@
             </div>
         </div>
         <label class="block text-sm font-medium text-gray-700" for="type">Type</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="text" id="type" v-model="newCrop.type">
+        <Listbox
+        :items="produces"
+        v-model="newCrop.type"
+        placeholder="Select a Produce"
+        itemLabel="id"
+        />
         <label class="block text-sm font-medium text-gray-700" for="variety">Variety</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="text" id="variety" v-model="newCrop.variety">
+        <Listbox
+        :items="selectableVariety"
+        v-model="newCrop.variety"
+        placeholder="Select a Variety"
+        :disabled="!newCrop.type"
+        />
         <label class="block text-sm font-medium text-gray-700" for="yieldTonnage">Yield Tonnage</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="number" id="yieldTonnage" v-model="newCrop.yieldTonnage">
         <label class="block text-sm font-medium text-gray-700" for="expectedHarvestDate">Expected Harvest Date</label>
@@ -39,10 +49,12 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { type Ref, ref, reactive, onMounted, computed } from 'vue';
+import type { Produce } from '@/types';
 import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
+import Listbox from '@/components/props/Listbox.vue';
 const emits = defineEmits(["close"]);
 const { profile } = storeToRefs(useMainStore());
 const images = ref([]);
@@ -100,4 +112,27 @@ const validateCrop = ()=>{
     }
     return true;
 }
+
+const isLoadingProduce = ref(false);
+const produces:Ref<Produce[]> = ref([]);
+const loadProduce = async () => {
+    isLoadingProduce.value = true;
+    produces.value = await useMainStore().getProduce() as Produce[];
+    console.log("produce", produces.value);
+    isLoadingProduce.value = false;
+};
+const selectableVariety = computed(()=>{
+    if(newCrop.type === "") {
+        return [];
+    }
+    const produce = produces.value.find((produce)=>produce.id === newCrop.type);
+    if(produce) {
+        return produce.sub;
+    }
+    return [];
+})
+onMounted(async () => {
+    console.log("mounted");
+    await loadProduce();
+})
 </script>
