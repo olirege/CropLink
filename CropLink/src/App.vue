@@ -21,6 +21,9 @@
   <AddAdModal v-if="modals['addad']"/>
   <EditAdModal v-if="modals['editad']"/>
   <AddBidModal v-if="modals['addbid']"/>
+  <EditJobModal v-if="modals['editjob']"/>
+  <AddJobModal v-if="modals['addjob']"/>
+  <ConfirmRemoveModal v-if="modals['confirmremove']"/>
   <StateNotificationToast v-show="notifications.show"/>
   <div class="w-full">
     <RouterView />
@@ -34,6 +37,9 @@ import { useModalStore } from '@/stores/modals';
 import AddAdModal from '@/components/modals/AddAdModal.vue';
 import EditAdModal from '@/components/modals/EditAdModal.vue'
 import AddBidModal from '@/components/modals/AddBidModal.vue';
+import AddJobModal from './components/modals/AddJobModal.vue';
+import EditJobModal from './components/modals/EditJobModal.vue';
+import ConfirmRemoveModal from './components/modals/ConfirmRemoveModal.vue';
 import StateNotificationToast from '@/components/toasts/StateNotificationToast.vue';
 import HeaderNotificationDropdown from './components/toasts/HeaderNotificationDropdown.vue';
 import { ref } from 'vue';

@@ -25,15 +25,14 @@
                     >
                         <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-md bg-white p-6 text-left align-middle shadow-xl transition-all">
                             <DialogTitle as="h3" class="text-lg font-bold leading-6 text-gray-900">
-                                Edit Ad
+                                Are you sure? 
                             </DialogTitle>
                             <DialogDescription class="mt-2 mb-4">
                                 <p class="text-sm text-gray-500">
-                                    Edit an ad
+                                    Type <span class="font-bold">{{modals['context'].__key}}</span> to confirm
                                 </p>
                             </DialogDescription>
-                            <SellerEditAdForm @close="setIsOpen(false)" v-if="profile?.accountType === ACCOUNT_TYPES.SELLER" :ad="modals['context']"/>
-                            <BuyerEditAdForm @close="setIsOpen(false)" v-if="profile?.accountType === ACCOUNT_TYPES.BUYER" :ad="modals['context']"/>
+                            <ConfirmRemoveForm @close="setIsOpen(false)" :context="modals['context']"/>
                         </DialogPanel>
                     </TransitionChild>
                 </div>
@@ -42,10 +41,8 @@
     </TransitionRoot>
 </template>
 <script setup lang="ts">
-import SellerEditAdForm from '@/components/forms/SellerEditAdForm.vue';
-import BuyerEditAdForm from '@/components/forms/BuyerEditAdForm.vue';
+import ConfirmRemoveForm from '@/components/forms/ConfirmRemoveForm.vue';
 import { useModalStore } from '@/stores/modals';
-import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { 
@@ -57,12 +54,9 @@ import {
     DialogDescription,
 } from '@headlessui/vue'
 const { modals } = storeToRefs(useModalStore());
-const { profile } = storeToRefs(useMainStore());
-const ACCOUNT_TYPES = useMainStore().ACCOUNT_TYPES;
 const isOpen = ref(true)
 function setIsOpen(value:boolean) {
   isOpen.value = value
-  modals.value['editad'] = value;
-  modals.value['context'] = {};
+  modals.value['confirmremove'] = value;
 }
 </script>

@@ -87,12 +87,11 @@
           Dev Fill Form
         </CardButton>
         <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-          <ButtonWithLoadingVue
+          <ButtonWithLoading
           :isLoading="isLoading" 
-          @click="submitForm"
-          class="shadow bg-teal-400 hover:bg-teal-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
+          @click="submitForm">
             Submit
-          </ButtonWithLoadingVue>
+          </ButtonWithLoading>
           <button @click="$emit('cancel')">
             Cancel
           </button>
@@ -104,7 +103,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useMainStore } from '@/stores/main';
-import ButtonWithLoadingVue from '../props/ButtonWithLoading.vue';
+import ButtonWithLoading from '../props/ButtonWithLoading.vue';
 import CardButton from '../props/CardButton.vue';
 const emits = defineEmits(['success','failure', 'cancel']);
 const form = ref({

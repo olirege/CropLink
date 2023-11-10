@@ -101,8 +101,9 @@ export type Produce = {
 };
 export type Job = {
     createdAt: Timestamp;
-    id: string;
+    jobId: string;
     title: string;
+    live: boolean;
     description: string;
     location: string;
     salary: string;

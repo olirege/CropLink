@@ -3,9 +3,11 @@ import { defineStore } from 'pinia'
 export const useModalStore = defineStore('ModalStore', () => {
     const modals = reactive({
         addjob: false,
+        editjob: false,
         addad: false,
         addbid: false,
         editad: false,
+        confirmremove: false,
         context: {},
     })
     const NOTIFICATION_TYPES = {

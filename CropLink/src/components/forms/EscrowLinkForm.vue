@@ -22,13 +22,12 @@
             <span v-if="!editInputs">Edit</span>
             <span v-if="editInputs">Cancel</span>
         </button>
-        <ButtonWithLoadingVue
+        <ButtonWithLoading
         :isLoading="isLoading"
         v-if="editInputs"
-        @click="submitForm"
-        class="shadow bg-teal-400 hover:bg-teal-400 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded" type="submit">
+        @click="submitForm">
             Submit
-        </ButtonWithLoadingVue>
+        </ButtonWithLoading>
     </div>
     </span>
 </div>
@@ -36,7 +35,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useMainStore } from '@/stores/main';
-import ButtonWithLoadingVue from '../props/ButtonWithLoading.vue';
+import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
 const { profile } = storeToRefs(useMainStore());
 const emits = defineEmits(['success','failure']);

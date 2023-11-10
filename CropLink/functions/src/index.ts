@@ -676,3 +676,99 @@ export const linkEscrowAccount = onCall(callableOptions, async (request:Callable
         return error;
     }
 });
+export const createJobPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("createAd", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const jobId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await admin.firestore().collection("jobs").doc(uid).collection("jobs").doc(jobId).set({ ...request.data, jobId: jobId, createdAt: admin.firestore.FieldValue.serverTimestamp(), posterId: uid, live: false });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const postJobPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("postJobPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("jobs").doc(uid).collection("jobs").doc(request.data.jobId).set({ live: true, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const takeDownJobPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("takeDownJobPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("jobs").doc(uid).collection("jobs").doc(request.data.jobId).set({ live: false, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const editJobPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("editJobPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("jobs").doc(uid).collection("jobs").doc(request.data.jobId).set({ ...request.data.changes, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const removeJobPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("removeJobPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("jobs").doc(uid).collection("jobs").doc(request.data.jobId).delete();
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});

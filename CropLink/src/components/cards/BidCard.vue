@@ -25,8 +25,7 @@
             <ButtonWithLoading 
                 :isLoading="isCancellingBid == bid.id" 
                 v-if="bid.status === BID_STATUSES.PENDING"
-                @click="onCancelBid(bid.id as string)"
-                class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                @click="onCancelBid(bid.id as string)">
                 Cancel Bid
             </ButtonWithLoading>
             <button
@@ -42,7 +41,7 @@
 </template>
 <script setup lang="ts">
 import { isFirestoreTimestamp, convertTimestampToDate } from '@/firebase/utils';
-import ButtonWithLoadingVue from '../props/ButtonWithLoading.vue';
+import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { type PropType, ref } from 'vue';
 import { useMainStore} from '@/stores/main';
 import { useRouter } from 'vue-router';

@@ -25,15 +25,14 @@
                     >
                         <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-md bg-white p-6 text-left align-middle shadow-xl transition-all">
                             <DialogTitle as="h3" class="text-lg font-bold leading-6 text-gray-900">
-                                Edit Ad
+                                Edit Job Post
                             </DialogTitle>
                             <DialogDescription class="mt-2 mb-4">
                                 <p class="text-sm text-gray-500">
-                                    Edit an ad
+                                    Edit a Job Post
                                 </p>
                             </DialogDescription>
-                            <SellerEditAdForm @close="setIsOpen(false)" v-if="profile?.accountType === ACCOUNT_TYPES.SELLER" :ad="modals['context']"/>
-                            <BuyerEditAdForm @close="setIsOpen(false)" v-if="profile?.accountType === ACCOUNT_TYPES.BUYER" :ad="modals['context']"/>
+                            <JobPostEditForm @close="setIsOpen(false)" :job="(modals['context'] as Job)"/>
                         </DialogPanel>
                     </TransitionChild>
                 </div>
@@ -42,10 +41,9 @@
     </TransitionRoot>
 </template>
 <script setup lang="ts">
-import SellerEditAdForm from '@/components/forms/SellerEditAdForm.vue';
-import BuyerEditAdForm from '@/components/forms/BuyerEditAdForm.vue';
+import JobPostEditForm from '@/components/forms/JobPostEditForm.vue';
+import type { Job } from '@/types';
 import { useModalStore } from '@/stores/modals';
-import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { 
@@ -57,12 +55,10 @@ import {
     DialogDescription,
 } from '@headlessui/vue'
 const { modals } = storeToRefs(useModalStore());
-const { profile } = storeToRefs(useMainStore());
-const ACCOUNT_TYPES = useMainStore().ACCOUNT_TYPES;
 const isOpen = ref(true)
 function setIsOpen(value:boolean) {
   isOpen.value = value
-  modals.value['editad'] = value;
+  modals.value['editjob'] = value;
   modals.value['context'] = {};
 }
 </script>

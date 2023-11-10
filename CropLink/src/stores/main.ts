@@ -12,6 +12,11 @@ import {
   editAdCallable,
   createEscrowAccountCallable,
   linkEscrowAccountCallable,
+  createJobPostCallable,
+  editJobPostCallable,
+  removeJobPostCallable,
+  postJobPostCallable,
+  takedownJobPostCallable,
  } from '@/firebase/callables';
 import type { User, Profile, BuyerAd, SellerAd } from '@/types';
 import { getAuth } from 'firebase/auth';
@@ -207,6 +212,72 @@ export const useMainStore = defineStore('MainStore', () => {
     const produceDoc = await getDocuments("produce")
     return produceDoc
   }
+  const createJobPost = createJobPostCallable();
+  const createJobPostAd = async (jobPostData:object) => {
+    try {
+      console.log("createJobPostAd start");
+      console.log("createJobPostAd", createJobPost)
+      const response = await createJobPost(jobPostData);
+      console.log("createJobPostAd res", jobPostData);
+      return response;
+    } catch (error:any) {
+      console.log("createJobPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const postJobPost = postJobPostCallable();
+  const postJobPostAd = async (jobId:string) => {
+    try {
+      console.log("postJobPostAd start", jobId);
+      console.log("postJobPostAd", postJobPost)
+      const response = await postJobPost({jobId});
+      console.log("postJobPostAd res", jobId);
+      return response;
+    } catch (error:any) {
+      console.log("postJobPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const takedownJobPost = takedownJobPostCallable();
+  const takedownJobPostAd = async (jobId:string) => {
+    try {
+      console.log("takedownJobPostAd start", jobId);
+      console.log("takedownJobPostAd", takedownJobPost)
+      const response = await takedownJobPost({jobId});
+      console.log("takedownJobPostAd res", jobId);
+      return response;
+    } catch (error:any) {
+      console.log("takedownJobPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const editJobPost = editJobPostCallable();
+  const editJobPostAd = async (jobPostChangesData:object) => {
+    try {
+      console.log("editJobPostAd start");
+      console.log("editJobPostAd", editJobPost)
+      const response = await editJobPost(jobPostChangesData);
+      console.log("editJobPostAd res", jobPostChangesData);
+      return response;
+    } catch (error:any) {
+      console.log("editJobPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const removeJobPost = removeJobPostCallable();
+  const removeJobPostAd = async (jobId:string) => {
+    try {
+      console.log("removeJobPostAd start");
+      console.log("removeJobPostAd", removeJobPost)
+      const response = await removeJobPost({jobId});
+      console.log("removeJobPostAd res", jobId);
+      return response;
+    } catch (error:any) {
+      console.log("removeJobPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  
   return { 
     user,
     setUser,
@@ -231,5 +302,10 @@ export const useMainStore = defineStore('MainStore', () => {
     createEscrowUserAccount,
     linkEscrowUserAccount,
     getProduce,
+    createJobPostAd,
+    editJobPostAd,
+    removeJobPostAd,
+    postJobPostAd,
+    takedownJobPostAd,
    }
 })

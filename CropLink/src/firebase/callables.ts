@@ -40,3 +40,23 @@ export function linkEscrowAccountCallable() {
     console.log("linkEscrowAccountCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "linkEscrowAccount");
 }
+export function createJobPostCallable() {
+    console.log("createJobPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "createJobPost");
+}
+export function editJobPostCallable() {
+    console.log("editJobPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "editJobPost");
+}
+export function removeJobPostCallable() {
+    console.log("removeJobPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "removeJobPost");
+}
+export function postJobPostCallable() {
+    console.log("postJobPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "postJobPost");
+}
+export function takedownJobPostCallable() {
+    console.log("takedownJobPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "takeDownJobPost");
+}
