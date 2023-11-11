@@ -112,12 +112,23 @@ export const useMainStore = defineStore('MainStore', () => {
   const postNewAd = async (adId:string) => {
     try {
       console.log("postAd start", adId);
-      console.log("createAd", createAd)
       const ad = await postAd({adId});
       console.log("postAd res", ad);
       return ad;
     } catch (error:any) {
       console.log("postAd error", error);
+      throw new Error(error);
+    }
+  }
+  const takedownAd = postAdCallable();
+  const takedownUserAd = async (adId:string) => {
+    try {
+      console.log("takedownAd start", adId);
+      const ad = await takedownAd({adId});
+      console.log("takedownAd res", ad);
+      return ad;
+    } catch (error:any) {
+      console.log("takedownAd error", error);
       throw new Error(error);
     }
   }
@@ -291,6 +302,7 @@ export const useMainStore = defineStore('MainStore', () => {
     ACCOUNT_TYPES,
     createUserAd,
     postNewAd,
+    takedownUserAd,
     signout,
     BID_STATUSES,
     AD_STATUSES,
@@ -307,5 +319,6 @@ export const useMainStore = defineStore('MainStore', () => {
     removeJobPostAd,
     postJobPostAd,
     takedownJobPostAd,
+    
    }
 })

@@ -82,8 +82,9 @@ export type ChatRoom = {
     sellerId: string,
     buyerId: string,
     createdAt: Timestamp,
+    lastSender?: string,
     lastMessage?: string,
-    lastMessageAt?: Timestamp,
+    lastUpdated?: Timestamp,
     unreadCount?:number,
 }
 export type Message = {

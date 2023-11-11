@@ -23,7 +23,7 @@
             <label class="block text-sm font-medium text-gray-700">salary</label>
             <p class="text-sm">{{ job.salary }}</p>
         </div>
-        <div class="w-full flex justify-end gap-4">
+        <div class="w-full flex justify-end gap-4" v-if="showButtons">
             <ButtonWithLoading :isLoading="isLoading" v-if="!job.live" @click="onPost(job.jobId)" :classes="'w-20'">Post</ButtonWithLoading>
             <ButtonWithLoading :isLoading="isLoading" v-if="job.live" @click="onTakedown(job.jobId)" :classes="'w-20'">Takedown</ButtonWithLoading>
             <CardButton @click="onRemove(job.jobId)" :classes="'w-20'">Remove</CardButton>
@@ -46,6 +46,10 @@ const props = defineProps({
     job: {
         type: Object as PropType<Job>,
         required: true
+    },
+    showButtons: {
+        type: Boolean,
+        default: true
     }
 })
 const isLoading = ref(false);

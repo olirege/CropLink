@@ -49,6 +49,13 @@ const router = createRouter({
       meta: {requiresAuth: true}
     },
     {
+      path: '/jobs/:jobId',
+      name: 'job',
+      component: () => import('../views/JobView.vue'),
+      props: true,
+      meta: {requiresAuth: true}
+    },
+    {
       path: '/userboard',
       name: 'userboard',
       component: () => import('../views/UserBoardView.vue'),

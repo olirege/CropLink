@@ -20,6 +20,10 @@ export function postAdCallable() {
     console.log("postAdCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "postAd");
 }
+export function takedownAdCallable() {
+    console.log("takedownAdCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "takedownAd");
+}
 export function placeBidCallable() {
     console.log("placeBidCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "placeBid");

@@ -5,7 +5,7 @@
     <div v-if="liveAds.length > 0 && !isLoadingAds" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <template v-for="(liveAd,index) of liveAds" :key="index">
             <template v-if="liveAd.adType == ACCOUNT_TYPES.SELLER">
-                <SellerAdThumbnailCard :ad="(liveAd as SellerAd)" />
+                <SellerAdThumbnailCard :ad="(liveAd as SellerAd)" :showButtons="false"/>
             </template>
             <template v-if="liveAd.adType == ACCOUNT_TYPES.BUYER">
                 <BuyerAdCard :ad="(liveAd as BuyerAd)" />

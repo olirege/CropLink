@@ -13,4 +13,5 @@ export const ERROR_CODES:ERROR_CODES = {
     "bid-already-accepted": "This bid has already been accepted.",
     "bid-already-rejected": "This bid has already been rejected.",
     "internal": "An internal error occurred. Please try again later.",
+    "ad-already-not-live": "This ad is already not live.",
 };

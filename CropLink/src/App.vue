@@ -7,12 +7,10 @@
         <h1 class="text-3xl font-semibold pb-1">CropLink</h1>
       </div>
       <nav class="space-x-4">
-        <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 0}" to="/" @click="selectedPage = 0">Home</RouterLink>
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 1}" to="/userboard" v-if="profile" @click="selectedPage = 1">Dashboard</RouterLink>
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 2}" to="/signup" v-if="!profile" @click="selectedPage = 2">Signin</RouterLink>
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 3}" to="/profile" v-if="profile" @click="selectedPage = 3">Profile</RouterLink>
         <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 4}" to="/feed" v-if="profile" @click="selectedPage = 4">Feed</RouterLink>
-        <RouterLink class="hover:underline" :class="{'bg-blue-700 text-white': selectedPage == 5}" to="/about" @click="selectedPage = 5">About</RouterLink>
         <a class="hover:underline" @click="onSignout">Signout</a>
       </nav>
     </div>
@@ -28,6 +26,7 @@
   <div class="w-full">
     <RouterView />
   </div>
+  <DirectMessageComponent/>
 </template>
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
@@ -42,6 +41,7 @@ import EditJobModal from './components/modals/EditJobModal.vue';
 import ConfirmRemoveModal from './components/modals/ConfirmRemoveModal.vue';
 import StateNotificationToast from '@/components/toasts/StateNotificationToast.vue';
 import HeaderNotificationDropdown from './components/toasts/HeaderNotificationDropdown.vue';
+import DirectMessageComponent from './components/props/DirectMessageComponent.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 const { profile } = storeToRefs(useMainStore());

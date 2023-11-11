@@ -153,10 +153,10 @@ export const deleteDocument = async (collectionName: string, documentId: string)
         onError(error);
     }
 };
-export const queryForCollectionGroupDocumentById = async (collectionName: string, docId: string): Promise<Document | null> => {
+export const queryForCollectionGroupDocumentById = async (collectionName: string, docId: string, idKey='id'): Promise<Document | null> => {
     console.log("queryForCollectionGroupDocumentById", collectionName, docId)
     try {
-        const q = query(collectionGroup(db, collectionName), where('id', '==', docId));
+        const q = query(collectionGroup(db, collectionName), where(idKey, '==', docId));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
             console.log("queryForCollectionGroupDocumentById", "No matching documents.");

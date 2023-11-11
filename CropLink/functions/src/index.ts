@@ -1,4 +1,5 @@
 import { onCall, HttpsError, CallableOptions, CallableRequest } from "firebase-functions/v2/https";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getStorage } from "firebase-admin/storage";
 import { MemoryOption } from "firebase-functions/v2";
@@ -352,6 +353,45 @@ export const postAd = onCall(callableOptions, async (request:CallableRequest) =>
         }
     }
 });
+export const takedownAd = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("takedownAd", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    // fetch ad
+    const adId = request.data.adId;
+    if (!adId) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const adRef = admin.firestore().collection("ads").doc(uid);
+    const adGroupRef = admin.firestore().collection("ads").doc(uid).collection("ads").doc(adId);
+    const adGroupDoc = await adGroupRef.get();
+    if (!adGroupDoc.exists) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const adGroup = adGroupDoc.data() as Ad;
+    if (!adGroup.live) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["ad-already-not-live"]);
+    } else {
+        try {
+            if (adGroup.adType === "seller" && adGroup.resizedImages && adGroup.resizedImages.length > 0 && adGroup.variety) {
+                await adRef.set({ samples: admin.firestore.FieldValue.arrayRemove({ name: adGroup.variety, image: adGroup.resizedImages[0], adId: adId }) }, { merge: true });
+            }
+            await adGroupRef.set({ live: false, postedOn: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            return { success: true };
+        } catch (error:any) {
+            logger.error(error);
+            throw new HttpsError("internal", error);
+        }
+    }
+});
 export const placeBid = onCall(callableOptions, async (request:CallableRequest) => {
     logger.info("placeBid", request);
     if (!request.auth) {
@@ -411,7 +451,6 @@ export const cancelBid = onCall(callableOptions, async (request:CallableRequest)
     if (!uid) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
-    // fetch bid
     const bidId = request.data.bidId;
     if (!bidId) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
@@ -656,7 +695,6 @@ export const linkEscrowAccount = onCall(callableOptions, async (request:Callable
         type Response = {
             status: string;
         };
-        // TODO - get escrow account with creds, then update user profile
         const response = await new Promise((resolve) => {
             setTimeout(() => {
                 resolve({ status: "success" });
@@ -664,7 +702,6 @@ export const linkEscrowAccount = onCall(callableOptions, async (request:Callable
         , 1000);
         }) as Response;
         if (response && response.status === "success") {
-            // update user profile
             const uid = request.auth.uid;
             await admin.firestore().collection("users").doc(uid).set({ escrowAuth: { ...request.data }, hasEscrow: true }, { merge: true });
             return response;
@@ -771,4 +808,22 @@ export const removeJobPost = onCall(callableOptions, async (request:CallableRequ
         logger.error(error);
         throw new HttpsError("internal", error);
     }
+});
+export const updateLastMessage = onDocumentCreated("/chatrooms/{chatroomId}/messages/{messageId}", (event) => {
+    const chatroomId = event.params.chatroomId;
+    const snapshot = event.data;
+    if (!snapshot) {
+        return;
+    }
+    const messageData = snapshot.data();
+    const chatroomUpdate = {
+        lastMessage: messageData.text,
+        lastSender: messageData.senderId,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    return admin.firestore().collection("chatrooms").doc(chatroomId)
+        .update(chatroomUpdate)
+        .catch( (error) => {
+            logger.error("Error updating chatroom: ", error);
+        });
 });
