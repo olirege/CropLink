@@ -9,6 +9,11 @@
           <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
           <textarea v-model="newJob.description" id="description" name="description" rows="4" class="mt-1 p-2 w-full border rounded-md resize-none" required></textarea>
         </div>
+        <Listbox
+        :items="['Full Time', 'Part Time', 'Contract']"
+        v-model="newJob.type"
+        placeholder="Select an Employment Type"
+        />
         <div class="mb-4">
           <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
           <input v-model="newJob.location" type="text" id="location" name="location" class="mt-1 p-2 w-full border rounded-md" required />
@@ -46,6 +51,7 @@
   <script setup lang="ts">
   import { ref } from 'vue';
   import CardButton from '@/components/props/CardButton.vue';
+  import Listbox from '../props/Listbox.vue';
   import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
   import { useMainStore } from '@/stores/main';
   import type { Job } from '@/types';
@@ -60,6 +66,7 @@
   const newJob = ref({
     createdAt: deepAdCopy.createdAt,
     title: deepAdCopy.title,
+    type: deepAdCopy.type,
     description: deepAdCopy.description,
     location: deepAdCopy.location,
     salary: deepAdCopy.salary,
@@ -96,12 +103,22 @@
     if(validateJob()) {
       const originalJob = props.job;
       const changes = Object.keys(newJob.value).reduce((acc, key) => {
+        if(key === 'tasks') {
+          acc[key] = newJob.value[key].filter((task) => {
+            return task !== '';
+          });
+          return acc;
+        }
+        if(key === 'createdAt') {
+          return acc;
+        }
         if(newJob.value[key] !== originalJob[key]) {
           acc[key] = newJob.value[key];
         }
         return acc;
       }, {} as Job);
       const deepCopy = JSON.parse(JSON.stringify(changes));
+      console.log(changes)
       try{
         const jobId = props.job.jobId;
         await useMainStore().editJobPostAd({jobId, changes:deepCopy});

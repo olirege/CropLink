@@ -64,3 +64,7 @@ export function takedownJobPostCallable() {
     console.log("takedownJobPostCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "takeDownJobPost");
 }
+export function sendDmCallable() {
+    console.log("sendDmCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "sendDm");
+}

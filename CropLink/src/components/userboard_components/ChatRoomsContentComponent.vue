@@ -1,18 +1,22 @@
 <template>
-    <span class="grid grid-flow-row space-y-4" v-if="chatrooms.docs && chatrooms.docs.length > 0 && !isLoadingChatRooms" >
+    <template v-if="chatrooms.docs && chatrooms.docs.length > 0 && !isLoadingChatRooms" >
         <template v-if="!withThumbnails">
-            <ChatRoomCard v-for="(chatroom,index) in chatrooms.docs" :key="index" :chatroom="chatroom"/>
+            <div class="grid grid-flow-row space-y-4">
+                <ChatRoomCard v-for="(chatroom,index) in chatrooms.docs" :key="index" :chatroom="chatroom"/>
+            </div>
         </template>
         <template v-else>
-            <ChatRoomThumbnailCard v-for="(chatroom,index) in chatrooms.docs" :key="index" :chatroom="chatroom"/>
+            <div class="flex flex-col overflow-y-auto w-full flex-1 max-h-72">
+                <ChatRoomThumbnailCard v-for="(chatroom,index) in chatrooms.docs" :key="index" :chatroom="chatroom"/>
+            </div>
         </template>
-   </span>
-   <span v-else-if="chatrooms.docs && chatrooms.docs.length == 0 && !isLoadingChatRooms">
+   </template>
+   <template v-else-if="chatrooms.docs && chatrooms.docs.length == 0 && !isLoadingChatRooms">
        <p>No conversations yet</p>
-   </span>
-   <div v-else>
+   </template>
+   <template v-else>
         <LoadingSpinner :isLoading ="isLoadingChatRooms"/>
-    </div>
+    </template>
 </template>
 <script setup lang="ts">
 import type { ChatRoom } from '@/types';
@@ -30,7 +34,7 @@ const chatrooms: Ref<{lastVisible:ChatRoom, docs:ChatRoom[]}> = ref([]);
 const isLoadingChatRooms = ref(false);
 const props = defineProps({
     withThumbnails: {
-        type: String,
+        type: Boolean,
         default: false
     }
 })

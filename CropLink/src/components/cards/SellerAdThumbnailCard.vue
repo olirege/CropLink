@@ -12,12 +12,14 @@
         <p class="text-sm mb-2">
             <strong>Price:</strong> {{ ad.price }}
         </p>
-        <div class="w-full flex justify-end space-x-2" v-if="showButtons">
-            <p class="underline" @click="onPostAd((ad.id) as string)" v-if="!ad.live">Post ad</p>
-            <p class="underline" @click="onTakedownAd((ad.id) as string)" v-if="ad.live">Take down ad</p>
-            <p class="underline" @click="onContactWinner((ad.id) as string)">Contact</p>
-            <p class="underline" @click="onRemoveAd((ad.id) as string)">Remove</p>
-            <p class="underline" @click="onEditAd((ad.id) as string)">Edit</p>
+        <div class="w-full flex justify-end space-x-2 flex-wrap">
+            <template v-if="showButtons">
+                <p class="underline" @click="onPostAd((ad.id) as string)" v-if="!ad.live">Post ad</p>
+                <p class="underline" @click="onTakedownAd((ad.id) as string)" v-if="ad.live">Take down</p>
+                <p class="underline" @click="onContactWinner((ad.id) as string)">Contact</p>
+                <p class="underline" @click="onRemoveAd((ad.id) as string)">Remove</p>
+                <p class="underline" @click="onEditAd((ad.id) as string)">Edit</p>
+            </template>
             <p class="underline" @click="onViewAd((ad.id) as string)">View</p>
         </div>
     </div>

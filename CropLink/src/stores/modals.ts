@@ -7,6 +7,7 @@ export const useModalStore = defineStore('ModalStore', () => {
         addad: false,
         addbid: false,
         editad: false,
+        viewjob: false,
         confirmremove: false,
         context: {},
     })
@@ -27,6 +28,11 @@ export const useModalStore = defineStore('ModalStore', () => {
         message: "",
         type: "",
         context: {},
+    })
+
+    const messaging = reactive({
+        show: false,
+        to: null,
     })
     const resetNotification = () => {
         notifications.show = false
@@ -54,5 +60,6 @@ export const useModalStore = defineStore('ModalStore', () => {
         resetNotification,
         resetModals,
         resetDropdowns,
+        messaging,
    }
 })

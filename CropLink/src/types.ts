@@ -109,4 +109,5 @@ export type Job = {
     location: string;
     salary: string;
     tasks: string[];
+    type: string;
 };

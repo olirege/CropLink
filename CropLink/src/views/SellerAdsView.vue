@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="absolute bottom-10 right-20">
-            <button class="border-2 border p-1 w-32 rounded-md flex flex-row items-center justify-center gap-2">
+            <button class="border-2 border p-1 w-32 rounded-md flex flex-row items-center justify-center gap-2" @click="onMessage">
                 <EnvelopeIcon class="w-6 h-6"/>
                 <p>Message</p>
             </button>
@@ -58,6 +58,8 @@ import { EnvelopeIcon } from '@heroicons/vue/24/outline';
 import SellerAdThumbnailCard from '@/components/cards/SellerAdThumbnailCard.vue';
 import JobThumbnailCard from '@/components/cards/JobThumbnailCard.vue';
 import BuyerAdCard from '@/components/cards/BuyerAdCard.vue';
+import { useModalStore } from '@/stores/modals';
+import { storeToRefs } from 'pinia';
 const ACCOUNT_TYPES = useMainStore().ACCOUNT_TYPES;
 const liveAds:Ref<SellerAd[]|BuyerAd[]> = ref([]);
 const liveJobs:Ref<Job[]> = ref([]);
@@ -73,6 +75,14 @@ const props = defineProps({
         required: true
     }
 })
+const { messaging } = storeToRefs(useModalStore());
+const onMessage = async () => {
+    messaging.value.show = true;
+    messaging.value.to = {
+        id: props.id,
+        name: props.sellerName
+    }
+}
 onMounted(async() => {
     isLoadingAds.value = true;
     const paginatedAds = await getPaginatedCollectionGroupWhereWhere('ads', 'live', '==', true, 'uid', '==', props.id, ['postedOn','desc'], 25)

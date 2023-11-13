@@ -22,11 +22,12 @@
   <EditJobModal v-if="modals['editjob']"/>
   <AddJobModal v-if="modals['addjob']"/>
   <ConfirmRemoveModal v-if="modals['confirmremove']"/>
+  <JobViewModal v-if="modals['viewjob']"/>
   <StateNotificationToast v-show="notifications.show"/>
   <div class="w-full">
     <RouterView />
   </div>
-  <DirectMessageComponent/>
+  <DirectMessageComponent v-if="profile"/>
 </template>
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
@@ -39,6 +40,7 @@ import AddBidModal from '@/components/modals/AddBidModal.vue';
 import AddJobModal from './components/modals/AddJobModal.vue';
 import EditJobModal from './components/modals/EditJobModal.vue';
 import ConfirmRemoveModal from './components/modals/ConfirmRemoveModal.vue';
+import JobViewModal from './components/modals/JobViewModal.vue';
 import StateNotificationToast from '@/components/toasts/StateNotificationToast.vue';
 import HeaderNotificationDropdown from './components/toasts/HeaderNotificationDropdown.vue';
 import DirectMessageComponent from './components/props/DirectMessageComponent.vue';

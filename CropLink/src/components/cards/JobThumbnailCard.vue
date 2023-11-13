@@ -23,6 +23,9 @@ import type { Job } from '@/types';
 import { type PropType } from 'vue';
 import { useRouter } from 'vue-router';
 import { MapPinIcon, CurrencyDollarIcon } from '@heroicons/vue/24/outline';
+import { useModalStore } from '@/stores/modals';
+import { storeToRefs } from 'pinia';
+const { modals } = storeToRefs(useModalStore());
 const emits = defineEmits(['edit', 'remove']);
 const router = useRouter();
 const props = defineProps({
@@ -32,6 +35,9 @@ const props = defineProps({
     },
 })
 const onView = (jobId: string) => {
-    router.push({ name: 'job', params: { jobId } });
+    if(!jobId) return;
+    // router.push({ name: 'job', params: { jobId } });
+    modals.value['viewjob'] = true;
+    modals.value['context'].__key = jobId;
 }
 </script>

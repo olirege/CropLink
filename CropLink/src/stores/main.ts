@@ -17,6 +17,7 @@ import {
   removeJobPostCallable,
   postJobPostCallable,
   takedownJobPostCallable,
+  sendDmCallable,
  } from '@/firebase/callables';
 import type { User, Profile, BuyerAd, SellerAd } from '@/types';
 import { getAuth } from 'firebase/auth';
@@ -289,6 +290,19 @@ export const useMainStore = defineStore('MainStore', () => {
     }
   }
   
+  const sendDirectMessage = sendDmCallable();
+  const sendDm = async (messageData:object) => {
+    try {
+      console.log("sendDm start");
+      console.log("sendDm", sendDirectMessage)
+      const response = await sendDirectMessage(messageData);
+      console.log("sendDm res", messageData);
+      return response;
+    } catch (error:any) {
+      console.log("sendDm error", error);
+      throw new Error(error);
+    }
+  }
   return { 
     user,
     setUser,
@@ -319,6 +333,6 @@ export const useMainStore = defineStore('MainStore', () => {
     removeJobPostAd,
     postJobPostAd,
     takedownJobPostAd,
-    
+    sendDm,
    }
 })

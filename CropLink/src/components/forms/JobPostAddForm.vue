@@ -9,6 +9,11 @@
           <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
           <textarea v-model="job.description" id="description" name="description" rows="4" class="mt-1 p-2 w-full border rounded-md resize-none" required></textarea>
         </div>
+        <Listbox
+        :items="['Full Time', 'Part Time', 'Contract']"
+        v-model="job.type"
+        placeholder="Select an Employment Type"
+        />
         <div class="mb-4">
           <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
           <input v-model="job.location" type="text" id="location" name="location" class="mt-1 p-2 w-full border rounded-md" required />
@@ -47,6 +52,7 @@
   import { type PropType, ref } from 'vue';
   import CardButton from '@/components/props/CardButton.vue';
   import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
+  import Listbox from '@/components/props/Listbox.vue';
   import { useMainStore } from '@/stores/main';
   import type { Job } from '@/types';
   const emits = defineEmits(['close']);
@@ -59,6 +65,7 @@
   const job = ref({
     createdAt: null,
     title: '',
+    type: '',
     description: '',
     location: '',
     salary: '',
@@ -74,7 +81,7 @@
   };
   
   const validateJob = () => {
-    if(!job.value.title || !job.value.description || !job.value.location || !job.value.salary || !job.value.tasks.length) {
+    if(!job.value.title || !job.value.description || !job.value.location || !job.value.salary || !job.value.type || !job.value.tasks.length) {
       if(job.value.tasks.length > 0 ) {
         for(const task in job.value.tasks) {
           if(!task) {

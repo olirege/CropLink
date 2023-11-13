@@ -827,3 +827,50 @@ export const updateLastMessage = onDocumentCreated("/chatrooms/{chatroomId}/mess
             logger.error("Error updating chatroom: ", error);
         });
 });
+export const sendDm = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("sendDm", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const dmId = request.auth.uid + "_" + request.data.receiverId;
+        if (!request.data.receiverId) throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        if (!request.data.senderId) throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        const dmIdData = {
+            dmId: dmId,
+            sellerId: request.data.receiverId,
+            buyerId: request.data.senderId,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        await admin.firestore().collection("dms").doc(dmId).set(dmIdData);
+        await admin.firestore().collection("dms").doc(dmId).collection("messages").add({ senderId: request.data.senderId, text: request.data.text, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const updateLastDm = onDocumentCreated("/dms/{dmId}/messages/{messageId}", (event) => {
+    const dmId = event.params.dmId;
+    const snapshot = event.data;
+    if (!snapshot) {
+        return;
+    }
+    const messageData = snapshot.data();
+    const dmUpdate = {
+        lastMessage: messageData.text,
+        lastSender: messageData.senderId,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    return admin.firestore().collection("dms").doc(dmId)
+        .update(dmUpdate)
+        .catch( (error) => {
+            logger.error("Error updating dms: ", error);
+        });
+});
