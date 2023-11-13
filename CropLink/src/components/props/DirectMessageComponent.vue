@@ -56,7 +56,7 @@
 </template>
 <script setup lang="ts">
 import { ChevronUpIcon, EnvelopeIcon, ChevronDownIcon } from '@heroicons/vue/24/outline';
-import { ref, onBeforeUnmount } from 'vue';
+import { ref, onBeforeUnmount, watch } from 'vue';
 import DirectMessagingContentComponent from '../userboard_components/DirectMessagingContentComponent.vue';
 import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
@@ -64,7 +64,7 @@ import { PaperAirplaneIcon } from '@heroicons/vue/24/outline';
 import { db } from '@/firebase/main';
 import { useMainStore } from '@/stores/main';
 import type { Message } from '@/types';
-import { onSnapshot, query, collection, orderBy, Timestamp } from 'firebase/firestore';
+import { onSnapshot, query, collection, orderBy, Timestamp, addDoc } from 'firebase/firestore';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 const DMS_COLLECTION = import.meta.env.VITE_DMS_COLLECTION as string;
 const MESSAGES_COLLECTION = import.meta.env.VITE_MESSAGES_COLLECTION as string;
@@ -81,11 +81,7 @@ const onOpenDm = (value:boolean) => {
 const onViewDm = async (dmId:string) => {
     console.log('onViewDm', dmId);
     messaging.value.show = true;
-    messaging.value.to = {
-        id: dmId,
-        name: 'No one',
-    }
-    await loadMessages(dmId);
+    messaging.value.dmId = dmId;
 }
 const directMessage = ref('');
 const messages = ref([]);
@@ -102,6 +98,13 @@ const loadMessages = async (dmId:string) => {
         isLoadingMessages.value = false;
     });
 }
+watch(messaging, async (newVal) => {
+    console.log('messaging', newVal);
+    if(newVal && newVal.show && newVal.dmId) {
+        console.log('loadMessages')
+        await loadMessages(newVal.dmId as string);
+    }
+},{deep:true})
 const isSendingMessage = ref(false);
 const onSendMessage = async () => {
     if(!directMessage.value) return;
@@ -109,11 +112,20 @@ const onSendMessage = async () => {
     if(!profile.value) return;
     if(user.value.uid == messaging.value.to?.id) return;
     isSendingMessage.value = true;
-    await useMainStore().sendDm({
-        text: directMessage.value,
-        senderId: user.value.uid,
-        receiverId: messaging.value.to?.id as string,
-    });
+    if(messages.value.length == 0 && messaging.value.to?.id && !messaging.value.dmId){
+        await useMainStore().sendDm({
+            text: directMessage.value,
+            senderId: user.value.uid,
+            receiverId: messaging.value.to?.id as string,
+        });
+    } else {
+        const messageRef = collection(db, DMS_COLLECTION, messaging.value.dmId, MESSAGES_COLLECTION);
+        await addDoc(messageRef, {
+            text: directMessage.value,
+            senderId: user.value.uid,
+            createdAt: new Date(),
+        });
+    }
     directMessage.value = '';
     isSendingMessage.value = false
 }

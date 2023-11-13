@@ -1,7 +1,7 @@
 <template>
     <template v-if="dms.docs && dms.docs.length > 0 && !isLoadingDms" >
         <div class="flex flex-col overflow-y-auto w-full flex-1 max-h-72">
-            <DirectMessageCard v-for="(dm,index) in dms.docs" :key="index" :dm="dm" @click="onView(dm.id)"/>
+            <DirectMessageCard v-for="(dm,index) in dms.docs" :key="index" :dm="dm" @click="onView(dm.dmId)"/>
         </div>
    </template>
    <template v-else-if="dms.docs && dms.docs.length == 0 && !isLoadingDms">
