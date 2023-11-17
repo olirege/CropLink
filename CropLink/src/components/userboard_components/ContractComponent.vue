@@ -74,12 +74,12 @@
                     >Cancel
                 </button>
             </div>
-            <button
+            <ButtonWithLoading
                 @click="onProceed"
                 v-if="contract.ready?.includes(contract.sellerId) && contract.ready?.includes(contract.buyerId)"
-                class="bg-yellow-500 text-white px-4 h-8 rounded-md hover:bg-yellow-400 transition duration-300 ease-in-out"
+                :isLoading="isCreatingTransaction"
                 >Proceed
-            </button>
+            </ButtonWithLoading>
         </div>
         <div v-else>
             <LoadingSpinner :isLoading="isLoadingClauses"/>
@@ -94,6 +94,7 @@
 </template>
 <script setup lang="ts">
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
+import ButtonWithLoading from '../props/ButtonWithLoading.vue';
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
@@ -103,6 +104,7 @@ import { CheckCircleIcon } from '@heroicons/vue/20/solid';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import type { Contract, Clause } from '@/types';
 import { convertTimestampToDate, isFirestoreTimestamp } from '@/firebase/utils';
+import { createTransactionCallable } from '@/firebase/callables';
 import router from '@/router';
 const emits = defineEmits(['onMentionClause']);
 const props = defineProps({
@@ -206,9 +208,17 @@ const onCancelReadyToProceed = async () => {
     const contractRef = collection(db, CONTRACTS_COLLECTION);
     await updateDoc(doc(contractRef,contract.value.id),{ready:arrayRemove(user.value.uid)})
 }
-const onProceed = () => {
-    if(!props.adId) return
-    router.push({name:'banking',params:{adId:props.adId}})
+const createATransaction = createTransactionCallable();
+const isCreatingTransaction = ref(false);
+const onProceed = async () => {
+    if (!props.adId) return
+    console.log("onProceed", props.adId, contract.value.id)
+    isCreatingTransaction.value = true;
+    const res = await createATransaction({adId:props.adId, contractId:contract.value.id});
+    isCreatingTransaction.value = false;
+    if (res && res.data.landingPage) {
+        router.push({name:'banking',params:{adId:props.adId, contractId:contract.value.id}})
+    }
 }
 onMounted(async () => {
     stopContractSubscription = onSnapshot(query(collection(db, CONTRACTS_COLLECTION),where('adId','==', props.adId), orderBy('createdAt','asc')), (snapshot) => {

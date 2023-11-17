@@ -36,9 +36,17 @@ export function createTransactionCallable() {
     console.log("createTransactionCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "createTransaction");
 }
+export function getTransactionCallable() {
+    console.log("getTransactionCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "getTransaction");
+}
 export function createEscrowAccountCallable() {
     console.log("createEscrowAccountCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "createEscrowAccount");
+}
+export function getEscrowLandingPageCallable() {
+    console.log("getEscrowLandingPageCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "getEscrowLandingPage");
 }
 export function linkEscrowAccountCallable() {
     console.log("linkEscrowAccountCallable")
@@ -64,7 +72,39 @@ export function takedownJobPostCallable() {
     console.log("takedownJobPostCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "takeDownJobPost");
 }
+export function createGigPostCallable() {
+    console.log("createGigPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "createGigPost");
+}
+export function editGigPostCallable() {
+    console.log("editGigPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "editGigPost");
+}
+export function removeGigPostCallable() {
+    console.log("removeGigPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "removeGigPost");
+}
+export function postGigPostCallable() {
+    console.log("postGigPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "postGigPost");
+}
+export function takedownGigPostCallable() {
+    console.log("takedownGigPostCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "takeDownGigPost");
+}
 export function sendDmCallable() {
     console.log("sendDmCallable")
     return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "sendDm");
+}
+export function updateProfileCallable() {
+    console.log("updateProfileCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "updateProfile");
+}
+export function submitApplicationCallable() {
+    console.log("submitApplicationCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "submitApplication");
+}
+export function removeApplicationCallable() {
+    console.log("removeApplicationCallable")
+    return httpsCallable(getFunctions(undefined, "northamerica-northeast1"), "removeApplication");
 }

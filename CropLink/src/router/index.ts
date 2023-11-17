@@ -69,11 +69,17 @@ const router = createRouter({
       props: true,
     },
     {
-      path: '/banking/:adId',
+      path: '/banking/:adId/:contractId/',
       name: 'banking',
       component: () => import('../views/BankingView.vue'),
       meta: {requiresAuth: true},
       props: true,
+    },
+    {
+      path: '/devHelper/',
+      name: 'devHelper',
+      component: () => import('../views/DevHelper.vue'),
+      meta: {requiresAuth: true},
     }
   ]
 })

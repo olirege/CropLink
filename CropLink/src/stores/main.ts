@@ -17,7 +17,15 @@ import {
   removeJobPostCallable,
   postJobPostCallable,
   takedownJobPostCallable,
+  createGigPostCallable,
+  editGigPostCallable,
+  removeGigPostCallable,
+  postGigPostCallable,
+  takedownGigPostCallable,
   sendDmCallable,
+  updateProfileCallable,
+  submitApplicationCallable,
+  removeApplicationCallable,
  } from '@/firebase/callables';
 import type { User, Profile, BuyerAd, SellerAd } from '@/types';
 import { getAuth } from 'firebase/auth';
@@ -289,7 +297,71 @@ export const useMainStore = defineStore('MainStore', () => {
       throw new Error(error);
     }
   }
-  
+  const createGigPost = createGigPostCallable();
+  const createGigPostAd = async (gigPostData:object) => {
+    try {
+      console.log("createGigPostAd start");
+      console.log("createGigPostAd", createGigPost)
+      const response = await createGigPost(gigPostData);
+      console.log("createGigPostAd res", gigPostData);
+      return response;
+    } catch (error:any) {
+      console.log("createGigPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const postGigPost = postGigPostCallable();
+  const postGigPostAd = async (gigId:string) => {
+    try {
+      console.log("postGigPostAd start", gigId);
+      console.log("postGigPostAd", postGigPost)
+      const response = await postGigPost({gigId});
+      console.log("postGigPostAd res", gigId);
+      return response;
+    } catch (error:any) {
+      console.log("postGigPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const takedownGigPost = takedownGigPostCallable();
+  const takedownGigPostAd = async (gigId:string) => {
+    try {
+      console.log("takedownGigPostAd start", gigId);
+      console.log("takedownGigPostAd", takedownGigPost)
+      const response = await takedownGigPost({gigId});
+      console.log("takedownGigPostAd res", gigId);
+      return response;
+    } catch (error:any) {
+      console.log("takedownGigPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const editGigPost = editGigPostCallable();
+  const editGigPostAd = async (gigPostChangesData:object) => {
+    try {
+      console.log("editGigPostAd start");
+      console.log("editGigPostAd", editGigPost)
+      const response = await editGigPost(gigPostChangesData);
+      console.log("editGigPostAd res", gigPostChangesData);
+      return response;
+    } catch (error:any) {
+      console.log("editGigPostAd error", error);
+      throw new Error(error);
+    }
+  }
+  const removeGigPost = removeGigPostCallable();
+  const removeGigPostAd = async (gigId:string) => {
+    try {
+      console.log("removeGigPostAd start");
+      console.log("removeGigPostAd", removeGigPost)
+      const response = await removeGigPost({gigId});
+      console.log("removeGigPostAd res", gigId);
+      return response;
+    } catch (error:any) {
+      console.log("removeGigPostAd error", error);
+      throw new Error(error);
+    }
+  }
   const sendDirectMessage = sendDmCallable();
   const sendDm = async (messageData:object) => {
     try {
@@ -300,6 +372,45 @@ export const useMainStore = defineStore('MainStore', () => {
       return response;
     } catch (error:any) {
       console.log("sendDm error", error);
+      throw new Error(error);
+    }
+  }
+  const updateUserProfileCallable = updateProfileCallable();
+  const updateProfileChanges = async (changes:object) => {
+    try {
+      console.log("updateProfileChanges start");
+      console.log("updateProfileChanges", changes)
+      const response = await updateUserProfileCallable(changes);
+      console.log("updateProfileChanges res", changes);
+      return response;
+    } catch (error:any) {
+      console.log("updateProfileChanges error", error);
+      throw new Error(error);
+    }
+  }
+  const submitUserApplicationCallable = submitApplicationCallable();
+  const submitApplication = async (applicationData:object) => {
+    try {
+      console.log("submitApplication start");
+      console.log("submitApplication", submitUserApplicationCallable)
+      const response = await submitUserApplicationCallable(applicationData);
+      console.log("submitApplication res", applicationData);
+      return response;
+    } catch (error:any) {
+      console.log("submitApplication error", error);
+      throw new Error(error);
+    }
+  }
+  const removeUserApplicationCallable = removeApplicationCallable();
+  const removeApplication = async (applicationId:string) => {
+    try {
+      console.log("removeApplication start");
+      console.log("removeApplication", removeUserApplicationCallable)
+      const response = await removeUserApplicationCallable({applicationId});
+      console.log("removeApplication res", applicationId);
+      return response;
+    } catch (error:any) {
+      console.log("removeApplication error", error);
       throw new Error(error);
     }
   }
@@ -333,6 +444,14 @@ export const useMainStore = defineStore('MainStore', () => {
     removeJobPostAd,
     postJobPostAd,
     takedownJobPostAd,
+    createGigPostAd,
+    editGigPostAd,
+    removeGigPostAd,
+    postGigPostAd,
+    takedownGigPostAd,
     sendDm,
+    updateProfileChanges,
+    submitApplication,
+    removeApplication,
    }
 })

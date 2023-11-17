@@ -31,18 +31,81 @@
                                         <p class="text-md">{{ job.location }}</p>
                                         <p class="text-md">${{ job.salary }}</p>
                                         <p class="text-md">{{ job.type }}</p>
-                                        <CardButton>
+                                        <CardButton @click="onApply">
                                             Apply
                                         </CardButton>
                                     </span>
-                                    <div class="w-full border-t-2 h-64 overflow-y-scroll">
-                                        <p class="text-md text-left p-5">{{ job.description }}</p>
-                                    </div>
-                                    <div class="w-full flex flex-col gap-2 justify-start items-start px-5 pb-5">
-                                        <div v-for="task in job.tasks">
-                                            <p class="text-md">{{ task }}</p>
+                                    <template v-if="!showApplyResponse">
+                                        <div class="w-full border-t-2 h-64 overflow-y-scroll">
+                                            <p class="text-md text-left p-5">{{ job.description }}</p>
                                         </div>
-                                    </div>
+                                        <div class="w-full flex flex-col gap-2 justify-start items-start px-5 pb-5">
+                                            <div v-for="task in job.tasks">
+                                                <p class="text-md">{{ task }}</p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div class="w-full border-t-2 h-96 overflow-y-scroll">
+                                            <div>
+                                                <label for="name" class="block text-sm font-medium text-gray-700">
+                                                    Name
+                                                </label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        id="name"
+                                                        autocomplete="given-name"
+                                                        v-model="application.name"
+                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+                                                <label for="email" class="block text-sm font-medium text-gray-700">
+                                                    Email
+                                                </label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        id="email"
+                                                        name="email"
+                                                        type="email"
+                                                        v-model="application.email"
+                                                        autocomplete="email"
+                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+                                                <label from="phone" class="block text-sm font-medium text-gray-700">
+                                                    Phone
+                                                </label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        id="phone"
+                                                        name="phone"
+                                                        type="tel"
+                                                        autocomplete="tel"
+                                                        v-model="application.phone"
+                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+                                                <label for="resume" class="block text-sm font-medium text-gray-700">
+                                                    Resume
+                                                </label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        id="resume"
+                                                        name="resume"
+                                                        type="file"
+                                                        ref="resume"
+                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                        @change="onFileChange"
+                                                    />
+                                                </div>
+                                               <ButtonWithLoading :isLoading="isLoadingSubmit" @click="onSubmitResume" classes="w-full">
+                                                    Submit
+                                                </ButtonWithLoading>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                             <div v-else>
@@ -56,11 +119,12 @@
     </TransitionRoot>
 </template>
 <script setup lang="ts">
-import { type PropType, ref, onMounted } from 'vue';
+import { type PropType, ref, onMounted, reactive } from 'vue';
 import type { Job } from '@/types';
 import { queryForCollectionGroupDocumentById } from '@/firebase/utils';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import CardButton from '@/components/props/CardButton.vue';
+import ButtonWithLoading from '../props/ButtonWithLoading.vue';
 import { 
     TransitionRoot,
     TransitionChild,
@@ -69,6 +133,20 @@ import {
 } from '@headlessui/vue'
 import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
+import { useMainStore } from '@/stores/main';
+import { getStorage, ref as fbStorageRef, uploadBytes } from 'firebase/storage';
+const { user } = storeToRefs(useMainStore());
+const uploadFileToFirebaseStorage = async (file) => {
+    const storage = getStorage();
+    const storageRef = fbStorageRef(storage, `resumes/${user.value.uid}/` + file.name); // Unique path for each file
+    await uploadBytes(storageRef, file);
+    return storageRef.fullPath; // Return the reference to the file
+};
+
+const showApplyResponse = ref(false);
+const onApply = () => {
+    showApplyResponse.value = true;
+}
 const { modals } = storeToRefs(useModalStore());
 const isOpen = ref(true)
 function setIsOpen(value:boolean) {
@@ -83,6 +161,29 @@ const loadJob = async () => {
     isLoadingJob.value = true;
     job.value = await queryForCollectionGroupDocumentById('jobs', jobId, 'jobId') as Job;
     isLoadingJob.value = false;
+}
+const application = reactive({
+    name: '',
+    email: '',
+    phone: '',
+    resume: ''
+})
+const onFileChange = (e:any) => {
+    const file = e.target.files[0];
+    application.resume = file;
+}
+const isLoadingSubmit = ref(false);
+const onSubmitResume = async () => {
+    isLoadingSubmit.value = true;
+    console.log("application", application);
+    application.parentId = job.value.jobId;
+    application.parentType = 'job';
+    application.ownerId = job.value.posterId;
+    const fileRef = await uploadFileToFirebaseStorage(application.resume);
+    application.resume = fileRef;
+    const deepCopy = JSON.parse(JSON.stringify(application));
+    await useMainStore().submitApplication(deepCopy);
+    isLoadingSubmit.value = false;
 }
 onMounted(async () => {
     await loadJob();

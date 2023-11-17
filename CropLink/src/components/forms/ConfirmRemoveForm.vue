@@ -48,5 +48,11 @@
     if(props.context.__key == 'job') {
       await useMainStore().removeJobPostAd(props.context.jobId);
     }
+    if(props.context.__key == 'gig') {
+      await useMainStore().removeGigPostAd(props.context.gigId);
+    }
+    if(props.context.__key == 'application') {
+      await useMainStore().removeApplication(props.context.applicationId);
+    }
   }
   </script>

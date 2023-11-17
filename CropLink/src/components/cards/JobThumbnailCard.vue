@@ -14,7 +14,7 @@
             </div>
         </div>
         <div class="w-full flex justify-end gap-4">
-            <p @click="onView(job.jobId)" class="underline text-sm">View</p>
+            <p @click="onView(job.jobId)" class="underline text-sm cursor-pointer">View</p>
         </div>
     </span>
 </template>

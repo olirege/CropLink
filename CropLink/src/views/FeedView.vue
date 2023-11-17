@@ -2,14 +2,14 @@
     <div class="p-6">
         <GroupedAdsComponent />
     </div>
-    <div v-if="liveAds.length > 0 && !isLoadingAds" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-if="liveAds.length > 0 && !isLoadingAds" class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <template v-for="(liveAd,index) of liveAds" :key="index">
             <template v-if="liveAd.adType == ACCOUNT_TYPES.SELLER">
                 <SellerAdThumbnailCard :ad="(liveAd as SellerAd)" :showButtons="false"/>
             </template>
-            <template v-if="liveAd.adType == ACCOUNT_TYPES.BUYER">
+            <!-- <template v-if="liveAd.adType == ACCOUNT_TYPES.BUYER">
                 <BuyerAdCard :ad="(liveAd as BuyerAd)" />
-            </template>
+            </template> -->
         </template>
     </div>
     <div v-if="isLoadingAds">
@@ -33,8 +33,6 @@ const isLoadingAds = ref(false);
 
 onMounted(async() => {
     isLoadingAds.value = true;
-    const adType = profile.value?.accountType == ACCOUNT_TYPES.SELLER ? ACCOUNT_TYPES.BUYER : ACCOUNT_TYPES.SELLER;
-    // const paginatedAds = await getPaginatedCollectionGroupWhereWhere('ads', 'live', '==', true, 'adType', '==', adType, ['postedOn','desc'], 25)
     const paginatedAds = await getPaginatedCollectionGroupWhere('ads', 'live', '==', true, ['postedOn','desc'], 25)
     console.log("ads", paginatedAds);
     liveAds.value = paginatedAds.docs as SellerAd[]|BuyerAd[];

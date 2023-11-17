@@ -6,8 +6,8 @@ import { MemoryOption } from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { ERROR_CODES } from "./errors";
-import { isAdmin, deleteImageFromBucket } from "./utils";
-import type { Ad } from "./types";
+import { isAdmin, deleteFileFromBucket, generateTransaction } from "./utils";
+import type { Ad, Contract, Transaction } from "./types";
 import * as sharp from "sharp";
 import axios from "axios";
 const service = require("../service/service.json");
@@ -71,7 +71,128 @@ export const createUserProfile = onCall(callableOptions, async (request:Callable
         }
     }
 });
-
+export const updateProfile = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("updateProfile", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const BUCKET_PREFIX = process.env.BUCKETURL;
+        const profilePicSignedUrls = [];
+        const profilePicResizedSignedUrls = [];
+        const bannerPicSignedUrls = [];
+        const bannerPicResizedSignedUrls = [];
+        const bucket = getStorage().bucket();
+        if ( request.data.profilePic && request.data.profilePic.length > 0) {
+            const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            const filename = `${imageId}.jpg`;
+            const bucketPath= `${`users/${uid}/` + filename}`;
+            const file = bucket.file(bucketPath);
+            const base64EncodedImageString = request.data.profilePic.replace(/^data:image\/\w+;base64,/, "");
+            const imageBuffer = Buffer.from(base64EncodedImageString, "base64");
+            await file.save(imageBuffer, { contentType: "image/jpeg" });
+            const imagePath = `${BUCKET_PREFIX + `users/${uid}/` + filename}`;
+            const _imageUrl = new URL(imagePath);
+            const imageUrl = _imageUrl.pathname.substring(1);
+            const imageRef = bucket.file(imageUrl);
+            const [signedUrl] = await imageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            profilePicSignedUrls.push(signedUrl);
+            const resizedImageFilename = `${imageId}_resized.jpg`;
+            const resizedImageBucketPath= `${`users/${uid}/` + resizedImageFilename}`;
+            const resizedImageFile = bucket.file(resizedImageBucketPath);
+            const resizedImageBuffer = await sharp(imageBuffer)
+            .resize(256, 256, {
+                fit: "contain",
+                background: { r: 0, g: 0, b: 0 },
+            })
+            .jpeg()
+            .toBuffer();
+            await resizedImageFile.save(resizedImageBuffer, { contentType: "image/jpeg" });
+            const resizedImagePath = `${BUCKET_PREFIX + `users/${uid}/` + resizedImageFilename}`;
+            const _resizedImageUrl = new URL(resizedImagePath);
+            const resizedImageUrl = _resizedImageUrl.pathname.substring(1);
+            const resizedImageRef = bucket.file(resizedImageUrl);
+            const [resizedSignedUrl] = await resizedImageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            profilePicResizedSignedUrls.push(resizedSignedUrl);
+        }
+        if ( request.data.bannerPic && request.data.bannerPic.length > 0) {
+            const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            const filename = `${imageId}.jpg`;
+            const bucketPath= `${`users/${uid}/` + filename}`;
+            const file = bucket.file(bucketPath);
+            const base64EncodedImageString = request.data.bannerPic.replace(/^data:image\/\w+;base64,/, "");
+            const imageBuffer = Buffer.from(base64EncodedImageString, "base64");
+            await file.save(imageBuffer, { contentType: "image/jpeg" });
+            const imagePath = `${BUCKET_PREFIX + `users/${uid}/` + filename}`;
+            const _imageUrl = new URL(imagePath);
+            const imageUrl = _imageUrl.pathname.substring(1);
+            const imageRef = bucket.file(imageUrl);
+            const [signedUrl] = await imageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            bannerPicSignedUrls.push(signedUrl);
+            const resizedImageFilename = `${imageId}_resized.jpg`;
+            const resizedImageBucketPath= `${`users/${uid}/` + resizedImageFilename}`;
+            const resizedImageFile = bucket.file(resizedImageBucketPath);
+            const resizedImageBuffer = await sharp(imageBuffer)
+            .resize(1024, 616, {
+                fit: "contain",
+                background: { r: 0, g: 0, b: 0 },
+            })
+            .jpeg()
+            .toBuffer();
+            await resizedImageFile.save(resizedImageBuffer, { contentType: "image/jpeg" });
+            const resizedImagePath = `${BUCKET_PREFIX + `users/${uid}/` + resizedImageFilename}`;
+            const _resizedImageUrl = new URL(resizedImagePath);
+            const resizedImageUrl = _resizedImageUrl.pathname.substring(1);
+            const resizedImageRef = bucket.file(resizedImageUrl);
+            const [resizedSignedUrl] = await resizedImageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            bannerPicResizedSignedUrls.push(resizedSignedUrl);
+        }
+        const profile = {
+            ...request.data,
+            profilePic: profilePicSignedUrls[0],
+            profilePicResized: profilePicResizedSignedUrls[0],
+            bannerPic: bannerPicSignedUrls[0],
+            bannerPicResized: bannerPicResizedSignedUrls[0],
+        };
+        logger.info("updateProfile", "profile", profile);
+        await admin.firestore().collection("users").doc(uid).set(profile, { merge: true });
+        logger.info("updateProfile", "success");
+        await admin.firestore().collection("ads").doc(uid).set({
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            profilePic: profile.profilePic,
+            bannerPic: profile.bannerPic,
+            profilePicResized: profile.profilePicResized,
+            bannerPicResized: profile.bannerPicResized,
+        }, { merge: true });
+        logger.info("updateProfile", "success");
+        return profile;
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
 export const createAd = onCall(callableOptions, async (request:CallableRequest) => {
     logger.info("createAd", request);
     if (!request.auth) {
@@ -253,10 +374,10 @@ export const editAd = onCall(callableOptions, async (request:CallableRequest) =>
                     return originalImageNameWithoutResized;
                 });
                 for (const image of resizedImagesToDelete) {
-                    await deleteImageFromBucket(image, bucket, BUCKET_PREFIX);
+                    await deleteFileFromBucket(image, bucket, BUCKET_PREFIX);
                 }
                 for (const image of originalImagesToDelete) {
-                    await deleteImageFromBucket(image, bucket, BUCKET_PREFIX);
+                    await deleteFileFromBucket(image, bucket, BUCKET_PREFIX);
                 }
             }
             if (request.data.changes.newImages && request.data.changes.newImages.length > 0) {
@@ -501,6 +622,7 @@ export const terminateBidSession = onSchedule({
             const highestBid = bids.docs.filter((bid) => bid.data().adId === ad.id)[0];
             if (highestBid) {
                 highestBids.push(highestBid);
+                await ad.ref.set({ highestBid: { bidId: highestBid.data().id, price: highestBid.data().price, buyerId: highestBid.data().buyerId } }, { merge: true });
             }
         }
         // set all bids to cancelled except the highest bid
@@ -558,86 +680,169 @@ export const terminateBidSession = onSchedule({
 );
 
 export const createTransaction = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("createTransaction", request.data);
     if (!request.auth) {
         throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
     }
-    // if (!request.data) {
-    //     throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
-    // }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data.adId || !request.data.contractId) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
     try {
-        // const response = await new Promise((resolve) => {
-        //     setTimeout(() => {
-        //         resolve({ ...request.data, id: "1234567890" });
-        //     }
-        // , 1000);
-        // });
-        const authB64 = Buffer.from(`${process.env.ESCROW_EMAIL}:${process.env.ESCROW_API_KEY}`).toString("base64");
-        axios.defaults.headers.common["Authorization"] = `Bearer ${authB64}`;
-        const response = await axios.post(process.env.ESCROW_API_PAY_URL as string, {
-            "currency": "usd",
-            "description": "Perfect sedan for the snow",
-            "reference": "test-transact",
-            "return_url": "https://www.escrow.com",
-            "redirect_type": "manual",
-            "items": [
-                {
-                    "extra_attributes": {
-                        "make": "BMW",
-                        "model": "328xi",
-                        "year": "2008",
-                    },
-                    "fees": [
-                        {
-                            "payer_customer": "me",
-                            "split": "1",
-                            "type": "escrow",
-                        },
-                    ],
-                    "inspection_period": 259200,
-                    "quantity": 1,
-                    "schedule": [
-                        {
-                            "amount": 8000,
-                            "payer_customer": "john.wick@test.escrow.com",
-                            "beneficiary_customer": "me",
-                        },
-                    ],
-                    "title": "BMW 328xi",
-                    "type": "motor_vehicle",
-                },
-            ],
-            "parties": [
-                {
-                    "address": {
-                        "line1": "180 Montgomery St",
-                        "line2": "Suite 650",
-                        "city": "San Francisco",
-                        "state": "CA",
-                        "country": "US",
-                        "post_code": "94104",
-                    },
-                    "agreed": true,
-                    "customer": "john.wick@test.escrow.com",
-                    "date_of_birth": "1980-07-18",
-                    "first_name": "John",
-                    "initiator": false,
-                    "last_name": "Wick",
-                    "phone_number": "4155555555",
-                    "lock_email": true,
-                    "role": "buyer",
-                },
-                {
-                    "agreed": true,
-                    "customer": "me",
-                    "initiator": true,
-                    "role": "seller",
-                },
-            ],
+        logger.info("createTransaction try", request.data);
+        const contractId = request.data.contractId;
+        // check if transaction already exists
+        const transactionRef = admin.firestore().collection("transactions").doc(contractId);
+        const transactionDoc = await transactionRef.get();
+        if (transactionDoc.exists) {
+            const transactionData = transactionDoc.data();
+            if (transactionData?.landing_page) {
+                return { landingPage: transactionData.landing_page, transactionId: transactionData.transaction_id };
+            } else {
+                throw new HttpsError("invalid-argument", ERROR_CODES["transaction-no-landing-page"]);
+            }
+        }
+        logger.info("createTransaction contractId", contractId);
+        const contractRef = admin.firestore().collection("contracts").where("id", "==", contractId);
+        logger.info("createTransaction contractRef", contractRef);
+        const contractDocs = await contractRef.get();
+        logger.info("createTransaction contractDocs", contractDocs);
+        if (contractDocs.empty) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["contract-does-not-exist"]);
+        }
+        logger.info("createTransaction contractRef", contractRef);
+        const contractData = contractDocs.docs[0].data();
+        logger.info("createTransaction contractData", contractData);
+        if (contractData.ready.length < 2) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["parties-not-ready"]);
+        }
+        const adRef = admin.firestore().collectionGroup("ads").where("id", "==", request.data.adId);
+        const adDocs = await adRef.get();
+        if (adDocs.empty) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["ad-does-not-exist"]);
+        }
+        logger.info("createTransaction adRef", adRef);
+        const adData = adDocs.docs[0].data();
+        logger.info("createTransaction adData", adData);
+        const sellerRef = admin.firestore().collection("users").doc(contractData.sellerId);
+        const sellerDoc = await sellerRef.get();
+        if (!sellerDoc.exists) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["user-does-not-exist"]);
+        }
+        const sellerData = sellerDoc.data();
+        logger.info("createTransaction sellerRef", sellerData);
+        const buyerRef = admin.firestore().collection("users").doc(contractData.buyerId);
+        const buyerDoc = await buyerRef.get();
+        if (!buyerDoc.exists) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["user-does-not-exist"]);
+        }
+        const buyerData = buyerDoc.data();
+        logger.info("createTransaction buyerRef", buyerData);
+        if (!sellerData?.hasEscrow || !buyerData?.hasEscrow) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["user-does-not-have-escrow-account"]);
+        }
+        const sellerEmail = sellerData?.escrowAuth.email;
+        logger.info("createTransaction sellerEmail", sellerEmail);
+        const buyerEmail = buyerData?.escrowAuth.email;
+        logger.info("createTransaction buyerEmail", buyerEmail);
+        if (!sellerEmail || !buyerEmail) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["user-does-not-have-escrow-account"]);
+        }
+        const escrowPayload = generateTransaction({
+            contractData: contractData as Contract,
+            adData: adData as Ad,
+            sellerEmail,
+            buyerEmail,
         });
-        return response.data;
-    } catch (error) {
-        logger.error("Error creating transaction:", error);
-        return error;
+        logger.info("createTransaction escrowPayload", escrowPayload);
+        const authB64 = Buffer.from(`${process.env.ESCROW_EMAIL}:${process.env.ESCROW_API_KEY}`).toString("base64");
+        axios.defaults.headers.common["Authorization"] = `Basic  ${authB64}`;
+        logger.info("createTransaction b4 response");
+        const response = await axios.post(process.env.ESCROW_API_PAY_URL as string, escrowPayload, { maxContentLength: 30 * 1024 * 1024, maxBodyLength: 30 * 1024 * 1024 });
+        logger.info("createTransaction af response");
+        if (response.data) {
+            const transactionRef = admin.firestore().collection("transactions").doc(request.data.contractId);
+            logger.info("createTransaction transactionRef", transactionRef);
+            await transactionRef.set({ ...response.data, ...escrowPayload, sellerId: contractData.sellerId, buyerId: contractData.buyerId, createdAt: admin.firestore.FieldValue.serverTimestamp(), contractId: contractData.id });
+            return { landingPage: response.data.landing_page, transactionId: response.data.id };
+        } else {
+            throw new HttpsError("internal", ERROR_CODES["internal"]);
+        }
+    } catch (error:any) {
+        logger.log("Error creating transaction:", error);
+        logger.log("Error creating transaction:", error.response.data);
+        return { error };
+    }
+});
+export const getTransaction = onCall(callableOptions, async (request:CallableRequest) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const contractId = request.data.transactionId;
+    if (!contractId) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const transactionRef = admin.firestore().collection("transactions").doc(contractId);
+        const transactionDoc = await transactionRef.get();
+        if (transactionDoc.exists) {
+            const transactionData = transactionDoc.data() as Transaction;
+            const uid = request.auth.uid;
+            if (transactionData?.sellerId !== uid && transactionData?.buyerId !== uid) {
+                throw new HttpsError("invalid-argument", ERROR_CODES["permission-denied"]);
+            } else {
+                const authB64 = Buffer.from(`${process.env.ESCROW_EMAIL}:${process.env.ESCROW_API_KEY}`).toString("base64");
+                axios.defaults.headers.common["Authorization"] = `Basic  ${authB64}`;
+                logger.info("getTransaction transactionData", transactionData);
+                const response = await axios.get(`${process.env.ESCROW_API_GETTRANSACTION_URL}${transactionData.transaction_id}` as string);
+                logger.info("getTransaction response", response);
+                if (response.status == 200) {
+                    transactionRef.set({ ...response.data }, { merge: true });
+                    return { transaction: response.data, landingPage: transactionData.landing_page };
+                } else {
+                    throw new HttpsError("internal", ERROR_CODES["internal"]);
+                }
+            }
+        } else {
+            throw new HttpsError("invalid-argument", ERROR_CODES["transaction-does-not-exist"]);
+        }
+    } catch (error:any) {
+        logger.log("Error getting transaction:", error.response.data);
+        return { error };
+    }
+});
+
+export const getEscrowLandingPage = onCall(callableOptions, async (request:CallableRequest) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const transactionId = request.data.transactionId;
+    if (!transactionId) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const transactionRef = admin.firestore().collection("transactions").doc(transactionId);
+        const transactionDoc = await transactionRef.get();
+        if (transactionDoc.exists) {
+            const transactionData = transactionDoc.data();
+            const uid = request.auth.uid;
+            if (transactionData?.sellerId !== uid && transactionData?.buyerId !== uid) {
+                throw new HttpsError("invalid-argument", ERROR_CODES["permission-denied"]);
+            } else {
+                if (transactionData?.landing_page) {
+                    return { landingPage: transactionData.landing_page, transactionId: transactionData.id };
+                } else {
+                    throw new HttpsError("invalid-argument", ERROR_CODES["transaction-no-landing-page"]);
+                }
+            }
+        } else {
+            throw new HttpsError("invalid-argument", ERROR_CODES["transaction-does-not-exist"]);
+        }
+    } catch (error:any) {
+        logger.log("Error getting transaction:", error);
+        return { error };
     }
 });
 export const createEscrowAccount = onCall(callableOptions, async (request:CallableRequest) => {
@@ -714,7 +919,7 @@ export const linkEscrowAccount = onCall(callableOptions, async (request:Callable
     }
 });
 export const createJobPost = onCall(callableOptions, async (request:CallableRequest) => {
-    logger.info("createAd", request);
+    logger.info("createJob", request);
     if (!request.auth) {
         throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
     }
@@ -809,6 +1014,102 @@ export const removeJobPost = onCall(callableOptions, async (request:CallableRequ
         throw new HttpsError("internal", error);
     }
 });
+export const createGigPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("createGig", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const gigId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await admin.firestore().collection("gigs").doc(uid).collection("gigs").doc(gigId).set({ ...request.data, gigId: gigId, createdAt: admin.firestore.FieldValue.serverTimestamp(), posterId: uid, live: false });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const postGigPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("postGigPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("gigs").doc(uid).collection("gigs").doc(request.data.gigId).set({ live: true, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const takeDownGigPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("takeDownGigPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("gigs").doc(uid).collection("gigs").doc(request.data.gigId).set({ live: false, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const editGigPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("editGigPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("gigs").doc(uid).collection("gigs").doc(request.data.gigId).set({ ...request.data.changes, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const removeGigPost = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("removeGigPost", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        await admin.firestore().collection("gigs").doc(uid).collection("gigs").doc(request.data.gigId).delete();
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
 export const updateLastMessage = onDocumentCreated("/chatrooms/{chatroomId}/messages/{messageId}", (event) => {
     const chatroomId = event.params.chatroomId;
     const snapshot = event.data;
@@ -848,7 +1149,21 @@ export const sendDm = onCall(callableOptions, async (request:CallableRequest) =>
             sellerId: request.data.receiverId,
             buyerId: request.data.senderId,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            senderProfilePic: "",
         };
+        // fetch user profile picture
+        const userRef = admin.firestore().collection("users").doc(request.data.senderId);
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        const userData = userDoc.data();
+        if (!userData) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        if (userData.profilePic) {
+            dmIdData.senderProfilePic = userData.profilePic;
+        }
         await admin.firestore().collection("dms").doc(dmId).set(dmIdData);
         await admin.firestore().collection("dms").doc(dmId).collection("messages").add({ senderId: request.data.senderId, text: request.data.text, createdAt: admin.firestore.FieldValue.serverTimestamp() });
     } catch (error:any) {
@@ -872,5 +1187,84 @@ export const updateLastDm = onDocumentCreated("/dms/{dmId}/messages/{messageId}"
         .update(dmUpdate)
         .catch( (error) => {
             logger.error("Error updating dms: ", error);
-        });
+    });
+});
+export const submitApplication = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("submitApplication", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const resume = request.data.resume;
+        if (!resume) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        const bucket = admin.storage().bucket();
+        const file = bucket.file(resume);
+        const fileExists = await file.exists();
+        if (!fileExists) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        const [url] = await file.getSignedUrl({ action: "read", expires: "03-09-2491" });
+        const applicationId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        delete request.data.resume;
+        const applicationData = {
+            ...request.data,
+            resume: url,
+            applicationId: applicationId,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            status: "pending",
+            applicantId: uid,
+        };
+        await admin.firestore().collection("applications").doc(applicationId).set(applicationData);
+        return { success: true };
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const removeApplication = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("removeApplication", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const applicationId = request.data.applicationId;
+        const appRef = admin.firestore().collection("applications").doc(applicationId);
+        const appDoc = await appRef.get();
+        if (!appDoc.exists) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        const appData = appDoc.data();
+        if ( appData && appData.resume ) {
+            const bucket = admin.storage().bucket();
+            const BUCKET_PREFIX = process.env.BUCKETPARSEDURL as string;
+            try {
+                await deleteFileFromBucket(appData?.resume, bucket, BUCKET_PREFIX);
+            } catch (error) {
+                logger.error(error);
+            }
+        }
+        await appRef.delete();
+        return { success: true };
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
 });

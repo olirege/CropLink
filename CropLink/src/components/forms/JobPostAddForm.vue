@@ -56,12 +56,6 @@
   import { useMainStore } from '@/stores/main';
   import type { Job } from '@/types';
   const emits = defineEmits(['close']);
-  const props = defineProps({
-    job: {
-      type: Object as PropType<Job>,
-      required: true
-    }
-  })
   const job = ref({
     createdAt: null,
     title: '',

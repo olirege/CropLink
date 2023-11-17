@@ -55,6 +55,8 @@ export type Profile = {
         email: string;
         apiKey: string;
     };
+    profilePic: string;
+    bannerPic: string;
 };
 export type Clause = {
     id: string;
@@ -110,4 +112,27 @@ export type Job = {
     salary: string;
     tasks: string[];
     type: string;
+};
+export type Gig = {
+    createdAt: Timestamp;
+    gigId: string;
+    title: string;
+    live: boolean;
+    description: string;
+    location: string;
+    milestones: object[];
+};
+export type Application = {
+    createdAt: Timestamp;
+    parentId?: string;
+    applicationId: string;
+    status: string;
+    updatedAt: Timestamp;
+    resume?: string;
+    applicantId?: string;
+    ownerId?: string;
+    parentType?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
 };

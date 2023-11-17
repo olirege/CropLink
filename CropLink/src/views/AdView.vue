@@ -10,7 +10,7 @@
                 <p>No bids yet</p>
             </span>
             <span v-if="bids && bids.length > 0">
-                <BidCard v-for="bid in bids" :bid="bid" :showViewButton="false"/>
+                <BidCard v-for="bid in bids" :bid="bid" :showViewButton="false" :sellerId="(ad.uid as string)"/>
             </span>
         </div>
         <div v-else>
@@ -44,7 +44,6 @@ import { storeToRefs } from 'pinia';
 import { db } from '@/firebase/main';
 import { onSnapshot, collectionGroup, query, where, orderBy } from 'firebase/firestore';
 import { convertTimestampToDate, getPaginatedCollectionGroupWhereWhere } from '@/firebase/utils';
-import { useRouter } from 'vue-router';
 const { modals } = storeToRefs(useModalStore());
 const { profile } = storeToRefs(useMainStore());
 const ACCOUNT_TYPES = useMainStore().ACCOUNT_TYPES;

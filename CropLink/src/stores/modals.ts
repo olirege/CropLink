@@ -2,12 +2,15 @@ import { reactive } from 'vue'
 import { defineStore } from 'pinia'
 export const useModalStore = defineStore('ModalStore', () => {
     const modals = reactive({
+        addgig: false,
+        editgig: false,
         addjob: false,
         editjob: false,
         addad: false,
         addbid: false,
         editad: false,
         viewjob: false,
+        viewgig: false,
         confirmremove: false,
         context: {},
     })
@@ -44,6 +47,12 @@ export const useModalStore = defineStore('ModalStore', () => {
         modals.addad = false
         modals.addbid = false
         modals.editad = false
+        modals.viewjob = false
+        modals.confirmremove = false
+        modals.addgig = false
+        modals.editgig = false
+        modals.addjob = false
+        modals.editjob = false
         modals.context = {}
     }
     const resetDropdowns = () => {

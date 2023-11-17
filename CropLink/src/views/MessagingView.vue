@@ -14,6 +14,10 @@ const props = defineProps({
         type: String,
         required: false
     },
+    contractId: {
+        type: String,
+        required: false
+    },
 })
 const clauseMentionned = ref({} as Clause);
 const onMentionClause = (clause:Clause) => {

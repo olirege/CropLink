@@ -56,8 +56,13 @@
                     <JobsContentComponent/>
                 </TabPanel>
                 <TabPanel>
+                    <GigsContentComponent/>
+                </TabPanel>
+                <TabPanel>
+                    <ApplicationsContentComponent/>
+                </TabPanel>
+                <TabPanel>
                     <BidContentComponent/>
-            
                 </TabPanel>
             </TabGroup>
         </div>
@@ -71,6 +76,8 @@ import { TabGroup, TabList, Tab, TabPanel } from '@headlessui/vue'
 import SellerContentComponent from '@/components/userboard_components/SellerContentComponent.vue';
 import BuyerContentComponent from '@/components/userboard_components/BuyerContentComponent.vue';
 import BidContentComponent from '@/components/userboard_components/BidContentComponent.vue';
+import GigsContentComponent from '@/components/userboard_components/GigsContentComponent.vue';
+import ApplicationsContentComponent from '@/components/userboard_components/ApplicationsContentComponent.vue';
 import ContractContentComponent from '@/components/userboard_components/ContractsContentComponent.vue';
 import ChatRoomsContentComponent from '@/components/userboard_components/ChatRoomsContentComponent.vue';
 import JobsContentComponent from '@/components/userboard_components/JobsContentComponent.vue';
@@ -81,6 +88,8 @@ const TAB_CATEGORIES = {
     ADS: "Ads",
     CONTRACTS: "Contracts",
     MESSAGES: "Messages",
-    JOBS: "Job posts"
+    JOBS: "Job posts",
+    GIGS: "Gigs",
+    APPLICATIONS: "Applications",
 }
 </script>

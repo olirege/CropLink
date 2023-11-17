@@ -101,4 +101,17 @@ export type Contract = {
     status: "pending" | "accepted" | "rejected",
     endedAt?: Timestamp,
     ready?:string[],
+    total?:number,
+};
+
+export type TransactionPayload = {
+    adData: Ad;
+    contractData: Contract;
+    buyerEmail: string;
+    sellerEmail: string;
+};
+
+export type Transaction = {
+    [key: string]: any;
+    transaction_id: string;
 };

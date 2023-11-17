@@ -1,1 +1,0 @@
-import{C as e,e as t,f as o,g as s}from"./index-f692dcdc.js";const c={},n={class:"about"},_=s("h1",null,"About",-1),a=[_];function r(d,i){return t(),o("div",n,a)}const l=e(c,[["render",r]]);export{l as default};

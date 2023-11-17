@@ -24,18 +24,21 @@
         <div class="flex justify-end mt-2 space-x-4">
             <ButtonWithLoading 
                 :isLoading="isCancellingBid == bid.id" 
-                v-if="bid.status === BID_STATUSES.PENDING"
+                v-if="bid.status === BID_STATUSES.PENDING && bid.buyerId == user?.uid"
                 @click="onCancelBid(bid.id as string)">
                 Cancel Bid
             </ButtonWithLoading>
-            <button
+            <CardButton
             v-if="showViewButton"
             @click="onViewAd(bid.adId)"
-            class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
                 View
-            </button>
-            <button @click="onContact(bid.adId)" class="inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Contact</button>
+            </CardButton>
+            <CardButton @click="onContact(bid.adId)"
+            v-if="bid.status == BID_STATUSES.ACCEPTED && (bid.buyerId == user?.uid || sellerId == user?.uid)"
+            >
+                Contact
+            </CardButton>
         </div>
     </div>
 </template>
@@ -43,12 +46,19 @@
 import { isFirestoreTimestamp, convertTimestampToDate } from '@/firebase/utils';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { type PropType, ref } from 'vue';
-import { useMainStore} from '@/stores/main';
+import { useMainStore } from '@/stores/main';
 import { useRouter } from 'vue-router';
 import type { Bid } from '@/types';
+import CardButton from '../props/CardButton.vue';
+import { storeToRefs } from 'pinia';
+const { user } = storeToRefs(useMainStore());
 const props = defineProps({
     bid: {
         type: Object as PropType<Bid>,
+        required: true
+    },
+    sellerId: {
+        type: String,
         required: true
     },
     showViewButton: {

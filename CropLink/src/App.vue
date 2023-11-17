@@ -1,6 +1,6 @@
 
 <template>
-  <header  class="relative bg-blue-900 text-white p-4">
+  <header  class="relative bg-blue-900 text-white p-4 sticky top-0 z-50">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center">
         <img src="@/assets/croplink_logo.png" alt="CropLink Logo" class="w-10 h-10 mr-2 rounded-sm">
@@ -21,8 +21,11 @@
   <AddBidModal v-if="modals['addbid']"/>
   <EditJobModal v-if="modals['editjob']"/>
   <AddJobModal v-if="modals['addjob']"/>
+  <EditGigModal v-if="modals['editgig']"/>
+  <AddGigModal v-if="modals['addgig']"/>
   <ConfirmRemoveModal v-if="modals['confirmremove']"/>
   <JobViewModal v-if="modals['viewjob']"/>
+  <GigViewModal v-if="modals['viewgig']"/>
   <StateNotificationToast v-show="notifications.show"/>
   <div class="w-full">
     <RouterView />
@@ -39,8 +42,11 @@ import EditAdModal from '@/components/modals/EditAdModal.vue'
 import AddBidModal from '@/components/modals/AddBidModal.vue';
 import AddJobModal from './components/modals/AddJobModal.vue';
 import EditJobModal from './components/modals/EditJobModal.vue';
+import AddGigModal from './components/modals/AddGigModal.vue';
+import EditGigModal from './components/modals/EditGigModal.vue';
 import ConfirmRemoveModal from './components/modals/ConfirmRemoveModal.vue';
 import JobViewModal from './components/modals/JobViewModal.vue';
+import GigViewModal from './components/modals/GigViewModal.vue';
 import StateNotificationToast from '@/components/toasts/StateNotificationToast.vue';
 import HeaderNotificationDropdown from './components/toasts/HeaderNotificationDropdown.vue';
 import DirectMessageComponent from './components/props/DirectMessageComponent.vue';

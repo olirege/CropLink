@@ -35,7 +35,7 @@ onMounted(() => {
             useMainStore().setNewUser(authResult.additionalUserInfo?.isNewUser);
             router.push({name:'profile-setup'});
           } else {
-            router.push({name:'userboard'});
+            router.push({name:'/feed'});
           }
           return false;
         },
