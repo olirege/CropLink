@@ -22,7 +22,7 @@ onMounted(() => {
           forceSameDevice: false,
         }
       ],
-      signInSuccessUrl: '/feed',
+      signInSuccessUrl: '/',
       callBacks: {
         uiShown: () => {
           console.log("uiShown")
@@ -35,7 +35,7 @@ onMounted(() => {
             useMainStore().setNewUser(authResult.additionalUserInfo?.isNewUser);
             router.push({name:'profile-setup'});
           } else {
-            router.push({name:'/feed'});
+            router.push({name:'home'});
           }
           return false;
         },

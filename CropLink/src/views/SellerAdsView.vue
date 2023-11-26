@@ -1,87 +1,185 @@
 <template>
-    <div id="seller-ad-banner" class="w-full h-64 relative">
-        <img :src="sellerSignature.bannerPic" class="bg-slate-500 w-full h-48 object-cover" ref="bannerPic" v-if="!isLoadingProfile">
-        <div v-else class="bg-slate-500 w-full h-48 animate-pulse"></div>
-        <div class="absolute bottom-5 left-20 flex flex-row">
-            <img :src="sellerSignature.profilePicResized" class="z-10 border-4 border-white rounded-full w-32 h-32 bg-indigo-500" ref="profilePic" v-if="!isLoadingProfile">
-            <div v-else class="z-10 border-4 border-white rounded-full w-32 h-32 bg-indigo-500 animate-pulse"></div>
-            <div class="relative ml-5 p-1">
-                <h1 class="absolute bottom-1 text-xl font-bold truncate">
-                    {{ props.sellerName }}
-                </h1>
+    <div class="p-5 flex flex-col gap-4">
+        <span>
+            <div id="seller-ad-banner" class="w-full h-64 relative  bg-gradient-to-r from-white to-sky-500/40">
+                <img :src="sellerSignature.bannerPic" class="bg-slate-500 w-full h-48 object-cover rounded-t-md" ref="bannerPic" v-if="!isLoadingProfile">
+                <div v-else class="bg-slate-500 w-full h-48 animate-pulse"></div>
+                <div class="absolute bottom-5 left-20 flex flex-row">
+                    <img :src="sellerSignature.profilePicResized" class="z-9 border-4 border-white rounded-full w-32 h-32 bg-indigo-500" ref="profilePic" v-if="!isLoadingProfile">
+                    <div v-else class="z-10 border-4 border-white rounded-full w-32 h-32 bg-indigo-500 animate-pulse"></div>
+                    <div class="relative ml-5 p-1">
+                        <div class="absolute bottom-1 text-xl font-bold truncate flex flex-row">
+                            <p>{{ props.sellerName }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="absolute bottom-5 right-20">
+                    <button class="border-2 border p-1 w-32 rounded-md flex flex-row items-center justify-center gap-2 bg-white" @click="onMessage">
+                        <EnvelopeIcon class="w-6 h-6"/>
+                        <p>Message</p>
+                    </button>
+                </div>
             </div>
-        </div>
-        <div class="absolute bottom-5 right-20">
-            <button class="border-2 border p-1 w-32 rounded-md flex flex-row items-center justify-center gap-2 bg-white" @click="onMessage">
-                <EnvelopeIcon class="w-6 h-6"/>
-                <p>Message</p>
-            </button>
-        </div>
-    </div>
-    <div class="flex flex-row gap-6 w-full p-5">
-        <div class="relative flex flex-col h-full w-full">
-            <h2>Job Openings</h2>
-            <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveJobs.length > 0 && !isLoadingJobs">
-                <JobThumbnailCard :job="(job as Job)" v-for="job in liveJobs.slice(0,MAX_JOBS)"/>
+            <div v-if="!isLoadingProfile" class="flex flex-col gap-2 p-4  bg-gradient-to-r from-white to-sky-500/40 mb-4">
+                <div class="flex flex-row items-center gap-2">
+                    <span class="flex flex-row gap-1 items-center">
+                        <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
+                        <p>Verified</p>
+                    </span>
+                    <p class="p-1 px-2 bg-white">{{ amountOfTime }}</p>
+                    <p class="p-1 px-2 bg-white">{{ sellerSignature.staffNumber }} staff</p>
+                    <p class="p-1 px-2 bg-white">{{ sellerSignature.acreage }} acres</p>
+                </div>
+                <div class="flex flex-row gap-2 italic">
+                    <MapPinIcon class="w-5 h-5"/>
+                    <p>{{ sellerSignature.location }}</p>
+                </div>
             </div>
-            <div v-else-if="liveJobs.length == 0 && !isLoadingJobs">
-                <p class="text-center">No jobs to show</p>
+        </span>
+        <span class="border rounded-md shadow">
+            <span class="grid grid-cols-2 gap-4">
+                <span class="p-4">
+                    <div class="border-b p-4 flex flex-row gap-2 divide-x" v-if="!isLoadingProfile">
+                        <div class="flex flex-row gap-2 px-4 py-2">
+                            <p class="font-bold"><span class="text-6xl">{{ sellerSignature.rating }}</span> /5</p>
+                            <span class="flex flex-col justify-end">
+                                <p class="font-bold">{{ storeRating }}</p>
+                                <p>({{ sellerSignature.reviewsCount }} <span class="text-xs text-slate-400">reviews</span>)</p>
+                            </span>
+                        </div>
+                        <span class="flex flex-col justify-center items-center px-4 py-2">
+                            <p class="italic text-sm">average response rate</p>
+                            <p class="font-bold"> {{"≤" + sellerSignature.averageResponseTime }} hrs</p>
+                        </span>
+                    </div>
+                    <span class="grid grid-cols-4 gap-2 w-full divide-x py-4">
+                        <div class="p-4">
+                            <p class="text-xl text-slate-400 mb-2 font-bold">Machinery</p>
+                            <ul class="list-disc pl-6">
+                                <li v-for="machine in sellerSignature.machinery">
+                                    <p class="text-xs italic">{{ machine }}</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-xl text-slate-400 mb-2 font-bold">Plants</p>
+                            <span>
+                                <div v-for="plant in sellerSignature.plants" class="flex flex-row gap-1 items-center justify-between w-full space-y-1">
+                                    <p class="text-xs truncate ...">{{ plant.variety }}</p>
+                                    <p class="text-xs">{{ plant.quantity }}</p>
+                                </div>
+                            </span>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <p class="text-xl text-slate-400 mb-2 font-bold">Shipping</p>
+                            <div v-for="method in sellerSignature.shipping" class="flex flex-col">
+                                <p>{{ method.type }}</p>
+                                <p class="text-xs italic pl-2">Up to {{ method.distance }}KMs</p>
+                                <p class="text-xs italic pl-2">Max: {{ method.weight }}KGs</p>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-xl text-slate-400 mb-2 font-bold">Capabilities</p>
+                            <li v-for="capability in sellerSignature.capabilities" class="text-xs inline space-x-2">
+                                <p>{{ capability }}</p>
+                            </li>
+                        </div>
+                    </span>
+                </span>
+                <div class="grid grid-cols-3 p-4">
+                    <img class="bg-slate-500 rounded-md flex h-96 w-96 w-min-96 col-span-2 object-cover" src="@/assets/crop_1.png"/>
+                    <div class="grid grid-rows-3">
+                        <div class="flex items-center justify-center">
+                            <img class="bg-slate-500 rounded-md h-28 w-28 object-cover" src="@/assets/crop_2.png"/>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <img class="bg-slate-500 rounded-md h-28 w-28 object-cover" src="@/assets/crop_3.png"/>
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <img class="bg-slate-500 rounded-md h-28 w-28 object-cover" src="@/assets/crop_4.png"/>
+                        </div>
+                    </div>
+                </div>
+            </span>
+        </span>
+        <span v-if="liveJobs.length > 0 && liveGigs.length > 0" class="border rounded-md shadow p-5">
+            <div class="flex items-center justify-start h-12 bg-gradient-to-r from-sky-500/40 to-white rounded-t-md">
+                <h2 class="pl-2 text-white text-2xl font-bold p-1">Work Opportunities</h2>
+            </div>
+            <div class="flex flex-col gap-6 w-full p-2">
+                <div class="relative flex flex-col h-full w-full h-96" v-if="liveJobs.length > 0">
+                    <h2 class="text-xl font-bold italic my-2 pl-2">Job Openings</h2>
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveJobs.length > 0">
+                        <JobCard :job="(job as Job)" v-for="job in liveJobs.slice(0,MAX_JOBS)"/>
+                    </div>
+                    <div v-else-if="liveJobs.length == 0">
+                        <p class="text-center">No jobs to show</p>
+                    </div>
+                    <div v-if="liveJobs.length == 2" class="flex w-full justify-end" @click="onShowMoreJobs">
+                        <p class="text-sm underline cursor-pointer">View more jobs</p>
+                    </div>
+                    <template v-if="isLoadingJobs">
+                        <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-8 flex justify-center items-center min-h-96">
+                            <LoadingSpinner :isLoading="isLoadingJobs" class="z-9"/>
+                        </div>
+                    </template>
+                </div>
+                <div class="flex flex-col h-full w-full relative h-96" v-if="liveGigs.length > 0">
+                    <h2 class="text-xl font-bold italic my-2 pl-2">Small Gigs</h2>
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveGigs.length > 0">
+                        <GigCard :gig="(gig as Gig)" v-for="gig in liveGigs.slice(0,MAX_GIGS)"/>
+                    </div>
+                    <div v-else-if="liveGigs.length == 0">
+                        <p class="text-center">No gigs to show</p>
+                    </div>
+                    <div v-if="liveGigs.length == 2" class="flex w-full justify-end"  @click="onShowMoreGigs">
+                        <p class="text-sm underline cursor-pointer">View more gigs</p>
+                    </div>
+                    <template v-if="isLoadingGigs">
+                        <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-8 flex justify-center items-center min-h-96">
+                            <LoadingSpinner :isLoading="isLoadingGigs" class="z-9"/>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </span>
+        <div class="p-5 border rounded-md shadow" v-if="liveAds.length > 0">
+            <div class="flex items-center justify-start h-12 bg-gradient-to-r from-sky-500/40 to-white rounded-t-md">
+                <h2 class="pl-2 text-white text-2xl font-bold p-1">Product listings</h2>
+            </div>
+            <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveAds.length > 0 && !isLoadingAds">
+                <div v-for="ad in liveAds">
+                    <template v-if="ad.adType == ACCOUNT_TYPES.SELLER">
+                        <SellerAdThumbnailCard :ad="(ad as SellerAd)" :showButtons="false"/>
+                    </template>
+                    <template v-if="ad.adType == ACCOUNT_TYPES.BUYER">
+                        <BuyerAdCard :ad="(ad as BuyerAd)" />
+                    </template>
+                </div>
+            </div>
+            <div v-else-if="liveAds.length == 0 && !isLoadingAds">
+                <p class="text-center">No ads to show</p>
             </div>
             <div v-else>
-                <LoadingSpinnerVue :isLoading="isLoadingJobs"/>
+                <LoadingSpinner :isLoading="isLoadingAds"/>
             </div>
-            <div v-if="liveJobs.length == 2 && !isLoadingJobs" class="flex w-full justify-end" @click="onShowMoreJobs">
-                <p class="text-sm underline cursor-pointer">View more jobs</p>
-            </div>
-        </div>
-        <div class="flex flex-col h-full w-full relative">
-            <h2>Small Gigs</h2>
-            <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveGigs.length > 0 && !isLoadingGigs">
-                <GigThumbnailCard :gig="(gig as Gig)" v-for="gig in liveGigs.slice(0,MAX_GIGS)"/>
-            </div>
-            <div v-else-if="liveGigs.length == 0 && !isLoadingGigs">
-                <p class="text-center">No gigs to show</p>
-            </div>
-            <div v-else>
-                <LoadingSpinnerVue :isLoading="isLoadingGigs"/>
-            </div>
-            <div v-if="liveGigs.length == 2 && !isLoadingGigs" class="flex w-full justify-end"  @click="onShowMoreGigs">
-                <p class="text-sm underline cursor-pointer">View more gigs</p>
-            </div>
-        </div>
-    </div>
-    <div class="p-5">
-        <h2>Product listings</h2>
-        <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveAds.length > 0 && !isLoadingAds">
-            <div v-for="ad in liveAds">
-                <template v-if="ad.adType == ACCOUNT_TYPES.SELLER">
-                    <SellerAdThumbnailCard :ad="(ad as SellerAd)" :showButtons="false"/>
-                </template>
-                <template v-if="ad.adType == ACCOUNT_TYPES.BUYER">
-                    <BuyerAdCard :ad="(ad as BuyerAd)" />
-                </template>
-            </div>
-        </div>
-        <div v-else-if="liveAds.length == 0 && !isLoadingAds">
-            <p class="text-center">No ads to show</p>
-        </div>
-        <div v-else>
-            <LoadingSpinnerVue :isLoading="isLoadingAds"/>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { useMainStore } from '@/stores/main';
-import LoadingSpinnerVue from '@/components/props/LoadingSpinner.vue';
-import { ref, onMounted, type Ref } from 'vue';
+import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
+import { ref, onMounted, type Ref, computed } from 'vue';
 import type { SellerAd, BuyerAd, Job, Gig } from '@/types';
 import { getPaginatedCollectionGroupWhereWhere, getDocument } from '@/firebase/utils';
 import { EnvelopeIcon } from '@heroicons/vue/24/outline';
+import { CheckCircleIcon } from '@heroicons/vue/20/solid';
 import SellerAdThumbnailCard from '@/components/cards/SellerAdThumbnailCard.vue';
-import JobThumbnailCard from '@/components/cards/JobThumbnailCard.vue';
-import GigThumbnailCard from '@/components/cards/GigThumbnailCard.vue';
+import JobCard from '@/components/cards/JobStoreCard.vue';
+import GigCard from '@/components/cards/GigStoreCard.vue';
 import BuyerAdCard from '@/components/cards/BuyerAdCard.vue';
 import { useModalStore } from '@/stores/modals';
+import { MapPinIcon } from '@heroicons/vue/24/solid';
 import { storeToRefs } from 'pinia';
 const ACCOUNT_TYPES = useMainStore().ACCOUNT_TYPES;
 const liveAds:Ref<SellerAd[]|BuyerAd[]> = ref([]);
@@ -139,9 +237,7 @@ onMounted(async() => {
     isLoadingGigs.value = true;
     const promises = [];
     promises.push(getDocument(import.meta.env.VITE_ADS_COLLECTION, props.id).then((doc)=>{
-        sellerSignature.value.name = doc.name;
-        sellerSignature.value.profilePicResized = doc.profilePicResized;
-        sellerSignature.value.bannerPic = doc.bannerPic;
+        sellerSignature.value = doc 
         isLoadingProfile.value = false;
     }));
     promises.push(getPaginatedCollectionGroupWhereWhere('ads', 'live', '==', true, 'uid', '==', props.id, ['postedOn','desc'], 25).then((paginatedAds)=>{
@@ -157,5 +253,32 @@ onMounted(async() => {
         isLoadingGigs.value = false;
     }));
     await Promise.all(promises);
+})
+const amountOfTime = computed(() => {
+    // display amount of time since member joined
+    if(!sellerSignature.value || !sellerSignature.value.createdAt ) return
+    const now = new Date();
+    const joined = new Date(sellerSignature.value.createdAt.toDate().toString());
+    const diff = now.getTime() - joined.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const months = Math.floor(days / 31);
+    const years = Math.floor(months / 12);
+    if (years > 0) {
+        return `${years} yrs`;
+    } else if (months > 0) {
+        return `${months} mths`;
+    } else {
+        return `${days} days`;
+    }
+})
+const storeRating = computed(() => {
+    if(!sellerSignature.value || !sellerSignature.value.rating ) return
+    const rating = sellerSignature.value.rating;
+    if(rating == 0) return 'No ratings yet'
+    if (rating > 0 && rating < 1) return 'Poor'
+    if (rating >= 1 && rating < 2) return 'Fair'
+    if (rating >= 2 && rating < 3) return 'Average'
+    if (rating >= 3 && rating < 4) return 'Good'
+    if (rating >= 4 && rating < 5) return 'Excellent'
 })
 </script>

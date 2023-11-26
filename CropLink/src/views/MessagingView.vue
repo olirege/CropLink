@@ -1,7 +1,7 @@
 <template>
     <div class="grid grid-cols-2 gap-x-4 p-2">
         <ChatRoomComponent :clauseMentionned="clauseMentionned" @onRemoveMentionnedClause="onRemoveMentionnedClause" :adId="(adId as string)"/>
-        <ContractComponent :adId="(adId as string)" @onMentionClause="onMentionClause"/>
+        <ContractComponent :adId="(adId as string)" @onMentionClause="onMentionClause" />
     </div>
 </template>
 <script setup lang="ts">

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <span v-if="adGroups && adGroups.docs && adGroups.docs.length > 0 && !isLoadingAds" class="grid grid-cols-3 gap-4">
+        <span v-if="adGroups && adGroups.docs && adGroups.docs.length > 0 && !isLoadingAds" class="grid grid grid-cols-1 gap-4">
             <GroupAdCard :adGroup="adGroup" v-for="adGroup in adGroups.docs" :key="adGroup.id"/>
         </span>
         <div class="flex flex-row justify-end">
@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import GroupAdCard from '@/components/cards/GroupedAdCard.vue';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted } from 'vue';
 import { getPaginatedDocuments } from '@/firebase/utils';
 const isLoadingAds = ref(false);
 const adGroups = ref([]);

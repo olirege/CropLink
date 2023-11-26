@@ -4,6 +4,23 @@
         <div>
             <p>Last Updated: {{ isFirestoreTimestamp(contract.updatedAt) ? convertTimestampToDate(contract.updatedAt) : contract.updatedAt }}</p>
         </div>
+        <div v-if="contract.context">
+            <template v-if="contract.type == 'gig'">
+                <div class="grid">
+                    <GigThumbnailCard :gig="(contract.context as Gig)" />
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-lg font-semibold border-b pb-2">Milestones:</label>
+                    <span v-for="(milestone,index) in contract.context.milestones" class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0 flex flex-col gap-2">
+                        <span class="flex flex-row justify-between">
+                            <span class="flex flex-row items-center gap-2"><p class="font-bold text-xl">{{ index + 1 +'.' }}</p><p class="italic text-xl">{{milestone.name}}</p></span>
+                            <span class="flex flex-row gap-4"><CurrencyDollarIcon class="h-6 w-6"/><p>{{ milestone.price }}</p></span>
+                        </span>
+                        <p>{{ milestone.description.substring(0,300) + '...' }}</p>
+                    </span>
+                </div>
+            </template>
+        </div>
         <button @click="onAddClauseDraft" class="w-full border-dashed border-2 border-sky-500 rounded-sm p-1">Add Clause</button>
         <div v-if="!isLoadingClauses" class="flex flex-col space-y-4">
             <span>
@@ -99,13 +116,16 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
 import { db } from '@/firebase/main';
-import { onSnapshot, query, orderBy, collection, where, setDoc, doc, deleteDoc, arrayUnion, arrayRemove, updateDoc } from 'firebase/firestore';
+import { setDoc, doc, deleteDoc, arrayUnion, arrayRemove, updateDoc, collection } from 'firebase/firestore';
 import { CheckCircleIcon } from '@heroicons/vue/20/solid';
-import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline';
-import type { Contract, Clause } from '@/types';
-import { convertTimestampToDate, isFirestoreTimestamp } from '@/firebase/utils';
-import { createTransactionCallable } from '@/firebase/callables';
+import { PencilSquareIcon, TrashIcon, CurrencyDollarIcon } from '@heroicons/vue/24/outline';
+import type { Contract, Clause, Gig } from '@/types';
+import { convertTimestampToDate, isFirestoreTimestamp, useCollectionQuerySubscription, useFirebaseFunctionCall } from '@/firebase/utils';
 import router from '@/router';
+import GigThumbnailCard from '../cards/GigThumbnailCard.vue';
+import { useModalStore } from '@/stores/modals';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const emits = defineEmits(['onMentionClause']);
 const props = defineProps({
     adId: {
@@ -126,28 +146,45 @@ const CLAUSE_STATUSES = useMainStore().CLAUSE_STATUSES;
 let stopContractSubscription:any;
 let stopUserClauses:any;
 let stopOtherClauses:any;
-const stopContractWatch = watch(contract,(newVal,oldVal) => {
+const stopContractWatch = watch(contract, async (newVal,oldVal) => {
     if(newVal.id) {
-        stopUserClauses = onSnapshot(query(collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`), where('authorId','==', user.value.uid), orderBy('createdAt','asc')), (snapshot) => {
-        isLoadingClauses.value = true;
-        console.log("user clauses changed")
-        userClauses.value = snapshot.docs.map((doc) => {
-            return {
-                ...doc.data()
-            } as Clause;
-        });
-        isLoadingClauses.value = false;
-    })
-        stopOtherClauses = onSnapshot(query(collection(db, `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`), where('authorId','!=', user.value.uid),where('draft','==', false)), (snapshot) => {
-            isLoadingClauses.value = true;
-            console.log("other clauses changed")
-            otherClauses.value = snapshot.docs.map((doc) => {
-                return {
-                    ...doc.data()
-                } as Clause;
-            });
-            isLoadingClauses.value = false;
-        })
+        const { subscribe: userClauseSub , unsubscribe: userClauseUnsub } = useCollectionQuerySubscription(
+            `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`,
+            [
+                ['authorId','==', user.value.uid]
+            ],
+            ['createdAt','asc'],
+            (data) => {
+                userClauses.value = data as Clause[];
+            },
+            (error) => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.ERROR;
+                notifications.value.message = "Error loading clauses, please try again later"
+            },
+            isLoadingClauses,
+        )
+        stopUserClauses = userClauseUnsub;
+        userClauseSub();
+        const { subscribe: otherClauseSub , unsubscribe: otherClauseUnsub } = useCollectionQuerySubscription(
+            `${CONTRACTS_COLLECTION}/${contract.value.id}/${CLAUSES_COLLECTION}`,
+            [
+                ['authorId','!=', user.value.uid],
+                ['draft','==', false]
+            ],
+            [],
+            (data) => {
+                otherClauses.value = data as Clause[];
+            },
+            (error) => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.ERROR;
+                notifications.value.message = "Error loading clauses, please try again later"
+            },
+            isLoadingClauses,
+        )
+        stopOtherClauses = otherClauseUnsub;
+        otherClauseSub();
     }
 })
 const onAddClauseDraft = async () => {
@@ -208,25 +245,54 @@ const onCancelReadyToProceed = async () => {
     const contractRef = collection(db, CONTRACTS_COLLECTION);
     await updateDoc(doc(contractRef,contract.value.id),{ready:arrayRemove(user.value.uid)})
 }
-const createATransaction = createTransactionCallable();
 const isCreatingTransaction = ref(false);
 const onProceed = async () => {
     if (!props.adId) return
     console.log("onProceed", props.adId, contract.value.id)
-    isCreatingTransaction.value = true;
-    const res = await createATransaction({adId:props.adId, contractId:contract.value.id});
-    isCreatingTransaction.value = false;
+    let res;
+    const { callFunction } = useFirebaseFunctionCall(
+        'createTransaction',
+        {adId:props.adId, contractId:contract.value.id},
+        isCreatingTransaction,
+        undefined,
+        (data) => {
+            res = data;
+        },
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Contract created successfully';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while creating contract, please try again later';
+        },
+    );
+    await callFunction();
     if (res && res.data.landingPage) {
         router.push({name:'banking',params:{adId:props.adId, contractId:contract.value.id}})
     }
 }
 onMounted(async () => {
-    stopContractSubscription = onSnapshot(query(collection(db, CONTRACTS_COLLECTION),where('adId','==', props.adId), orderBy('createdAt','asc')), (snapshot) => {
-        isLoadingContract.value = true;
-        console.log("contract changed")
-        contract.value = snapshot.docs[0].data() as Contract;
-        isLoadingContract.value = false;
-    })
+    const { subscribe: contractSub , unsubscribe: contractUnsub } = useCollectionQuerySubscription(
+        CONTRACTS_COLLECTION,
+        [
+            ['adId','==', props.adId]
+        ],
+        ['createdAt','asc'],
+        (data) => {
+            contract.value = data[0] as Contract;
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = "Error loading contract, please try again later"
+        },
+        isLoadingContract,
+    )
+    stopContractSubscription = contractUnsub;
+    contractSub();
 })
 onBeforeUnmount(()=>{
     if(stopContractSubscription) stopContractSubscription();

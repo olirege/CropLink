@@ -1,29 +1,24 @@
 <template>
-    <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 mb-4">
+    <div class="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition duration-300 mb-4">
         <div class="flex flex-row space-x-4" v-if="bid.status == BID_STATUSES.ACCEPTED ">
             <p class="text-sm text-green-400">{{ bid.status == BID_STATUSES.ACCEPTED ? "Winning Bid" : bid.status  }}</p>
         </div>
-        <div class="flex flex-row space-x-4">
-            <label class="block text-sm font-medium text-gray-700">Buyer</label>
-            <p class="text-sm">{{ bid.buyerId.substring(0,5) }}</p>
+        <div class="flex flex-row space-x-4 justify-end h-6">
+            <p class="text-xs italic">{{ isFirestoreTimestamp(bid.createdAt) ? fromNow(bid.createdAt) : bid.createdAt  }}</p>
         </div>
-        <div class="flex flex-row space-x-4">
-            <label class="block text-sm font-medium text-gray-700">Offer</label>
-            <p class="text-sm">{{ bid.price }}</p>
-        </div>
-        <div class="flex flex-row space-x-4">
-            <label class="block text-sm font-medium text-gray-700">Time</label>
-            <p class="text-sm">{{ isFirestoreTimestamp(bid.createdAt) ? convertTimestampToDate(bid.createdAt) : bid.createdAt  }}</p>
-        </div>
-        <span>
+        <span class="flex flex-row justify-between h-6 items-center">
             <div class="flex flex-row space-x-4">
-                <label class="block text-sm font-medium text-gray-700">Last updated</label>
-                <p class="text-sm">{{ isFirestoreTimestamp(bid.updatedAt) ? convertTimestampToDate(bid.updatedAt) : bid.updatedAt }}</p>
+                <label class="block text-sm font-medium text-gray-700">Buyer</label>
+                <p class="text-sm">{{ bid.buyerId.substring(0,5) }}</p>
+            </div>
+            <div class="flex flex-row space-x-4">
+                <label class="block text-sm font-medium text-gray-700">Offer</label>
+                <p class="text-sm font-bold" v-currency="bid.price"></p>
             </div>
         </span>
         <div class="flex justify-end mt-2 space-x-4">
             <ButtonWithLoading 
-                :isLoading="isCancellingBid == bid.id" 
+                :isLoading="isCancellingBid" 
                 v-if="bid.status === BID_STATUSES.PENDING && bid.buyerId == user?.uid"
                 @click="onCancelBid(bid.id as string)">
                 Cancel Bid
@@ -51,6 +46,10 @@ import { useRouter } from 'vue-router';
 import type { Bid } from '@/types';
 import CardButton from '../props/CardButton.vue';
 import { storeToRefs } from 'pinia';
+import { useModalStore } from '@/stores/modals';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const { user } = storeToRefs(useMainStore());
 const props = defineProps({
     bid: {
@@ -68,12 +67,27 @@ const props = defineProps({
 })
 const BID_STATUSES = useMainStore().BID_STATUSES;
 const router = useRouter();
-const isCancellingBid = ref("");
+const isCancellingBid = ref(false);
 const onCancelBid = async (bidId:string) => {
-    console.log("Cancelling bid", bidId);
-    isCancellingBid.value = bidId;
-    await useMainStore().cancelUserBid(bidId);
-    isCancellingBid.value = "";
+    if(!bidId) return;
+    const { callFunction } = useFirebaseFunctionCall(
+            'cancelBid',
+            {bidId},
+            isCancellingBid,
+            undefined,
+            undefined,
+            () => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+                notifications.value.message = 'Bid cancelled successfully';
+            },
+            (error) => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.ERROR;
+                notifications.value.message = 'Error while cancelling bid, please try again later';
+            },
+        );
+        await callFunction();
 }
 const onViewAd = (adId:string) => {
     if(!adId) return;
@@ -83,5 +97,25 @@ const onContact = (adId:string) => {
     if (!adId) return;
     console.log("contactWinner", adId);
     router.push({name: 'messaging', params: {adId: adId}});
+}
+const fromNow = (date:Timestamp) => {
+    const now = new Date();
+    const messageDate = date.toDate();
+    const diff = now.getTime() - messageDate.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    if(days > 0) {
+        return `${days} days ago`;
+    } else if(hours > 0) {
+        return `${hours} hours ago`;
+    } else if(minutes > 0) {
+        return `${minutes} minutes ago`;
+    } else if(seconds > 0) {
+        return `${seconds} seconds ago`;
+    } else {
+        return `just now`;
+    }
 }
 </script>

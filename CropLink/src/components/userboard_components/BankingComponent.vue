@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="sticky top-0">
         <div class="border rounded-md p-4 flex flex-col gap-4" v-if="transaction.id">
             <div class="flex flex-row justify-between gap-4">
                 <label>Escrow Transaction:</label> 
@@ -50,10 +50,14 @@
 </template>
 
 <script setup lang="ts">
-import { getTransactionCallable } from '@/firebase/callables';
 import { onMounted, ref } from 'vue';
 import CardButton from '@/components/props/CardButton.vue';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
+import { useModalStore } from '@/stores/modals';
+import { storeToRefs } from 'pinia';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const props = defineProps({
     contractId: {
         type:String,
@@ -64,19 +68,29 @@ const props = defineProps({
         required:false,
     },
 })
-const getATransaction = getTransactionCallable();
 const transaction = ref({} as any);
 const isLoadingTransaction = ref(false);
 const landingPage = ref({} as any);
 const getTransaction = async () => {
-    isLoadingTransaction.value = true;
     if(!props.contractId) return console.error('No contract id provided');
-    const res = await getATransaction({transactionId:props.contractId});
-    console.log(res);
-    if(!res || !res.data.transaction) return console.error('No transaction found');
-    transaction.value = res.data.transaction;
-    landingPage.value = res.data.landingPage;
-    isLoadingTransaction.value = false;
+    const { callFunction } = useFirebaseFunctionCall(
+        'getTransaction',
+        {transactionId:props.contractId},
+        isLoadingTransaction,
+        undefined,
+        (data) => {
+            if(!data || !data.data.transaction) return console.error('No transaction found');
+            transaction.value = data.data.transaction;
+            landingPage.value = data.data.landingPage;
+        },
+        () => {},
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while fetching transaction, please try again later';
+        },
+    );
+    await callFunction();
 };
 const goToLandingPage = () => {
     if(!landingPage.value) return console.error('No landing page found');

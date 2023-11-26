@@ -43,10 +43,11 @@ import { ref, type PropType } from 'vue';
 import type { BuyerAd } from '@/types';
 import ButtonWithLoading from '../props/ButtonWithLoading.vue';
 import CardButton from '../props/CardButton.vue';
-import { useMainStore } from '@/stores/main';
 import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
-const { modals } = storeToRefs(useModalStore());
+import { useFirebaseFunctionCall } from '@/firebase/utils';
+const { modals, notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const props = defineProps({
     ad: {
         type: Object as PropType<BuyerAd>,
@@ -60,16 +61,46 @@ const props = defineProps({
 const isPostingAd = ref(false);
 const onPostAd = async (adId:string) => {
     if(!adId) return;
-    isPostingAd.value = true;
-    await useMainStore().postNewAd(adId);
-    isPostingAd.value = false;
+    const { callFunction } = useFirebaseFunctionCall(
+        'postAd',
+        {adId},
+        isPostingAd,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Ad is live!';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while posting ad, please try again later';
+        },
+    );
+    await callFunction();
 }
-const isRemovingAd = ref("");
+const isRemovingAd = ref(false);
 const onRemoveAd = async (adId:string) => {
     if(!adId) return;
-    isRemovingAd.value = adId;
-    useMainStore().removeUserAd(adId);
-    isRemovingAd.value = "";
+    const { callFunction } = useFirebaseFunctionCall(
+        'removeAd',
+        {adId},
+        isRemovingAd,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Ad removed!';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while removing ad, please try again later';
+        },
+    );
+    await callFunction();
 }
 const onEditAd = async (adId:string) => {
     if(!adId) return;

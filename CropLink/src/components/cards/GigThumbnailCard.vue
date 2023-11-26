@@ -10,7 +10,7 @@
             </div>
             <div class="flex flex-row space-x-4">
                 <CurrencyDollarIcon class="w-5 h-5" />
-                <p class="text-sm">{{ milestoneTotal }}</p>
+                <p class="text-sm" v-currency="milestoneTotal"></p>
             </div>
         </div>
         <div class="w-full flex justify-end gap-4">
@@ -21,13 +21,11 @@
 <script setup lang="ts">
 import type { Gig } from '@/types';
 import { type PropType, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { MapPinIcon, CurrencyDollarIcon } from '@heroicons/vue/24/outline';
 import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
 const { modals } = storeToRefs(useModalStore());
 const emits = defineEmits(['edit', 'remove']);
-const router = useRouter();
 const props = defineProps({
     gig: {
         type: Object as PropType<Gig>,
@@ -35,11 +33,11 @@ const props = defineProps({
         },
 })
 const milestoneTotal = computed(() => {
+    if(!props.gig.milestones) return 0;
     return props.gig.milestones.reduce((acc, curr) => acc + curr.price, 0);
 })
 const onView = (gigId: string) => {
     if(!gigId) return;
-    // router.push({ name: 'gig', params: { gigId } });
     modals.value['viewgig'] = true;
     modals.value['context'].__key = gigId;
 }

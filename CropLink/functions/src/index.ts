@@ -6,8 +6,8 @@ import { MemoryOption } from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { ERROR_CODES } from "./errors";
-import { isAdmin, deleteFileFromBucket, generateTransaction } from "./utils";
-import type { Ad, Contract, Transaction } from "./types";
+import { deleteFileFromBucket, generateTransaction } from "./utils";
+import type { Ad, Contract, Transaction, Gig } from "./types";
 import * as sharp from "sharp";
 import axios from "axios";
 const service = require("../service/service.json");
@@ -21,27 +21,6 @@ const callableOptions: CallableOptions = {
     timeoutSeconds: 60,
     region: "northamerica-northeast1",
 };
-
-export const setDocument = onCall(callableOptions, async (request:CallableRequest) => {
-    logger.info("setDocument", request);
-    if (!isAdmin(request)) {
-        throw new HttpsError("permission-denied", ERROR_CODES["permission-denied"]);
-    }
-    if (!request.data) {
-        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
-    }
-    if (!request.data.collectionName || !request.data.documentId || !request.data.data) {
-        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
-    }
-    try {
-        const docRef = admin.firestore().collection(request.data.collectionName).doc(request.data.documentId);
-        await docRef.set(request.data.data, { merge: true });
-        return { success: true };
-    } catch (error:any) {
-        logger.error(error);
-        throw new HttpsError("internal", error);
-    }
-});
 
 export const createUserProfile = onCall(callableOptions, async (request:CallableRequest) => {
     logger.info("createUserProfile", request);
@@ -176,6 +155,11 @@ export const updateProfile = onCall(callableOptions, async (request:CallableRequ
             bannerPic: bannerPicSignedUrls[0],
             bannerPicResized: bannerPicResizedSignedUrls[0],
         };
+        for (const key in profile) {
+            if (profile[key] === "") {
+                delete profile[key];
+            }
+        }
         logger.info("updateProfile", "profile", profile);
         await admin.firestore().collection("users").doc(uid).set(profile, { merge: true });
         logger.info("updateProfile", "success");
@@ -188,6 +172,128 @@ export const updateProfile = onCall(callableOptions, async (request:CallableRequ
         }, { merge: true });
         logger.info("updateProfile", "success");
         return profile;
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const updateStoreChanges = onCall(callableOptions, async (request:CallableRequest) => {
+    // logger.info("updateStoreChanges", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const BUCKET_PREFIX = process.env.BUCKETURL;
+        const logoSignedUrls = [];
+        const logoResizedSignedUrls = [];
+        const storeBannerPicSignedUrls = [];
+        const storeBannerPicResizedSignedUrls = [];
+        const bucket = getStorage().bucket();
+        logger.info("updateStoreChanges", "request.data", request.data);
+        if ( request.data.storeLogo && request.data.storeLogo.length > 0) {
+            logger.info("updateStoreChanges", "request.data.storeLogo", request.data.storeLogo);
+            const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            const filename = `${imageId}.jpg`;
+            const bucketPath= `${`users/${uid}/` + filename}`;
+            const file = bucket.file(bucketPath);
+            const base64EncodedImageString = request.data.storeLogo.replace(/^data:image\/\w+;base64,/, "");
+            const imageBuffer = Buffer.from(base64EncodedImageString, "base64");
+            await file.save(imageBuffer, { contentType: "image/jpeg" });
+            const imagePath = `${BUCKET_PREFIX + `users/${uid}/` + filename}`;
+            const _imageUrl = new URL(imagePath);
+            const imageUrl = _imageUrl.pathname.substring(1);
+            const imageRef = bucket.file(imageUrl);
+            const [signedUrl] = await imageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            logoSignedUrls.push(signedUrl);
+            const resizedImageFilename = `${imageId}_resized.jpg`;
+            const resizedImageBucketPath= `${`users/${uid}/` + resizedImageFilename}`;
+            const resizedImageFile = bucket.file(resizedImageBucketPath);
+            const resizedImageBuffer = await sharp(imageBuffer)
+            .resize(256, 256, {
+                fit: "contain",
+                background: { r: 0, g: 0, b: 0 },
+            })
+            .jpeg()
+            .toBuffer();
+            await resizedImageFile.save(resizedImageBuffer, { contentType: "image/jpeg" });
+            const resizedImagePath = `${BUCKET_PREFIX + `users/${uid}/` + resizedImageFilename}`;
+            const _resizedImageUrl = new URL(resizedImagePath);
+            const resizedImageUrl = _resizedImageUrl.pathname.substring(1);
+            const resizedImageRef = bucket.file(resizedImageUrl);
+            const [resizedSignedUrl] = await resizedImageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            logoResizedSignedUrls.push(resizedSignedUrl);
+        }
+        logger.info("updateStoreChanges", "request.data.storeBannerPic", request.data.storeBannerPic);
+        if ( request.data.storeBannerPic && request.data.storeBannerPic.length > 0) {
+            const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            const filename = `${imageId}.jpg`;
+            const bucketPath= `${`users/${uid}/` + filename}`;
+            const file = bucket.file(bucketPath);
+            const base64EncodedImageString = request.data.storeBannerPic.replace(/^data:image\/\w+;base64,/, "");
+            const imageBuffer = Buffer.from(base64EncodedImageString, "base64");
+            await file.save(imageBuffer, { contentType: "image/jpeg" });
+            const imagePath = `${BUCKET_PREFIX + `users/${uid}/` + filename}`;
+            const _imageUrl = new URL(imagePath);
+            const imageUrl = _imageUrl.pathname.substring(1);
+            const imageRef = bucket.file(imageUrl);
+            const [signedUrl] = await imageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            storeBannerPicSignedUrls.push(signedUrl);
+            const resizedImageFilename = `${imageId}_resized.jpg`;
+            const resizedImageBucketPath= `${`users/${uid}/` + resizedImageFilename}`;
+            const resizedImageFile = bucket.file(resizedImageBucketPath);
+            const resizedImageBuffer = await sharp(imageBuffer)
+            .resize(1024, 616, {
+                fit: "contain",
+                background: { r: 0, g: 0, b: 0 },
+            })
+            .jpeg()
+            .toBuffer();
+            await resizedImageFile.save(resizedImageBuffer, { contentType: "image/jpeg" });
+            const resizedImagePath = `${BUCKET_PREFIX + `users/${uid}/` + resizedImageFilename}`;
+            const _resizedImageUrl = new URL(resizedImagePath);
+            const resizedImageUrl = _resizedImageUrl.pathname.substring(1);
+            const resizedImageRef = bucket.file(resizedImageUrl);
+            const [resizedSignedUrl] = await resizedImageRef.getSignedUrl({
+                action: "read",
+                expires: "03-17-2030",
+            });
+            storeBannerPicResizedSignedUrls.push(resizedSignedUrl);
+        }
+        const changes = {
+            ...request.data,
+            storeLogo: logoSignedUrls[0],
+            storeLogoResized: logoResizedSignedUrls[0],
+            storeBannerPic: storeBannerPicSignedUrls[0],
+            storeBannerPicResized: storeBannerPicResizedSignedUrls[0],
+        };
+        for (const key in changes) {
+            if (changes[key] === "") {
+                delete changes[key];
+            }
+        }
+        logger.info("updateStoreChanges", "changes", changes);
+        await admin.firestore().collection("ads").doc(uid).set({
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            ...changes,
+        }, { merge: true });
+        logger.info("updateStore", "success");
+        return changes;
     } catch (error:any) {
         logger.error(error);
         throw new HttpsError("internal", error);
@@ -659,9 +765,20 @@ export const terminateBidSession = onSchedule({
                 buyerId: buyerId,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
             };
+            const buyerRef = admin.firestore().collection("users").doc(buyerId);
+            const buyerDoc = await buyerRef.get();
+            if (!buyerDoc.exists) {
+                throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+            }
+            const buyerData = buyerDoc.data();
+            const userSignature = {
+                name: buyerData?.name,
+                profilePic: buyerData?.profilePicResized,
+            };
             const contractData = {
                 id: contractId,
                 adId: adId,
+                type: "sell",
                 sellerId: sellerId,
                 buyerId: buyerId,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -669,6 +786,7 @@ export const terminateBidSession = onSchedule({
                 status: "pending",
                 endedAt: "",
                 ready: [],
+                userSignature: userSignature,
             };
             logger.info("terminateBidSession", "chatRoomData", chatRoomData);
             await admin.firestore().collection("chatrooms").doc(chatroomId).set(chatRoomData);
@@ -678,6 +796,127 @@ export const terminateBidSession = onSchedule({
         logger.info("terminateBidSession", "success");
     }
 );
+export const initializeChatAndContract = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("initializeChatAndContract", request);
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
+    if (!request.data || !request.data.contractType) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const uid = request.auth.uid;
+    if (!uid) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    let contextData;
+    if (request.data.contractType == "gig" && request.data.adId) {
+        const adRef = admin.firestore().collectionGroup("gigs").where("gigId", "==", request.data.adId);
+        const adDocs = await adRef.get();
+        if (adDocs.empty) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["ad-does-not-exist"]);
+        }
+        contextData = adDocs.docs[0].data();
+    }
+    const adId = request.data.adId;
+    const contractId = `${adId}_${Math.random().toString(36).substring(2, 15)}`;
+    const chatroomId = `${adId}_${Math.random().toString(36).substring(2, 15)}`;
+    const chatRoomData = {
+        id: chatroomId,
+        adId: adId,
+        sellerId: request.data.sellerId,
+        buyerId: request.data.buyerId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    const contractData = {
+        id: contractId,
+        adId: adId,
+        type: request.data.contractType,
+        sellerId: request.data.sellerId,
+        buyerId: request.data.buyerId,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: "pending",
+        endedAt: "",
+        ready: [],
+        context: contextData,
+        userSignature: {
+            name: "",
+            profilePic: "",
+        },
+    };
+    const otherUserId = request.data.sellerId === uid ? request.data.buyerId : request.data.sellerId;
+    const otherUserRef = admin.firestore().collection("users").doc(otherUserId);
+    const otherUserRefDoc = await otherUserRef.get();
+    if (!otherUserRefDoc.exists) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const otherUserRefData = otherUserRefDoc.data();
+    contractData.userSignature.name = otherUserRefData?.name;
+    contractData.userSignature.profilePic = otherUserRefData?.profilePicResized;
+    const participants = [request.data.sellerId, request.data.buyerId].sort();
+    const participantKey = participants.join("_");
+    logger.info("initializeChatAndContract", "participants", participants, "participantKey", participantKey);
+    const dmRef = admin.firestore().collection("dms").where("participantKey", "==", participantKey);
+    logger.info("initializeChatAndContract", "dmRef", dmRef);
+    const dmDoc = await dmRef.get();
+    let dmMeta;
+    if (!dmDoc.empty) {
+        dmMeta = dmDoc.docs[0].data();
+    } else {
+        logger.info("no existing chat");
+        dmMeta = {
+            dmId: "",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            senderProfilePic: "",
+            senderId: "",
+            context: {},
+            participants: ([] as string[]),
+            participantKey: "",
+            lastMessage: "",
+            lastSender: "",
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        const userRef = admin.firestore().collection("users").doc(request.auth.uid);
+        const userDoc = await userRef.get();
+        logger.info("userDoc", userDoc);
+        if (!userDoc.exists) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        const userData = userDoc.data();
+        if (!userData) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        if (userData.profilePic) {
+            dmMeta.senderProfilePic = userData.profilePic;
+        }
+        dmMeta.senderId = request.auth.uid;
+        dmMeta.participants = participants;
+        dmMeta.participantKey = participantKey;
+        dmMeta.dmId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        logger.info("setting dmMeta", dmMeta);
+        await admin.firestore().collection("dms").doc(dmMeta.dmId).set(dmMeta);
+    }
+    const messageMeta = {
+        senderId: request.auth.uid,
+        text: "",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        context: {
+            __key: "invitation",
+            invitation: {
+                adId: adId,
+                contractId: contractId,
+                chatroomId: chatroomId,
+            },
+        },
+    };
+    logger.info("initializeChatAndContract", "dmMeta", dmMeta, "messageMeta", messageMeta);
+    await admin.firestore().collection("dms").doc(dmMeta.dmId).collection("messages").add(messageMeta);
+    logger.info("initializeChatAndContract", "chatRoomData", chatRoomData);
+    await admin.firestore().collection("chatrooms").doc(chatroomId).set(chatRoomData);
+    logger.info("initializeChatAndContract", "contractData", contractData);
+    await admin.firestore().collection("contracts").doc(contractId).set(contractData);
+    return { adId, chatroomId, contractId };
+});
 
 export const createTransaction = onCall(callableOptions, async (request:CallableRequest) => {
     logger.info("createTransaction", request.data);
@@ -712,13 +951,20 @@ export const createTransaction = onCall(callableOptions, async (request:Callable
         if (contractDocs.empty) {
             throw new HttpsError("invalid-argument", ERROR_CODES["contract-does-not-exist"]);
         }
-        logger.info("createTransaction contractRef", contractRef);
+        logger.info("createTransaction contractDocs", contractDocs);
         const contractData = contractDocs.docs[0].data();
         logger.info("createTransaction contractData", contractData);
         if (contractData.ready.length < 2) {
             throw new HttpsError("invalid-argument", ERROR_CODES["parties-not-ready"]);
         }
-        const adRef = admin.firestore().collectionGroup("ads").where("id", "==", request.data.adId);
+        let adRef;
+        if (contractData.type == "sell") {
+            adRef = admin.firestore().collectionGroup("ads").where("id", "==", request.data.adId);
+        } else if (contractData.type == "gig") {
+            adRef = admin.firestore().collectionGroup("gigs").where("gigId", "==", request.data.adId);
+        } else {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
         const adDocs = await adRef.get();
         if (adDocs.empty) {
             throw new HttpsError("invalid-argument", ERROR_CODES["ad-does-not-exist"]);
@@ -1028,7 +1274,12 @@ export const createGigPost = onCall(callableOptions, async (request:CallableRequ
     }
     try {
         const gigId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        await admin.firestore().collection("gigs").doc(uid).collection("gigs").doc(gigId).set({ ...request.data, gigId: gigId, createdAt: admin.firestore.FieldValue.serverTimestamp(), posterId: uid, live: false });
+        let total = 0;
+        const gig = request.data as Gig;
+        for ( const milestone of gig.milestones) {
+            total += milestone.price;
+        }
+        await admin.firestore().collection("gigs").doc(uid).collection("gigs").doc(gigId).set({ ...request.data, total, gigId: gigId, createdAt: admin.firestore.FieldValue.serverTimestamp(), posterId: uid, live: false });
     } catch (error:any) {
         logger.error(error);
         throw new HttpsError("internal", error);
@@ -1121,6 +1372,7 @@ export const updateLastMessage = onDocumentCreated("/chatrooms/{chatroomId}/mess
         lastMessage: messageData.text,
         lastSender: messageData.senderId,
         lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        lastContext: messageData.context && Object.keys(messageData.context).length > 0 ? messageData.context : null,
     };
     return admin.firestore().collection("chatrooms").doc(chatroomId)
         .update(chatroomUpdate)
@@ -1128,8 +1380,8 @@ export const updateLastMessage = onDocumentCreated("/chatrooms/{chatroomId}/mess
             logger.error("Error updating chatroom: ", error);
         });
 });
-export const sendDm = onCall(callableOptions, async (request:CallableRequest) => {
-    logger.info("sendDm", request);
+export const initiateDm = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("initiateDm", request);
     if (!request.auth) {
         throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
     }
@@ -1140,37 +1392,48 @@ export const sendDm = onCall(callableOptions, async (request:CallableRequest) =>
     if (!uid) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
-    try {
-        const dmId = request.auth.uid + "_" + request.data.receiverId;
-        if (!request.data.receiverId) throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
-        if (!request.data.senderId) throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
-        const dmIdData = {
-            dmId: dmId,
-            sellerId: request.data.receiverId,
-            buyerId: request.data.senderId,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            senderProfilePic: "",
-        };
-        // fetch user profile picture
-        const userRef = admin.firestore().collection("users").doc(request.data.senderId);
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) {
-            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
-        }
-        const userData = userDoc.data();
-        if (!userData) {
-            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
-        }
-        if (userData.profilePic) {
-            dmIdData.senderProfilePic = userData.profilePic;
-        }
-        await admin.firestore().collection("dms").doc(dmId).set(dmIdData);
-        await admin.firestore().collection("dms").doc(dmId).collection("messages").add({ senderId: request.data.senderId, text: request.data.text, createdAt: admin.firestore.FieldValue.serverTimestamp() });
-    } catch (error:any) {
-        logger.error(error);
-        throw new HttpsError("internal", error);
+    if (!request.data.participants) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
+    const dmMeta = {
+        dmId: "",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        senderProfilePic: "",
+        senderId: "",
+        context: {},
+        participants: [],
+        participantKey: "",
+        lastMessage: "",
+        lastSender: "",
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    const userRef = admin.firestore().collection("users").doc(request.data.senderId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const userData = userDoc.data();
+    if (!userData) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (userData.profilePic) {
+        dmMeta.senderProfilePic = userData.profilePic;
+    }
+    dmMeta.senderId = request.data.senderId;
+    dmMeta.participants = request.data.participants.sort();
+    dmMeta.participantKey = request.data.participants.sort().join("_");
+    dmMeta.dmId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const messageMeta = {
+        senderId: request.data.senderId,
+        text: request.data.text,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        context: request.data.context ? request.data.context : {},
+    };
+    await admin.firestore().collection("dms").doc(dmMeta.dmId).set(dmMeta);
+    await admin.firestore().collection("dms").doc(dmMeta.dmId).collection("messages").add(messageMeta);
+    return dmMeta;
 });
+
 export const updateLastDm = onDocumentCreated("/dms/{dmId}/messages/{messageId}", (event) => {
     const dmId = event.params.dmId;
     const snapshot = event.data;
@@ -1182,6 +1445,7 @@ export const updateLastDm = onDocumentCreated("/dms/{dmId}/messages/{messageId}"
         lastMessage: messageData.text,
         lastSender: messageData.senderId,
         lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        lastContext: messageData.context && Object.keys(messageData.context).length > 0 ? messageData.context : null,
     };
     return admin.firestore().collection("dms").doc(dmId)
         .update(dmUpdate)

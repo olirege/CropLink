@@ -18,10 +18,17 @@
             <label class="block text-sm font-medium text-gray-700">Milestones</label>
             <button @click="addMilestone" type="button" class="mt-2 text-blue-500 hover:text-blue-700">Add Milestone</button>
           </span>
-          <div v-for="(milestone, index) in gig.milestones" :key="index" class="flex items-center space-x-2">
-            <input v-model="gig.milestones[index].name" type="text" class="p-2 w-full border rounded-md" placeholder="Milestone" required />
-            <input v-model="gig.milestones[index].price" type="number" class="p-2 w-full border rounded-md" placeholder="Milestone" required />
-            <button @click="removeMilestone(index)" type="button" class="text-red-500 hover:text-red-700">Remove</button>
+          <div v-for="(milestone, index) in gig.milestones" :key="index" class="flex flex-col justify-start gap-1">
+            <p>{{ index + 1  }}.</p>
+            <input v-model="gig.milestones[index].name" type="text" class="p-1 w-full border rounded-md" placeholder="Milestone Title" required />
+            <textarea v-model="gig.milestones[index].description" type="text" class="p-1 w-full border rounded-md resize-none h-10" placeholder="Description" required />
+            <div class="flex flex-row gap-1 items-center justify-end w-full">
+              $CA
+              <input v-model="gig.milestones[index].price" type="number" class="p-1 w-1/6 border rounded-md" placeholder="Reward" required />
+            </div>
+            <div class="flex flex-row w-full justify-end items-center">
+              <TrashIcon @click="removeMilestone(index)" type="button" class="text-red-500 hover:text-red-700 h-5 w-5"/>
+            </div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-4">
@@ -41,11 +48,15 @@
     </div>
   </template>
   <script setup lang="ts">
-  import { type PropType, ref } from 'vue';
+  import { ref } from 'vue';
   import CardButton from '@/components/props/CardButton.vue';
   import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
-  import { useMainStore } from '@/stores/main';
-  import type { Gig } from '@/types';
+  import { useModalStore } from '@/stores/modals';
+  import { storeToRefs } from 'pinia';
+  import { useFirebaseFunctionCall } from '@/firebase/utils';
+  import { TrashIcon } from '@heroicons/vue/24/outline';
+  const { notifications } = storeToRefs(useModalStore());
+  const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
   const emits = defineEmits(['close']);
   const gig = ref({
     createdAt: null,
@@ -82,12 +93,27 @@
   };
   const isPostingAd = ref(false);
   const submitGig = async () => {
-    isPostingAd.value = true;
     if(validateGig()) {
       const deepCopy = JSON.parse(JSON.stringify(gig.value));
-      await useMainStore().createGigPostAd(deepCopy);
+      const { callFunction } = useFirebaseFunctionCall(
+        'createGigPost',
+        deepCopy,
+        isPostingAd,
+        undefined,
+        undefined,
+        ()=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+          notifications.value.message = 'Gig Created';
+        },
+        ()=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.ERROR;
+          notifications.value.message = 'An error occured during the process, please try again later';
+        },
+      );
+      await callFunction();
       emits("close");
     }
-    isPostingAd.value = false;
   };
   </script>

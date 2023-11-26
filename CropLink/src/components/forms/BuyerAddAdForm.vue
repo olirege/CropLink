@@ -30,6 +30,10 @@ import { ref, reactive } from 'vue';
 import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
+import { useModalStore } from '@/stores/modals';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const emits = defineEmits(["close"]);
 const { profile } = storeToRefs(useMainStore());
 let today = new Date().toISOString().split("T")[0].split("-").reverse().join("-");
@@ -41,15 +45,28 @@ const newRequest = reactive({
 });
 const isLoading = ref(false);
 const onConfirm = async () => {
-    isLoading.value = true;
     if(validateRequest() && profile.value) {
         const deepAdCopy = JSON.parse(JSON.stringify(newRequest));
         deepAdCopy.requestDate = new Date(deepAdCopy.requestDate).toISOString();
-        await useMainStore().createUserAd({...deepAdCopy, adType:profile.value.accountType});
-        isLoading.value = false;
+        const { callFunction } = useFirebaseFunctionCall(
+            'createAd',
+            {...deepAdCopy, adType:profile.value.accountType},
+            isLoading,
+            undefined,
+            undefined,
+            () => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+                notifications.value.message = 'Ad created!';
+            },
+            (error) => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.ERROR;
+                notifications.value.message = 'Error creating ad, please try again later';
+            },
+        );
+        await callFunction();
         emits("close")
-    } else {
-        isLoading.value = false;
     }
 }
 const validateRequest = ()=>{

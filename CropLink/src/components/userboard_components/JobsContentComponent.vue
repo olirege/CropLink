@@ -1,13 +1,29 @@
 <template>
-    <span>
-        <CardButton :classes="'w-full'" @click="onCreateJobPost">
-            Create a job post
-        </CardButton>
+    <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-4">
+        <div class="p-2">
+            <span class="text-sm font-medium text-slate-300">Number of Jobs</span>
+            <p class="text-4xl font-bold text-slate-500">{{ jobs.docs && jobs.docs.length }}</p> 
+        </div>
+        <div class="p-2">
+            <span class="text-sm font-medium text-slate-300">Number of live posts</span>
+            <p class="text-4xl font-bold text-slate-500">{{ numberOfLiveJobs }}</p>
+        </div>
+        <div class="p-2">
+            <span class="text-sm font-medium text-slate-300">Total views</span>
+            <p class="text-4xl font-bold text-slate-500">0</p>
+        </div>
+        <div class="p-2 flex items-center justify-center">
+            <CardButton :classes="'w-full'" @click="onCreateJobPost">
+                Create a job post
+            </CardButton>
+        </div>
+    </div>
+    <span class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         <span class="grid grid-flow-row space-y-4" v-if="jobs.docs && jobs.docs.length > 0 && !isLoadingJobs" >
             <JobCard v-for="(job,index) in jobs.docs" :key="index" :job="job" @edit="onEditJobPost" @remove="onRemoveJobPost"/>
         </span>
-        <span v-else-if="jobs.docs && jobs.docs.length == 0 && !isLoadingJobs">
-            <p>No job posts</p>
+        <span v-else-if="jobs.docs && jobs.docs.length == 0 && !isLoadingJobs" class="h-96 p-2 flex items-center justify-center">
+            <p class="italic">No job posts</p>
         </span>
         <div v-else="isLoadingJobs">
             <LoadingSpinner :isLoading ="isLoadingJobs"/>
@@ -16,38 +32,47 @@
 </template>
 <script setup lang="ts">
 import type { Job } from '@/types';
-import JobCard from '../cards/JobCard.vue';
-import { onMounted, type Ref, ref, onBeforeUnmount } from 'vue';
+import JobCard from '../cards/JobDashboardCard.vue';
+import { onMounted, type Ref, ref, onBeforeUnmount, computed } from 'vue';
 import CardButton from '../props/CardButton.vue';
 import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
-import { getPaginatedCollectionGroupWhere } from '@/firebase/utils';
 import { useMainStore } from '@/stores/main';
 import LoadingSpinner from '../props/LoadingSpinner.vue';
-import { db } from '@/firebase/main';
-import { onSnapshot, collectionGroup, query, where, orderBy } from 'firebase/firestore';
+import { useQuerySubscription } from '@/firebase/utils';
 const { user } = storeToRefs(useMainStore());
-const { modals } = storeToRefs(useModalStore());
+const { modals, notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const jobs: Ref<{lastVisible:Job, docs:Job[]}> = ref([]);
 const isLoadingJobs = ref(false);
-let stopSubscription:Function;
-const loadJobs = async () => {
-    isLoadingJobs.value = true;
-    stopSubscription = onSnapshot(query(collectionGroup(db, 'jobs'), where('posterId', '==', user.value.uid), orderBy('createdAt','desc')), (snapshot) => {
-        jobs.value.docs = snapshot.docs.map((doc) => {
-            return {
-                ...doc.data()
-            } as Job;
-        })
-        jobs.value.lastVisible = jobs.value.docs && jobs.value.docs.length > 0 ? jobs.value.docs[jobs.value.docs.length - 1] : null;
-    });
-    isLoadingJobs.value = false;
-}
-const loadMoreJobs = async () => {
-    isLoadingJobs.value = true;
-    jobs.value = await getPaginatedCollectionGroupWhere('jobs', 'posterId', '==', user.value.uid , ['createdAt','desc'], 10, jobs.value.lastVisible);
-    isLoadingJobs.value = false;
-}
+const { subscribe, unsubscribe } = useQuerySubscription(
+    import.meta.env.VITE_JOBS_COLLECTION,
+    [
+        ['posterId', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        jobs.value.docs = data as Job[];
+    },
+    (error) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.ERROR;
+        notifications.value.message = 'Error loading jobs, please try again later.'       
+    },
+    isLoadingJobs,
+    ()=>{},
+    ()=>{},
+    (doc) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+        notifications.value.message = 'Job has been created.'
+    },
+    (doc) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+        notifications.value.message = 'Job has been removed.'
+    },
+)
 const onCreateJobPost = () => {
     modals.value['addjob'] = true;
 }
@@ -64,10 +89,16 @@ const onEditJobPost = (jobId:string) => {
     modals.value['context'] = job;
 }
 
+const numberOfLiveJobs = computed(() => {
+    if(!jobs.value.docs || jobs.value.docs.length === 0) {
+        return 0;
+    }
+    return jobs.value.docs.filter((job) => job.live == true).length;
+})
 onMounted(async () => {
-    await loadJobs();
+    subscribe();
 })
 onBeforeUnmount(() => {
-    if(stopSubscription) stopSubscription();
+    unsubscribe();
 })
 </script>

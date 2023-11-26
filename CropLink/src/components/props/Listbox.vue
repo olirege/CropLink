@@ -21,9 +21,10 @@
     </div>
   </template>
   <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, watch } from 'vue';
   import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue';
   import { ChevronUpDownIcon, CheckIcon } from '@heroicons/vue/24/outline';
+  
   const props = defineProps({
     items: Array,
     modelValue: [String, Number],
@@ -41,9 +42,12 @@
   
   const emits = defineEmits(['update:modelValue']);
   const selectedValue = ref(props.modelValue);
-  
+  watch(() => props.modelValue, (newValue) => {
+    selectedValue.value = newValue;
+  });
   const onChange = (value) => {
     console.log('onChange', value);
+    selectedValue.value = value
     emits('update:modelValue', value);
   };
   </script>

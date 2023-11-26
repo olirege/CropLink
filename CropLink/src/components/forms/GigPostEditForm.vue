@@ -19,8 +19,9 @@
             <button @click="addMilestone" type="button" class="mt-2 text-blue-500 hover:text-blue-700">Add Milestone</button>
           </span>
           <div v-for="(milestone, index) in newGig.milestones" :key="index" class="flex items-center space-x-2">
-            <input v-model="gig.milestones[index].name" type="text" class="p-2 w-full border rounded-md" placeholder="Milestone" required />
-            <input v-model="gig.milestones[index].price" type="number" class="p-2 w-full border rounded-md" placeholder="Milestone" required />
+            <input v-model="gig.milestones[index].name" type="text" class="p-2 w-full border rounded-md" placeholder="Type name here..." required />
+            <input v-model="gig.milestones[index].description" type="text" class="p-2 w-full border rounded-md" placeholder="Type description here..." required />
+            <input v-model="gig.milestones[index].price" type="number" class="p-2 w-full border rounded-md" placeholder="0" required />
             <button @click="removeMilestone(index)" type="button" class="text-red-500 hover:text-red-700">Remove</button>
           </div>
         </div>
@@ -44,8 +45,12 @@
   import { ref } from 'vue';
   import CardButton from '@/components/props/CardButton.vue';
   import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
-  import { useMainStore } from '@/stores/main';
+  import { storeToRefs } from 'pinia';
+  import { useModalStore } from '@/stores/modals';
+  import { useFirebaseFunctionCall } from '@/firebase/utils';
   import type { Gig } from '@/types';
+  const { notifications } = storeToRefs(useModalStore());
+  const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
   const emits = defineEmits(['close']);
   const props = defineProps({
     gig: {
@@ -88,7 +93,6 @@
   };
   const isEditingGig = ref(false);
   const submitGig = async () => {
-    isEditingGig.value = true;
     if(validateGig()) {
       const originalGig = props.gig;
       const changes = Object.keys(newGig.value).reduce((acc, key) => {
@@ -102,15 +106,26 @@
       }, {} as Gig);
       const deepCopy = JSON.parse(JSON.stringify(changes));
       console.log(changes)
-      try{
-        const gigId = props.gig.gigId;
-        await useMainStore().editGigPostAd({gigId, changes:deepCopy});
-        emits("close");
-      } catch(err) {
-        isEditingGig.value = false;
-        console.log(err);
-      }
+      const gigId = props.gig.gigId;
+      const { callFunction } = useFirebaseFunctionCall(
+        'editGigPost',
+        { gigId, changes:deepCopy },
+        isEditingGig,
+        undefined,
+        undefined,
+        ()=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+          notifications.value.message = 'Gig Edited';
+        },
+        ()=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.ERROR;
+          notifications.value.message = 'An error occured during the process, please try again later';
+        },
+      );
+      await callFunction();
+      emits("close");
     }
-    isEditingGig.value = false;
   };
   </script>

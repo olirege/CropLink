@@ -20,7 +20,9 @@
         </div>
         <div class="mb-4">
           <label for="salary" class="block text-sm font-medium text-gray-700">Salary</label>
-          <input v-model="job.salary" type="text" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
+          <input v-model="job.salaryMin" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
+          <span class="text-sm text-gray-500">to</span>
+          <input v-model="job.salaryMax" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
         </div>
         <div class="mb-4 space-y-2">
           <span class="w-full flex items-center justify-between">
@@ -49,12 +51,15 @@
     </div>
   </template>
   <script setup lang="ts">
-  import { type PropType, ref } from 'vue';
+  import { ref } from 'vue';
   import CardButton from '@/components/props/CardButton.vue';
   import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
   import Listbox from '@/components/props/Listbox.vue';
-  import { useMainStore } from '@/stores/main';
-  import type { Job } from '@/types';
+  import { useModalStore } from '@/stores/modals';
+  import { storeToRefs } from 'pinia';
+  import { useFirebaseFunctionCall } from '@/firebase/utils';
+  const { notifications } = storeToRefs(useModalStore());
+  const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
   const emits = defineEmits(['close']);
   const job = ref({
     createdAt: null,
@@ -62,7 +67,8 @@
     type: '',
     description: '',
     location: '',
-    salary: '',
+    salaryMin: 0,
+    salaryMax: 0,
     tasks: [] as string [],
   });
   
@@ -75,7 +81,7 @@
   };
   
   const validateJob = () => {
-    if(!job.value.title || !job.value.description || !job.value.location || !job.value.salary || !job.value.type || !job.value.tasks.length) {
+    if(!job.value.title || !job.value.description || !job.value.location || !job.value.type || !job.value.tasks.length) {
       if(job.value.tasks.length > 0 ) {
         for(const task in job.value.tasks) {
           if(!task) {
@@ -93,12 +99,27 @@
   };
   const isPostingAd = ref(false);
   const submitJob = async () => {
-    isPostingAd.value = true;
     if(validateJob()) {
       const deepCopy = JSON.parse(JSON.stringify(job.value));
-      await useMainStore().createJobPostAd(deepCopy);
+      const { callFunction } = useFirebaseFunctionCall(
+        'createJobPost',
+        deepCopy,
+        isPostingAd,
+        undefined,
+        undefined,
+        ()=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+          notifications.value.message = 'Job Post Created';
+        },
+        (error)=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.ERROR;
+          notifications.value.message = 'An error occured during the process, please try again later';
+        },
+      );
+      await callFunction();
       emits("close");
     }
-    isPostingAd.value = false;
   };
   </script>

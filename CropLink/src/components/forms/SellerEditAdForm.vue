@@ -42,10 +42,13 @@
 </template>
 <script setup lang="ts">
 import { ref, reactive, type PropType } from 'vue';
-import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
+import { useModalStore } from '@/stores/modals';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
 import { type SellerAd } from '@/types';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const props = defineProps({
     ad: {
         type: Object as PropType<SellerAd>,
@@ -53,7 +56,6 @@ const props = defineProps({
     }
 })
 const emits = defineEmits(["close"]);
-const { profile } = storeToRefs(useMainStore());
 const images = ref([]);
 const imageInput = ref(null);
 const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB
@@ -90,7 +92,6 @@ const newCrop = reactive({
 });
 const isLoading = ref(false);
 const onConfirm = async () => {
-    isLoading.value = true;
     const changes = Object.keys(newCrop).reduce((acc, key) => {
         if(newCrop[key] !== props.ad[key]) {
             acc[key] = newCrop[key];
@@ -103,8 +104,24 @@ const onConfirm = async () => {
         });
         changes.newImages = base64Images;
     }
-    await useMainStore().editUserAd({changes, adId:props.ad.id});
-    isLoading.value = false;
+    const { callFunction } = useFirebaseFunctionCall(
+        'editAd',
+        {changes, adId:props.ad.id},
+        isLoading,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Ad edited successfully';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while editing bid, please try again later';
+        },
+    );
+    await callFunction();
     emits("close")
 }
 </script>

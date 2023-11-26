@@ -20,7 +20,9 @@
         </div>
         <div class="mb-4">
           <label for="salary" class="block text-sm font-medium text-gray-700">Salary</label>
-          <input v-model="newJob.salary" type="text" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
+          <input v-model="job.salaryMin" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
+          <span class="text-sm text-gray-500">to</span>
+          <input v-model="job.salaryMax" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
         </div>
         <div class="mb-4 space-y-2">
           <span class="w-full flex items-center justify-between">
@@ -53,8 +55,12 @@
   import CardButton from '@/components/props/CardButton.vue';
   import Listbox from '../props/Listbox.vue';
   import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
-  import { useMainStore } from '@/stores/main';
+  import { storeToRefs } from 'pinia';
+  import { useModalStore } from '@/stores/modals';  
+  import { useFirebaseFunctionCall } from '@/firebase/utils';
   import type { Job } from '@/types';
+  const { notifications } = storeToRefs(useModalStore());
+  const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
   const emits = defineEmits(['close']);
   const props = defineProps({
     job: {
@@ -81,7 +87,7 @@
     newJob.value.tasks.splice(index, 1);
   };
   const validateJob = () => {
-    if(!newJob.value.title || !newJob.value.description || !newJob.value.location || !newJob.value.salary || !newJob.value.tasks.length) {
+    if(!newJob.value.title || !newJob.value.description || !newJob.value.location || !newJob.value.tasks.length) {
       if(newJob.value.tasks.length > 0 ) {
         for(const task in newJob.value.tasks) {
           if(!task) {
@@ -99,7 +105,6 @@
   };
   const isEditingJob = ref(false);
   const submitJob = async () => {
-    isEditingJob.value = true;
     if(validateJob()) {
       const originalJob = props.job;
       const changes = Object.keys(newJob.value).reduce((acc, key) => {
@@ -119,15 +124,26 @@
       }, {} as Job);
       const deepCopy = JSON.parse(JSON.stringify(changes));
       console.log(changes)
-      try{
-        const jobId = props.job.jobId;
-        await useMainStore().editJobPostAd({jobId, changes:deepCopy});
-        emits("close");
-      } catch(err) {
-        isEditingJob.value = false;
-        console.log(err);
-      }
+      const jobId = props.job.jobId;
+      const { callFunction } = useFirebaseFunctionCall(
+        'editJobPost',
+        {jobId, changes:deepCopy},
+        isEditingJob,
+        undefined,
+        undefined,
+        ()=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+          notifications.value.message = 'Job Post Edited';
+        },
+        (error)=> {
+          notifications.value.show = true;
+          notifications.value.type = NOTIFICATION_TYPES.ERROR;
+          notifications.value.message = 'An error occured during the process, please try again later';
+        },
+      );
+      await callFunction();
+      emits("close");
     }
-    isEditingJob.value = false;
   };
   </script>

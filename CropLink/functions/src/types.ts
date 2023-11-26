@@ -91,6 +91,15 @@ export type Clause = {
     authorId: string;
     updatedAt: Timestamp;
 };
+export type Gig = {
+    createdAt: Timestamp;
+    gigId: string;
+    title: string;
+    live: boolean;
+    description: string;
+    location: string;
+    milestones: {name:string, description:string, price:number}[];
+};
 export type Contract = {
     id: string;
     adId: string,
@@ -102,6 +111,8 @@ export type Contract = {
     endedAt?: Timestamp,
     ready?:string[],
     total?:number,
+    type: "sell" | "gig",
+    context: Gig,
 };
 
 export type TransactionPayload = {

@@ -10,7 +10,9 @@
             </div>
             <div class="flex flex-row space-x-4">
                 <CurrencyDollarIcon class="w-5 h-5" />
-                <p class="text-sm">{{ job.salary }}</p>
+                <p class="text-sm">{{ job.salaryMin }}</p>
+                <p class="text-sm">-</p>
+                <p class="text-sm">{{ job.salaryMax }}</p>
             </div>
         </div>
         <div class="w-full flex justify-end gap-4">
@@ -21,13 +23,11 @@
 <script setup lang="ts">
 import type { Job } from '@/types';
 import { type PropType } from 'vue';
-import { useRouter } from 'vue-router';
 import { MapPinIcon, CurrencyDollarIcon } from '@heroicons/vue/24/outline';
 import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
 const { modals } = storeToRefs(useModalStore());
 const emits = defineEmits(['edit', 'remove']);
-const router = useRouter();
 const props = defineProps({
     job: {
         type: Object as PropType<Job>,
@@ -36,7 +36,6 @@ const props = defineProps({
 })
 const onView = (jobId: string) => {
     if(!jobId) return;
-    // router.push({ name: 'job', params: { jobId } });
     modals.value['viewjob'] = true;
     modals.value['context'].__key = jobId;
 }

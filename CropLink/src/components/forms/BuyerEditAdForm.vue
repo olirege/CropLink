@@ -27,10 +27,13 @@
 </template>
 <script setup lang="ts">
 import { ref, reactive, type PropType } from 'vue';
-import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
 import { type BuyerAd } from '@/types';
+import { useModalStore } from '@/stores/modals';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const props = defineProps({
     ad: {
         type: Object as PropType<BuyerAd>,
@@ -38,8 +41,6 @@ const props = defineProps({
     }
 })
 const emits = defineEmits(["close"]);
-const { profile } = storeToRefs(useMainStore());
-
 const deepAdCopy = JSON.parse(JSON.stringify(props.ad));
 const newRequest = reactive({
     type: deepAdCopy.type,
@@ -49,21 +50,30 @@ const newRequest = reactive({
 });
 const isLoading = ref(false);
 const onConfirm = async () => {
-    isLoading.value = true;
     const changes = Object.keys(newRequest).reduce((acc, key) => {
         if(newRequest[key] !== props.ad[key]) {
             acc[key] = newRequest[key];
         }
         return acc;
     }, {});
-    await useMainStore().editUserAd({changes, adId:props.ad.id});
-    isLoading.value = false;
+    const { callFunction } = useFirebaseFunctionCall(
+        'editAd',
+        {changes, adId:props.ad.id},
+        isLoading,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Ad edited successfully';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while editing bid, please try again later';
+        },
+    );
+    await callFunction();
     emits("close")
-}
-const validateRequest = ()=>{
-    if(newRequest.type === "" || newRequest.yieldTonnage === 0 || !newRequest.requestDate || newRequest.price === 0) {
-        return false;
-    }
-    return true;
 }
 </script>

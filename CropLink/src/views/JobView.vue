@@ -5,7 +5,7 @@
                 <span class="px-5 pt-5 text-left">
                     <h1 class="text-xl font-bold">{{ job.title  }}</h1>
                     <p class="text-md">{{ job.location }}</p>
-                    <p class="text-md">${{ job.salary }}</p>
+                    <p class="text-md">${{ job.salaryMin }} - {{ job.salaryMax }}</p>
                     <p class="text-md">{{ job.type }}</p>
                     <CardButton>
                         Apply

@@ -3,6 +3,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth }  from "./firebase/main";
 import { getDocument } from "./firebase/utils";
 import { useMainStore } from './stores/main';
+import currency from './directives/currency';
 import { storeToRefs } from 'pinia';
 let app: any;
 let profile: any;
@@ -33,6 +34,7 @@ import router from './router'
 const initApp = () => {
     app = createApp(App)
     app.use(createPinia())
+    app.directive('currency', currency)
     app.use(router)
     app.mount('#app')
 }

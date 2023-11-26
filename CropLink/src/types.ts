@@ -77,6 +77,8 @@ export type Contract = {
     status: "pending" | "accepted" | "rejected",
     endedAt?: Timestamp,
     ready?:string[],
+    type: "sell" | "gig",
+    context: Gig,
 };
 export type ChatRoom = {
     id: string,
@@ -109,7 +111,8 @@ export type Job = {
     live: boolean;
     description: string;
     location: string;
-    salary: string;
+    salaryMin: number;
+    salaryMax: number;
     tasks: string[];
     type: string;
 };
@@ -120,7 +123,7 @@ export type Gig = {
     live: boolean;
     description: string;
     location: string;
-    milestones: object[];
+    milestones: {name:string,description:string,price:number}[];
 };
 export type Application = {
     createdAt: Timestamp;

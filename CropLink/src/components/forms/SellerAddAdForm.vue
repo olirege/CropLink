@@ -53,6 +53,11 @@ import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
 import Listbox from '@/components/props/Listbox.vue';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
+import { useModalStore } from '@/stores/modals';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
+
 const emits = defineEmits(["close"]);
 const { profile } = storeToRefs(useMainStore());
 const images = ref([]);
@@ -89,7 +94,6 @@ const newCrop = reactive({
 });
 const isLoading = ref(false);
 const onConfirm = async () => {
-    isLoading.value = true;
     if(validateCrop() && profile.value) {
         const base64Images = images.value.map((imageObj) => {
             return imageObj.url.split(",")[1]; // Extract the base64 part of the DataURL
@@ -97,11 +101,25 @@ const onConfirm = async () => {
         const deepAdCopy = JSON.parse(JSON.stringify(newCrop));
         deepAdCopy.biddingEndTime = new Date(deepAdCopy.biddingEndTime).toISOString();
         deepAdCopy.expectedHarvestDate = new Date(deepAdCopy.expectedHarvestDate).toISOString();
-        await useMainStore().createUserAd({images:base64Images,...deepAdCopy, adType:profile.value.accountType});
-        isLoading.value = false;
+        const { callFunction } = useFirebaseFunctionCall(
+            'createAd',
+            {images:base64Images,...deepAdCopy, adType:profile.value.accountType},
+            isLoading,
+            undefined,
+            undefined,
+            () => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+                notifications.value.message = 'Ad created!';
+            },
+            (error) => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.ERROR;
+                notifications.value.message = 'Error creating ad, please try again later';
+            },
+        );
+        await callFunction();
         emits("close")
-    } else {
-        isLoading.value = false;
     }
 }
 const validateCrop = ()=>{

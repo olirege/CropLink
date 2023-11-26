@@ -1,8 +1,8 @@
 <template>
-    <div class="w-full px-2 py-3 sm:px-0">
+    <div class="w-full">
         <div class="w-full" v-if="profile">
-            <TabGroup class="w-full" as="div">
-                <TabList class="w-full flex space-x-1 rounded-xl bg-blue-900/20 p-1">
+            <TabGroup>
+                <TabList class="w-full flex space-x-1 p-1">
                     <Tab
                         v-for="(category,key,index) in TAB_CATEGORIES"
                         as="template"
@@ -12,11 +12,10 @@
                         >
                             <button
                             :class="[
-                            'w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700',
-                            'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                            'w-24 rounded-lg py-2.5 text-sm font-medium cursor-pointer',
                             selected
-                                ? 'bg-white shadow'
-                                : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
+                                ? 'text-blue-500 focus:outline-none'
+                                : 'text-slate-500',
                             ]"
                         >
                             {{ category }}
@@ -26,15 +25,14 @@
                     as="template"
                     v-if="profile.accountType === ACCOUNT_TYPES.BUYER"
                     v-slot="{ selected }"
-                    @click="selectedTab = 4"
+                    @click="selectedTab = 5"
                         >
                         <button
                             :class="[
-                            'w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700',
-                            'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                            'w-24 rounded-lg py-2.5 text-sm font-medium cursor-pointer',
                             selected
-                                ? 'bg-white shadow'
-                                : 'text-blue-100 hover:bg-white/[0.12] hover:text-white',
+                                ? 'text-blue-500 focus:outline-none'
+                                : 'text-slate-500',
                             ]"
                         >
                             Bids
@@ -48,10 +46,9 @@
                 <TabPanel>
                     <ContractContentComponent/>
                 </TabPanel>
-                <TabPanel>
+                <!-- <TabPanel>
                     <ChatRoomsContentComponent/>
-          
-                </TabPanel>
+                </TabPanel> -->
                 <TabPanel>
                     <JobsContentComponent/>
                 </TabPanel>
@@ -87,7 +84,7 @@ const selectedTab:Ref<number> = ref(0);
 const TAB_CATEGORIES = {
     ADS: "Ads",
     CONTRACTS: "Contracts",
-    MESSAGES: "Messages",
+    // MESSAGES: "Messages",
     JOBS: "Job posts",
     GIGS: "Gigs",
     APPLICATIONS: "Applications",

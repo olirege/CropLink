@@ -21,9 +21,12 @@
 </template>
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
-import { useMainStore } from '@/stores/main';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
-
+import { useModalStore } from '@/stores/modals';
+import { storeToRefs } from 'pinia';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const emits = defineEmits(["close"]);
 const props = defineProps({
     adId: {
@@ -38,13 +41,26 @@ const newBid = reactive({
 });
 const isLoading = ref(false);
 const onConfirm = async () => {
-    isLoading.value = true;
     if(validateRequest()) {
-        await useMainStore().placeNewBid({...newBid});
-        isLoading.value = false;
+        const { callFunction } = useFirebaseFunctionCall(
+            'placeBid',
+            {...newBid},
+            isLoading,
+            undefined,
+            undefined,
+            () => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+                notifications.value.message = 'Bid placed successfully';
+            },
+            (error) => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.ERROR;
+                notifications.value.message = 'Error while placing bid, please try again later';
+            },
+        );
+        await callFunction();
         emits("close")
-    } else {
-        isLoading.value = false;
     }
 }
 const validateRequest = ()=>{

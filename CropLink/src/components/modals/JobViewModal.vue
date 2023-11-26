@@ -29,7 +29,7 @@
                                     <span class="px-5 pt-5 text-left">
                                         <h1 class="text-xl font-bold">{{ job.title  }}</h1>
                                         <p class="text-md">{{ job.location }}</p>
-                                        <p class="text-md">${{ job.salary }}</p>
+                                        <p class="text-md">${{ job.salaryMin }} - {{  job.salaryMax }} </p>
                                         <p class="text-md">{{ job.type }}</p>
                                         <CardButton @click="onApply">
                                             Apply
@@ -119,7 +119,7 @@
     </TransitionRoot>
 </template>
 <script setup lang="ts">
-import { type PropType, ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import type { Job } from '@/types';
 import { queryForCollectionGroupDocumentById } from '@/firebase/utils';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
@@ -135,6 +135,7 @@ import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
 import { useMainStore } from '@/stores/main';
 import { getStorage, ref as fbStorageRef, uploadBytes } from 'firebase/storage';
+import { useFirebaseFunctionCall } from '@/firebase/utils';
 const { user } = storeToRefs(useMainStore());
 const uploadFileToFirebaseStorage = async (file) => {
     const storage = getStorage();
@@ -147,7 +148,8 @@ const showApplyResponse = ref(false);
 const onApply = () => {
     showApplyResponse.value = true;
 }
-const { modals } = storeToRefs(useModalStore());
+const { modals, notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const isOpen = ref(true)
 function setIsOpen(value:boolean) {
   isOpen.value = value
@@ -174,7 +176,6 @@ const onFileChange = (e:any) => {
 }
 const isLoadingSubmit = ref(false);
 const onSubmitResume = async () => {
-    isLoadingSubmit.value = true;
     console.log("application", application);
     application.parentId = job.value.jobId;
     application.parentType = 'job';
@@ -182,8 +183,24 @@ const onSubmitResume = async () => {
     const fileRef = await uploadFileToFirebaseStorage(application.resume);
     application.resume = fileRef;
     const deepCopy = JSON.parse(JSON.stringify(application));
-    await useMainStore().submitApplication(deepCopy);
-    isLoadingSubmit.value = false;
+    const { callFunction } = useFirebaseFunctionCall(
+        'submitApplication',
+        deepCopy,
+        isLoadingSubmit,
+        undefined,
+        undefined,
+        ()=> {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Application submitted';
+        },
+        ()=> {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'An error occured while submitting application, please try again later';
+        }
+    )
+    await callFunction();
 }
 onMounted(async () => {
     await loadJob();

@@ -5,8 +5,8 @@
     <div v-else-if="isLoadingBids">
         <LoadingSpinner :isLoading ="isLoadingBids"/>
     </div>
-    <span v-else>
-        <p>No bids yet</p>
+    <span v-else class="h-96 p-2 flex items-center justify-center">
+        <p class="italic">No bids yet</p>
     </span>
 </template>
 <script setup lang="ts">

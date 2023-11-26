@@ -2,7 +2,7 @@
     <div class="carousel">
       <div class="carousel-inner" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
         <div class="carousel-item" v-for="(image, index) in images" :key="index">
-          <img :src="(image as string)" class="w-full h-48 object-cover rounded-lg" v-if="image"/>
+          <img :src="(image as string)" class="w-full object-cover rounded-lg" :class="classes" v-if="image"/>
         </div>
       </div>
       <ChevronLeftIcon v-if="images.length > 1" @click="prev" class="carousel-prev"/>
@@ -16,8 +16,12 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 const emits = defineEmits(['onClick'])
 const props = defineProps({
     images: {
-    type: Array,
-    required: true
+      type: Array,
+      required: true
+    },
+    classes: {
+      type: String,
+      default: 'h-48'
     }
 })
 const currentIndex = ref(0);

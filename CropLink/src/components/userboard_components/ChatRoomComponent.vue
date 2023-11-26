@@ -21,10 +21,10 @@
                     </div>
                 </span>
             </div>
-            <div v-else-if="messages.length == 0 && !isLoadingMessages" class="flex justify-center items-center h-32">
+            <div v-else-if="messages.length == 0 && !isLoadingMessages" class="flex justify-center items-center h-32 flex-grow">
                 <p class="text-gray-500">No messages yet</p>
             </div>
-            <div v-else-if="isLoadingMessages" class="flex justify-center items-center h-32">
+            <div v-else-if="isLoadingMessages" class="flex justify-center items-center h-32 flex-grow">
                 <LoadingSpinner :isLoading="isLoadingMessages"/>
             </div>
             <span class="flex items-end space-x-2">
@@ -56,14 +56,17 @@
 import type { ChatRoom, Message, Clause } from '@/types'
 import { type PropType, ref, onMounted, onBeforeUnmount } from 'vue'
 import LoadingSpinner from '../props/LoadingSpinner.vue';
-import { onSnapshot, query, orderBy, collection, addDoc, type Timestamp } from 'firebase/firestore';
+import { collection, addDoc, type Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/main';
 import {  XCircleIcon } from '@heroicons/vue/20/solid';
 import { PaperAirplaneIcon } from '@heroicons/vue/24/outline';
-import { getDocsFromCollectionWhere } from '@/firebase/utils';
+import { useCollectionQuerySubscription } from '@/firebase/utils';
 import { useRouter } from 'vue-router';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
+import { useModalStore } from '@/stores/modals';
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const emits = defineEmits(['onRemoveMentionnedClause']);
 const props = defineProps({
     clauseMentionned: {
@@ -85,26 +88,55 @@ const chatRoom = ref({} as ChatRoom);
 const message = ref({} as Message);
 const messages = ref([] as Message[])
 let stopChatRoomMessagesSubscription:any;
+const loadMessages = async () => {
+    const order = [
+        ['createdAt', 'asc']
+    ];
+    const conditions = [];
+    const collectionName = `${CHATROOMS_COLLECTION}/${chatRoom.value.id}/${MESSAGES_COLLECTION}`;
+    const { subscribe, unsubscribe } = useCollectionQuerySubscription(
+        collectionName,
+        conditions,
+        order,
+        (data) => {
+            messages.value = data;
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = "Error loading messages, please try again later"
+        },
+        isLoadingMessages,
+    );
+    stopChatRoomMessagesSubscription = unsubscribe;
+    subscribe();
+}
+let unsubscribeToChatRoom: any;
 const loadChatroom = async () => {
-    // fetch chatroom with adid as adid
-    isLoadingChatRoom.value = true;
-    const chatroomDocs = await getDocsFromCollectionWhere(CHATROOMS_COLLECTION, 'adId', '==', props.adId);
-    const chatroom = chatroomDocs[0];
-    if(!chatroom) throw new Error("Chatroom not found");
-    chatRoom.value = {
-        ...chatroom
-    } as ChatRoom;
-    isLoadingChatRoom.value = false;
-    // subscribe to chatroom messages
-    stopChatRoomMessagesSubscription = onSnapshot(query(collection(db, `${CHATROOMS_COLLECTION}/${chatroom.id}/${MESSAGES_COLLECTION}`), orderBy('createdAt','asc')), (snapshot) => {
-        isLoadingMessages.value = true;
-        messages.value = snapshot.docs.map((doc) => {
-            return {
-                ...doc.data()
-            } as Message;
-        })
-        isLoadingMessages.value = false;
-    })
+    const collectionName = CHATROOMS_COLLECTION;
+    const conditions = [
+        ['adId', '==', props.adId],
+    ];
+    const order = [];
+    const { subscribe, unsubscribe } = useCollectionQuerySubscription(
+        collectionName,
+        conditions,
+        order,
+        (data) => {
+            if(data.length > 0) {
+                chatRoom.value = data[0];
+                loadMessages();
+            }
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = "Error loading chatroom, please try again later"
+        },
+        isLoadingChatRoom,
+    );
+    unsubscribeToChatRoom = unsubscribe;
+    subscribe();
 }
 onMounted(async () => {
     try{
@@ -115,6 +147,7 @@ onMounted(async () => {
 })
 onBeforeUnmount(()=>{
     if(stopChatRoomMessagesSubscription) stopChatRoomMessagesSubscription();
+    if(unsubscribeToChatRoom) unsubscribeToChatRoom();
 })
 const isSendingMessage = ref(false);
 const onSendMessage = async () => {
@@ -129,7 +162,6 @@ const onSendMessage = async () => {
     message.value.senderId = user.value.uid;
     await addDoc(messageRef, message.value);
     message.value.text = '';
-    // props.clauseMentionned = {} as Clause;
     emits('onRemoveMentionnedClause');
     isSendingMessage.value = false
 }
@@ -158,6 +190,7 @@ const showIfPreviousMessageIsDifferent = (index:number) => {
     const previousMessage = messages.value[index - 1];
     const currentMessage = messages.value[index];
     if(previousMessage.senderId !== currentMessage.senderId) return true;
+    if(previousMessage.createdAt.toDate().getHours() !== currentMessage.createdAt.toDate().getHours()) return true;
     return false;
 }
 </script>

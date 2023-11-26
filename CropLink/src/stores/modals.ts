@@ -36,6 +36,7 @@ export const useModalStore = defineStore('ModalStore', () => {
     const messaging = reactive({
         show: false,
         to: null,
+        context: {},
     })
     const resetNotification = () => {
         notifications.show = false
@@ -61,6 +62,11 @@ export const useModalStore = defineStore('ModalStore', () => {
         dropdowns.type = ""
         dropdowns.context = {}
     }
+    const clearMessaging = () => {
+        messaging.show = false
+        messaging.to = null
+        messaging.context = {}
+    }
     return {
         modals,
         notifications,
@@ -70,5 +76,6 @@ export const useModalStore = defineStore('ModalStore', () => {
         resetModals,
         resetDropdowns,
         messaging,
+        clearMessaging,
    }
 })

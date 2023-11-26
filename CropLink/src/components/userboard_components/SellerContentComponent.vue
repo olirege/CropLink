@@ -1,10 +1,30 @@
 <template>
-    <button @click="onAddAd" class="mt-2 mb-2 w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Add an ad</button>
-    <span class="px-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds">
-       <SellerAdThumbnailCard v-for="(ad,index) in ads.docs" :key="index" :ad="ad" />
+    <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-5">
+        <div class="p-2">
+            <span class="text-sm font-medium text-slate-300">Number of ads</span>
+            <p class="text-4xl font-bold text-slate-500">{{ ads.docs && ads.docs.length }}</p> 
+        </div>
+        <div class="p-2">
+            <span class="text-sm font-medium text-slate-300">Number of live ads</span>
+            <p class="text-4xl font-bold text-slate-500">{{ numberOfLiveAds }}</p>
+        </div>
+        <div class="p-2">
+            <span class="text-sm font-medium text-slate-300">Total views</span>
+            <p class="text-4xl font-bold text-slate-500">0</p>
+        </div>
+        <div class="p-2">
+            <span class="text-sm font-medium text-slate-300">Number of bids</span>
+            <p class="text-4xl font-bold text-slate-500">0</p>
+        </div>
+        <div class="p-2 flex items-center justify-center">
+            <CardButton @click="onAddAd" :classes="'w-32 p-2'">Create an ad</CardButton>
+        </div>
+    </div>
+    <span class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds">
+       <SellerAdDashboardCard v-for="(ad,index) in ads.docs" :key="index" :ad="ad" />
    </span>
-   <div v-else-if="ads.docs && ads.docs.length == 0 && !isLoadingAds">
-       <div>No ads found</div>
+   <div v-else-if="ads.docs && ads.docs.length == 0 && !isLoadingAds" class="h-96 p-2 flex items-center justify-center">
+       <div class="italic">No ads found</div>
     </div>
     <div v-else>
         <LoadingSpinner :isLoading ="isLoadingAds"/>
@@ -12,43 +32,59 @@
 </template>
 <script setup lang="ts">
 import type { SellerAd } from '@/types';
-import SellerAdThumbnailCard from '../cards/SellerAdThumbnailCard.vue';
+import SellerAdDashboardCard from '../cards/SellerAdThumbnailCard.vue';
 import { useModalStore } from '@/stores/modals';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
-import { ref, type Ref, onMounted, onBeforeUnmount } from 'vue';
-import { getPaginatedCollectionGroupWhere } from '@/firebase/utils';
+import { ref, type Ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { useQuerySubscription } from '@/firebase/utils';
 import LoadingSpinner from '../props/LoadingSpinner.vue';
-import { db } from '@/firebase/main';
-import { onSnapshot, collectionGroup, query, where, orderBy } from 'firebase/firestore';
+import CardButton from '../props/CardButton.vue';
 const { user } = storeToRefs(useMainStore());
-const { modals } = storeToRefs(useModalStore());
+const { modals, notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const ads: Ref<{lastVisible:SellerAd, docs:SellerAd[]}> = ref([]);
 const isLoadingAds = ref(false);
-const loadMoreAds = async () => {
-    isLoadingAds.value = true;
-    ads.value = await getPaginatedCollectionGroupWhere('ads', 'uid', '==', user.value.uid , ['createdAt','desc'], 10, ads.value.lastVisible);
-    console.log("ads", ads.value);
-    isLoadingAds.value = false;
-}
-let stopSubscription:Function;
-const loadAds = async () => {
-    isLoadingAds.value = true;
-    stopSubscription = onSnapshot(query(collectionGroup(db, 'ads'), where('uid', '==', user.value.uid), orderBy('createdAt','desc')), (snapshot) => {
-        ads.value.docs = snapshot.docs.map((doc) => {
-            return {
-                ...doc.data()
-            } as SellerAd;
-        })
-        ads.value.lastVisible = ads.value.docs && ads.value.docs.length > 0 ? ads.value.docs[ads.value.docs.length - 1] : null;
-    });
-    isLoadingAds.value = false;
-}
+const { subscribe, unsubscribe } = useQuerySubscription(
+    import.meta.env.VITE_ADS_COLLECTION,
+    [
+        ['uid', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        ads.value.docs = data as SellerAd[];
+        ads.value.lastVisible = ads.value.docs && ads.value.docs.length > 0 ? ads.value.docs[ads.value.docs.length - 1] : {} as SellerAd;
+    },
+    (error) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.ERROR;
+        notifications.value.message = 'Error loading ads, please try again later.'       
+    },
+    isLoadingAds,
+    ()=>{},
+    ()=>{},
+    (doc) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+        notifications.value.message = 'Ad has been created.'
+    },
+    (doc) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+        notifications.value.message = 'Ad has been removed.'
+    },
+)
 onMounted( async ()=>{
-    await loadAds();
+    subscribe();
 })
 onBeforeUnmount(() => {
-    if(stopSubscription) stopSubscription();
+    unsubscribe();
+})
+const numberOfLiveAds = computed(() => {
+    if(!ads.value.docs || ads.value.docs.length === 0) {
+        return 0;
+    }
+    return ads.value.docs.filter((ad) => ad.live == true).length;
 })
 const onAddAd = () => {
     modals.value['addad'] = true;

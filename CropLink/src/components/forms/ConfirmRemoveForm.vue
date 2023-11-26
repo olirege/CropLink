@@ -25,7 +25,11 @@
   import { ref } from 'vue';
   import CardButton from '@/components/props/CardButton.vue';
   import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
-  import { useMainStore } from '@/stores/main';
+  import { useFirebaseFunctionCall } from '@/firebase/utils';
+  import { useModalStore } from '@/stores/modals';
+  import { storeToRefs } from 'pinia';
+  const { notifications } = storeToRefs(useModalStore());
+  const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
   const emits = defineEmits(['close']);
   const props = defineProps({
     context: {
@@ -45,14 +49,85 @@
     isLoading.value = false;
   };
   const manageRemove = async () => {
+    if(props.context.__key == 'ad') {
+      const { callFunction } = useFirebaseFunctionCall(
+        'removeAd',
+        {adId:props.context.adId},
+        isLoading,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Ad removed!';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while removing ad, please try again later';
+        },
+      );
+      await callFunction();
+    }
     if(props.context.__key == 'job') {
-      await useMainStore().removeJobPostAd(props.context.jobId);
+      const { callFunction } = useFirebaseFunctionCall(
+        'removeJobPost',
+        {jobId:props.context.jobId},
+        isLoading,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Ad removed!';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while removing ad, please try again later';
+        },
+      );
+      await callFunction();
     }
     if(props.context.__key == 'gig') {
-      await useMainStore().removeGigPostAd(props.context.gigId);
+      const { callFunction } = useFirebaseFunctionCall(
+        'removeGigPost',
+        {gigId:props.context.gigId},
+        isLoading,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Gig removed!';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while removing gig, please try again later';
+        },
+      );
+      await callFunction();
     }
     if(props.context.__key == 'application') {
-      await useMainStore().removeApplication(props.context.applicationId);
+      const { callFunction } = useFirebaseFunctionCall(
+        'removeApplication',
+        {applicationId:props.context.applicationId},
+        isLoading,
+        undefined,
+        undefined,
+        () => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+            notifications.value.message = 'Gig removed!';
+        },
+        (error) => {
+            notifications.value.show = true;
+            notifications.value.type = NOTIFICATION_TYPES.ERROR;
+            notifications.value.message = 'Error while removing gig, please try again later';
+        },
+      );
+      await callFunction()
     }
   }
   </script>

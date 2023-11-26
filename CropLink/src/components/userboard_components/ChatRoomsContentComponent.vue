@@ -24,12 +24,13 @@ import ChatRoomCard from '../cards/ChatRoomCard.vue';
 import ChatRoomThumbnailCard from '../cards/ChatRoomThumbnailCard.vue';
 import { type Ref, ref, onMounted, onBeforeUnmount } from 'vue';
 import LoadingSpinner from '../props/LoadingSpinner.vue';
-import { getPaginatedCollectionGroupWhere }  from '@/firebase/utils';
 import { useMainStore } from '@/stores/main';
+import { useModalStore } from '@/stores/modals';
+import { useQuerySubscription } from '@/firebase/utils';
 import { storeToRefs } from 'pinia';
-import { db } from '@/firebase/main';
-import { onSnapshot, collectionGroup, query, where, orderBy } from 'firebase/firestore';
 const { user } = storeToRefs(useMainStore());
+const { notifications } = storeToRefs(useModalStore());
+const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const chatrooms: Ref<{lastVisible:ChatRoom, docs:ChatRoom[]}> = ref([]);
 const isLoadingChatRooms = ref(false);
 const props = defineProps({
@@ -38,48 +39,52 @@ const props = defineProps({
         default: false
     }
 })
-const loadMoreChatRooms = async () => {
-    isLoadingChatRooms.value = true;
-    const buyerChatrooms = await getPaginatedCollectionGroupWhere('chatrooms', 'buyerId', '==', user.value.uid , ['createdAt','desc'], 10, chatrooms.value.lastVisible && chatrooms.value.lastVisible.length > 0 ? chatrooms.value.lastVisible[0] : null);
-    const sellerChatrooms = await getPaginatedCollectionGroupWhere('chatrooms', 'sellerId', '==', user.value.uid , ['createdAt','desc'], 10, chatrooms.value.lastVisible && chatrooms.value.lastVisible.length > 0 ? chatrooms.value.lastVisible[1] : null );
-    chatrooms.value.docs = [...buyerChatrooms.docs as ChatRoom[], ...sellerChatrooms.docs as ChatRoom[]];
-    chatrooms.value.lastVisible = [buyerChatrooms.lastVisible as ChatRoom, sellerChatrooms.lastVisible as ChatRoom];
-    isLoadingChatRooms.value = false;
-}
-
-let stopSubscriptionSeller = null;
-let stopSubscriptionBuyer = null;
 let buyerChatrooms = [];
 let sellerChatrooms = [];
-
-const loadChatRooms = async () => {
-    stopSubscriptionSeller = onSnapshot(query(collectionGroup(db, 'chatrooms'), where('sellerId', '==', user.value.uid), orderBy('createdAt', 'desc')), (snapshot) => {
-        isLoadingChatRooms.value = true;
-        sellerChatrooms = snapshot.docs.map((doc) => ({...doc.data()}));
+const { subscribe: sellerSub, unsubscribe:sellerUnsub } = useQuerySubscription(
+    import.meta.env.VITE_CHATROOMS_COLLECTION,
+    [
+        ['sellerId', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        sellerChatrooms = data as ChatRoom[];
         updateChatrooms(); // Update combined chatrooms
-        isLoadingChatRooms.value = false;
-    });
-    stopSubscriptionBuyer = onSnapshot(query(collectionGroup(db, 'chatrooms'), where('buyerId', '==', user.value.uid), orderBy('createdAt', 'desc')), (snapshot) => {
-        isLoadingChatRooms.value = true;
-        buyerChatrooms = snapshot.docs.map((doc) => ({...doc.data()}));
+    },
+    (error) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.ERROR;
+        notifications.value.message = 'Error loading chatrooms, please try again later.'       
+    },
+    isLoadingChatRooms,
+)
+const { subscribe:buyerSub, unsubscribe:buyerUnsub } = useQuerySubscription(
+    import.meta.env.VITE_CHATROOMS_COLLECTION,
+    [
+        ['buyerId', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        buyerChatrooms = data as ChatRoom[];
         updateChatrooms(); // Update combined chatrooms
-        isLoadingChatRooms.value = false;
-    });
-};
-
+    },
+    (error) => {
+        notifications.value.show = true;
+        notifications.value.type = NOTIFICATION_TYPES.ERROR;
+        notifications.value.message = 'Error loading chatrooms, please try again later.'       
+    },
+    isLoadingChatRooms,
+)
 const updateChatrooms = () => {
     chatrooms.value.docs = [...buyerChatrooms, ...sellerChatrooms];
 };
 
-const unsubscribe = () => {
-    if (stopSubscriptionSeller) stopSubscriptionSeller();
-    if (stopSubscriptionBuyer) stopSubscriptionBuyer();
-};
-
 onMounted(async ()=>{
-    await loadChatRooms();
+    sellerSub();
+    buyerSub();
 })
 onBeforeUnmount(()=>{
-    unsubscribe();
+    sellerUnsub();
+    buyerUnsub();
 })
 </script>

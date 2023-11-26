@@ -42,92 +42,168 @@ export const generateTransaction = (payload: TransactionPayload) => {
     const sellerEmail = payload.sellerEmail;
     const sellerAgreed = payload.contractData.ready?.includes(payload.contractData.sellerId);
     const buyerAgreed = payload.contractData.ready?.includes(payload.contractData.buyerId);
-    const escrowFeeSplit = process.env.ESCROW_FEE_SPLIT as string;
-    const escrowInspectPeriod = parseInt(process.env.ESCROW_INSPECT_PERIOD as string);
-    const escrowTransactionType = process.env.ESCROW_TRANSACTION_TYPE as string;
-    const escrowBrokerFeeRate = process.env.ESCROW_BROKER_FEE as string;
     const total = payload.contractData.total ? payload.contractData.total : 0;
-    const escrowBrokerFee = Math.round(total * parseFloat(escrowBrokerFeeRate) * 100) / 100;
-    const data = {
-        "currency": currency,
-        "description": `Sale of ${variety} ${type}`,
-        "return_url": redirectUrl,
-        "redirect_type": "manual",
-        "items": [
-            {
-                "extra_attributes": {
-                    "concierge": false,
-                    "with_content": false,
+    let data;
+    if (payload.contractData.type == "sell") {
+        const escrowFeeSplit = 0.5;
+        const escrowInspectPeriod = 86400;
+        const escrowTransactionType = "general_merchandise";
+        const escrowBrokerFeeRate = 0.1;
+        const escrowBrokerFee = Math.round(total * escrowBrokerFeeRate) * 100 / 100;
+        data = {
+            "currency": currency,
+            "description": `Sale of ${variety} ${type}`,
+            "return_url": redirectUrl,
+            "redirect_type": "manual",
+            "items": [
+                {
+                    "extra_attributes": {
+                        "concierge": false,
+                        "with_content": false,
+                    },
+                    "fees": [
+                        {
+                            "payer_customer": sellerEmail,
+                            "split": escrowFeeSplit,
+                            "type": "escrow",
+                        },
+                        {
+                            "payer_customer": buyerEmail,
+                            "split": escrowFeeSplit,
+                            "type": "escrow",
+                        },
+                    ],
+                    "inspection_period": escrowInspectPeriod,
+                    "shipping_type": "no_shipping",
+                    "quantity": 1,
+                    "schedule": [
+                        {
+                            "amount": total,
+                            "payer_customer": buyerEmail,
+                            "beneficiary_customer": sellerEmail,
+                        },
+                    ],
+                    "title": `${variety} ${type}`,
+                    "type": escrowTransactionType,
+                    "description": `${variety} ${type} ${yieldTonnage}`,
                 },
-                "fees": [
-                    {
-                        "payer_customer": sellerEmail,
-                        "split": escrowFeeSplit,
-                        "type": "escrow",
-                    },
-                    {
-                        "payer_customer": buyerEmail,
-                        "split": escrowFeeSplit,
-                        "type": "escrow",
-                    },
-                ],
-                "inspection_period": escrowInspectPeriod,
-                "shipping_type": "no_shipping",
-                "quantity": 1,
-                "schedule": [
-                    {
-                        "amount": total,
-                        "payer_customer": buyerEmail,
-                        "beneficiary_customer": sellerEmail,
-                    },
-                ],
-                "title": `${variety} ${type}`,
-                "type": escrowTransactionType,
-                "description": `${variety} ${type} ${yieldTonnage}`,
-            },
-            {
-                "schedule": [
-                    {
-                        "amount": escrowBrokerFee,
-                        "beneficiary_customer": "me",
-                        "payer_customer": sellerEmail,
-                    },
-                ],
-                "type": "broker_fee",
-            },
-            {
-                "schedule": [
-                    {
-                        "amount": escrowBrokerFee,
-                        "beneficiary_customer": "me",
-                        "payer_customer": buyerEmail,
-                    },
-                ],
-                "type": "broker_fee",
-            },
-        ],
-        "parties": [
-            {
-                "role": "broker",
-                "customer": "me",
-                "initiator": true,
-                "agreed": true,
-            },
-            {
-                "agreed": buyerAgreed,
-                "customer": buyerEmail,
-                "initiator": false,
-                "lock_email": false,
-                "role": "buyer",
-            },
-            {
-                "agreed": sellerAgreed,
-                "customer": sellerEmail,
-                "initiator": false,
-                "role": "seller",
-            },
-        ],
-    };
+                {
+                    "schedule": [
+                        {
+                            "amount": escrowBrokerFee,
+                            "beneficiary_customer": "me",
+                            "payer_customer": sellerEmail,
+                        },
+                    ],
+                    "type": "broker_fee",
+                },
+                {
+                    "schedule": [
+                        {
+                            "amount": escrowBrokerFee,
+                            "beneficiary_customer": "me",
+                            "payer_customer": buyerEmail,
+                        },
+                    ],
+                    "type": "broker_fee",
+                },
+            ],
+            "parties": [
+                {
+                    "role": "broker",
+                    "customer": "me",
+                    "initiator": true,
+                    "agreed": true,
+                },
+                {
+                    "agreed": buyerAgreed,
+                    "customer": buyerEmail,
+                    "initiator": false,
+                    "lock_email": false,
+                    "role": "buyer",
+                },
+                {
+                    "agreed": sellerAgreed,
+                    "customer": sellerEmail,
+                    "initiator": false,
+                    "role": "seller",
+                },
+            ],
+        };
+    } else if ( payload.contractData.type == "gig") {
+        const escrowFeeSplit = 1.0;
+        const escrowInspectPeriod = 86400;
+        const escrowTransactionType = "milestone";
+        const escrowBrokerFeeRate = 0.1;
+        const escrowBrokerFee = Math.round(total * escrowBrokerFeeRate) * 100 / 100;
+        const dataMilestonesItems = [];
+        for (const milestone of payload.contractData.context.milestones) {
+            logger.info("milestone", milestone);
+            dataMilestonesItems.push(
+                {
+                    "fees": [
+                        {
+                            "payer_customer": buyerEmail,
+                            "split": escrowFeeSplit,
+                            "type": "escrow",
+                        },
+                    ],
+                    "title": `${milestone.name}`,
+                    "description": `${milestone.description.substring(0, 495)}...`,
+                    "type": `${escrowTransactionType}`,
+                    "inspection_period": escrowInspectPeriod,
+                    "quantity": 1,
+                    "schedule": [
+                        {
+                            "amount": `${milestone.price}`,
+                            "payer_customer": `${buyerEmail}`,
+                            "beneficiary_customer": `${sellerEmail}`,
+                        },
+                    ],
+                }
+            );
+        }
+        data = {
+            "currency": currency,
+            "description": `Work contract between ${buyerEmail} and ${sellerEmail}`,
+            "return_url": redirectUrl,
+            "redirect_type": "manual",
+            "items": [
+                ...dataMilestonesItems,
+                {
+                    "schedule": [
+                        {
+                            "amount": escrowBrokerFee,
+                            "beneficiary_customer": "me",
+                            "payer_customer": buyerEmail,
+                        },
+                    ],
+                    "type": "broker_fee",
+                },
+            ],
+            "parties": [
+                {
+                    "role": "broker",
+                    "customer": "me",
+                    "initiator": true,
+                    "agreed": true,
+                },
+                {
+                    "agreed": true,
+                    "customer": buyerEmail,
+                    "initiator": false,
+                    "lock_email": false,
+                    "role": "buyer",
+                },
+                {
+                    "agreed": true,
+                    "customer": sellerEmail,
+                    "initiator": false,
+                    "role": "seller",
+                },
+            ],
+        };
+    }
     logger.info("generateTransaction done", data);
     return data;
 };
