@@ -215,8 +215,8 @@ const createAds = async () => {
                 type: chosenProduct,
                 uid: sellers[seller].uid,
                 variety: prodTypes[chosenProduct],
-                yieldTonnage: Math.floor(Math.random() * 100),
-                price: Math.floor(Math.random() * 100),
+                pricePerTon: Math.floor(Math.random() * 100),
+                tons: Math.floor(Math.random() * 100),
                 postedOn: Timestamp.fromDate(new Date()),
             }
             const updateStoreFront = {

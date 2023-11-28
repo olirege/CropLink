@@ -23,7 +23,7 @@
             />
         </div>
         <span class="flex flex-row gap-2 relative w-full">
-            <div class="w-1/6 py-4 px-2 sticky top-24">
+            <div class="w-1/6 py-4 px-2 sticky top-24 h-64">
                 <h1 class="text-2xl font-bold mb-2 capitalize">Filters</h1>
                 <span class="divide-y">
                     <div class="py-4">

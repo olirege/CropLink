@@ -28,7 +28,7 @@
                 <p class="text-sm font-bold" v-currency="milestonesTotal"></p>
             </div>
         </div>
-        <div class="w-full flex justify-end gap-4" v-if="showButtons">
+        <div class="w-full flex justify-end gap-4">
             <template v-if="showButtons">
                 <ArrowUpTrayIcon  v-if="!gig.live" @click="onPost(gig.gigId)" class="w-5 h-5 cursor-pointer text-cyan-600" />
                 <ArrowDownTrayIcon  v-if="gig.live" @click="onTakedown(gig.gigId)" class="w-5 h-5 cursor-pointer text-cyan-600" />

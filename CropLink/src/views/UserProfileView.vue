@@ -424,8 +424,16 @@ const removeShippingMethodFromShipping = (shippingMethod) => {
     });
 }
 const storeMergeShipping = computed(()=> {
+    if(!storeChange.value) {
+        return [];
+    }
+    let merge = []
     const storeShipping = store.value?.shipping || [];
-    const merge = [...storeShipping, ...storeChange.value.shipping];
+    if (!storeChange.value.shipping) {
+        return storeShipping;
+    } else {
+        merge = [...storeShipping, ...storeChange.value.shipping];
+    }
     const removeDuplicates = merge.filter((method, index, self) =>
         index === self.findIndex((t) => (
             t.type === method.type && t.distance === method.distance && t.weight === method.weight
@@ -469,8 +477,16 @@ const removeProduceFromPlants = (plant) => {
     });
 }
 const storeMergePlants = computed(()=>{
+    if(!store.value) {
+        return [];
+    }
+    let merge = []
     const storePlants = store.value?.plants || [];
-    const merge = [...storePlants, ...storeChange.value.plants];
+    if(!storeChange.value.plants) {
+        return storePlants;
+    } else {
+        merge = [...storePlants, ...storeChange.value.plants];
+    }
     const removeDuplicates = merge.filter((plant, index, self) =>
         index === self.findIndex((t) => (
             t.type === plant.type && t.variety === plant.variety

@@ -27,10 +27,10 @@
             </CardButton>
         </div>
     </div>
-    <span class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        <span class="grid grid-flow-row space-y-4" v-if="gigs.docs && gigs.docs.length > 0 && !isLoadingGigs" >
+    <span class="p-4 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <template v-if="gigs.docs && gigs.docs.length > 0 && !isLoadingGigs" >
             <GigCard v-for="(gig,index) in gigs.docs" :key="index" :gig="gig" @edit="onEditGigPost" @remove="onRemoveGigPost"/>
-        </span>
+        </template>
         <span v-else-if="gigs.docs && gigs.docs.length == 0 && !isLoadingGigs" class="h-96 p-2 flex items-center justify-center col-span-4">
             <p class="italic">No gig posts</p>
         </span>

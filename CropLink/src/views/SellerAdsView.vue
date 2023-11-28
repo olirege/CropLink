@@ -1,43 +1,58 @@
 <template>
     <div class="p-5 flex flex-col gap-4">
-        <span class="shadow border rounded-md">
-            <div id="seller-ad-banner" class="w-full h-64 relative  bg-gradient-to-r from-white to-sky-500/40 rounded-t-md">
-                <img :src="sellerSignature.storeBannerPic" class="bg-slate-500 w-full h-48 object-cover rounded-t-md" ref="bannerPic" v-if="!isLoadingProfile">
+        <span class="rounded-md">
+            <div id="seller-ad-banner" class="w-full h-96 relative">
+                <img :src="sellerSignature.storeBannerPic" class="bg-slate-500 w-full h-80 object-cover rounded-md" ref="bannerPic" v-if="!isLoadingProfile">
                 <div v-else class="bg-slate-500 w-full h-48 animate-pulse"></div>
-                <div class="absolute bottom-5 left-20 flex flex-row">
-                    <img :src="sellerSignature.storeLogoResized" class="z-9 border-4 border-white rounded-full w-32 h-32 bg-indigo-500" ref="profilePic" v-if="!isLoadingProfile">
-                    <div v-else class="z-10 border-4 border-white rounded-full w-32 h-32 bg-indigo-500 animate-pulse"></div>
+                <div class="absolute bottom-0 left-20 flex flex-row">
+                    <img :src="sellerSignature.storeLogoResized" class="z-9 border-4 border-white rounded-full w-36 h-36 bg-indigo-500" ref="profilePic" v-if="!isLoadingProfile">
+                    <div v-else class="z-10 border-4 border-white rounded-full w-36 h-36 bg-indigo-500 animate-pulse"></div>
                     <div class="relative ml-5 p-1">
-                        <div class="absolute bottom-1 text-xl font-bold truncate flex flex-row">
-                            <p>{{ props.sellerName }}</p>
+                        <div class="absolute bottom-1 truncate flex flex-row">
+                            <p class="text-4xl font-bold">{{ props.sellerName }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="absolute bottom-5 right-20">
-                    <button class="border-2 border p-1 w-32 rounded-md flex flex-row items-center justify-center gap-2 bg-white" @click="onMessage">
-                        <EnvelopeIcon class="w-6 h-6"/>
-                        <p>Contact</p>
-                    </button>
+                <div class="absolute bottom-20 right-20">
+                    <button class="bg-slate-600/70 px-4 py-2 rounded-md flex flex-row gap-2 items-center"
+                        @click="onMessage">
+                        <EnvelopeIcon class="w-6 h-6 text-white"/>
+                        <p class="text-white font-semibold">Contact</p>
+                    </button>                
                 </div>
             </div>
-            <div v-if="!isLoadingProfile" class="flex flex-col gap-2 p-4  bg-gradient-to-r from-white to-sky-500/40 rounded-b-md">
+        </span>
+        <div class="flex flex-row gap-4 pt-6 border-y mt-4 sticky bg-white top-16 h-16 z-[9]">
+            <div @click="scrollTo('Information')" :class="tab == 'Information' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
+                Information
+            </div>
+            <div @click="scrollTo('Reviews')" :class="tab == 'Reviews' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
+                Reviews
+            </div>
+            <div @click="scrollTo('Work Opportunities')" :class="tab == 'Work Opportunities' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
+                Work Opportunities
+            </div>  
+            <div @click="scrollTo('Product Listings')" :class="tab == 'Product Listings' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
+                Product Listings
+            </div>
+        </div>
+        <span class="border rounded-md shadow">
+            <div v-if="!isLoadingProfile" class="flex flex-col gap-2 p-4 rounded-b-md">
                 <div class="flex flex-row items-center gap-2">
                     <span class="flex flex-row gap-1 items-center" v-if="sellerSignature.verifiedSeller">
                         <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
                         <p>Verified</p>
                     </span>
-                    <p class="p-1 px-2 bg-white">{{ amountOfTime }}</p>
-                    <p class="p-1 px-2 bg-white">{{ sellerSignature.staffNumber }} staff</p>
-                    <p class="p-1 px-2 bg-white">{{ sellerSignature.acreage }} acres</p>
+                    <p class="p-1 px-2">{{ amountOfTime }}</p>
+                    <p class="p-1 px-2">{{ sellerSignature.staffNumber }} staff</p>
+                    <p class="p-1 px-2">{{ sellerSignature.acreage }} acres</p>
                 </div>
                 <div class="flex flex-row gap-2 italic">
                     <MapPinIcon class="w-5 h-5"/>
                     <p>{{ sellerSignature.location }}</p>
                 </div>
             </div>
-        </span>
-        <span class="border rounded-md shadow">
-            <span class="grid grid-cols-2 gap-4">
+            <span class="grid grid-cols-2 gap-4" id="Information">
                 <span class="p-4">
                     <div class="border-b p-4 flex flex-row gap-2 divide-x" v-if="!isLoadingProfile">
                         <div class="flex flex-row gap-2 px-4 py-2">
@@ -104,7 +119,7 @@
                 </div>
             </span>
         </span>
-        <span v-if="liveJobs.length > 0 && liveGigs.length > 0" class="border rounded-md shadow p-5">
+        <span v-if="liveJobs.length > 0 && liveGigs.length > 0" class="border rounded-md shadow p-5" id="Work Opportunities">
             <div class="flex items-center justify-start h-12 bg-gradient-to-r from-sky-500/40 to-white rounded-t-md">
                 <h2 class="pl-2 text-white text-2xl font-bold p-1">Work Opportunities</h2>
             </div>
@@ -145,7 +160,7 @@
                 </div>
             </div>
         </span>
-        <div class="p-5 border rounded-md shadow" v-if="liveAds.length > 0">
+        <div class="p-5 border rounded-md shadow" v-if="liveAds.length > 0" id="Product Listings">
             <div class="flex items-center justify-start h-12 bg-gradient-to-r from-sky-500/40 to-white rounded-t-md">
                 <h2 class="pl-2 text-white text-2xl font-bold p-1">Product listings</h2>
             </div>
@@ -191,6 +206,7 @@ const isLoadingAds = ref(false);
 const isLoadingJobs = ref(false);
 const isLoadingGigs = ref(false);
 const isLoadingProfile = ref(false);
+const tab = ref('Information');
 const MAX_JOBS = ref(2);
 const MAX_GIGS = ref(2);
 const props = defineProps({
@@ -203,6 +219,12 @@ const props = defineProps({
         required: true
     }
 })
+const scrollTo = (refName:string) => {
+    const el = document.getElementById(refName);
+    if(!el) return;
+    el.scrollIntoView({behavior: 'smooth'});
+    tab.value = refName;
+}
 const { messaging } = storeToRefs(useModalStore());
 const onMessage = async () => {
     messaging.value.show = true;
@@ -246,11 +268,11 @@ onMounted(async() => {
         liveAds.value = paginatedAds.docs as SellerAd[]|BuyerAd[];
         isLoadingAds.value = false;
     }));
-    promises.push(getPaginatedCollectionGroupWhereWhere('jobs', 'live', '==', true, 'posterId', '==', props.id, ['updatedAt','desc'], 2).then((paginatedJobs)=>{
+    promises.push(getPaginatedCollectionGroupWhereWhere('jobs', 'live', '==', true, 'posterId', '==', props.id, ['updatedAt','desc'], 5).then((paginatedJobs)=>{
         liveJobs.value = paginatedJobs.docs as Job[];
         isLoadingJobs.value = false;
     }));
-    promises.push(getPaginatedCollectionGroupWhereWhere('gigs', 'live', '==', true, 'posterId', '==', props.id, ['updatedAt','desc'], 2).then((paginatedGigs)=>{
+    promises.push(getPaginatedCollectionGroupWhereWhere('gigs', 'live', '==', true, 'posterId', '==', props.id, ['updatedAt','desc'], 5).then((paginatedGigs)=>{
         liveGigs.value = paginatedGigs.docs as Gig[];
         isLoadingGigs.value = false;
     }));

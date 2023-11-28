@@ -7,13 +7,16 @@
         </div>
         <nav class="flex flex-row justify-between items-center w-full">
           <span class="sm:space-x-2 md:space-x-4 lg:space-x-6">
-            <RouterLink class="hover:bg-sky-500/50 p-2 rounded-md" :class="{'bg-sky-700/50 text-white': selectedPage == 4}" to="/" v-if="profile" @click="selectedPage = 4">Feed</RouterLink>
-            <RouterLink class="hover:bg-sky-500/50 p-2 rounded-md" :class="{'bg-sky-700/50 text-white': selectedPage == 1}" to="/userboard" v-if="profile" @click="selectedPage = 1">Dashboard</RouterLink>
-            <RouterLink class="hover:bg-sky-500/50 p-2 rounded-md" :class="{'bg-sky-700/50 text-white': selectedPage == 2}" to="/signup" v-if="!profile" @click="selectedPage = 2">Signin</RouterLink>
+            <RouterLink class="hover:bg-sky-500/50 p-2 rounded-md" :class="{'bg-sky-700/50 text-white': selectedPage == 4}" to="/" @click="selectedPage = 4">Home</RouterLink>
+            <RouterLink class="hover:bg-sky-500/50 p-2 rounded-md" :class="{'bg-sky-700/50 text-white': selectedPage == 1}" to="/userboard" v-if="user" @click="selectedPage = 1">Dashboard</RouterLink>
+            <RouterLink class="hover:bg-sky-500/50 p-2 rounded-md" :class="{'bg-sky-700/50 text-white': selectedPage == 2}" to="/signup" v-if="!user" @click="selectedPage = 2">Signin</RouterLink>
             <!-- <RouterLink class="hover:bg-sky-500/50 p-2 rounded-md" :class="{'bg-sky-700/50 text-white': selectedPage == 3}" to="/profile" v-if="profile" @click="selectedPage = 3">Profile</RouterLink> -->
           </span>
           <span class="flex flex-row gap-2 items-center">
-            <a class="hover:bg-sky-500 p-2 rounded-md" @click="onSignout">Signout</a>
+            <div class="p-2 bg-slate-500/40 rounded-md">
+              Alpha v.1.0.0
+            </div>
+            <a class="hover:bg-sky-500 p-2 rounded-md" @click="onSignout" v-if="user">Signout</a>
             <BellIcon class="h-6 w-6 text-white cursor-pointer"/>
             <Cog6ToothIcon class="h-6 w-6 text-white cursor-pointer" v-if="profile" @click="()=>{selectedPage = 3; router.push({name: 'profile'})}"/>
             <img v-if="profile" :src="profile.profilePicResized" alt="Profile Photo" class="w-10 h-10 rounded-full bg-slate-500"/>
@@ -63,7 +66,7 @@ import DirectMessageComponent from './components/props/DirectMessageComponentV2.
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { BellIcon, Cog6ToothIcon } from '@heroicons/vue/20/solid';
-const { profile } = storeToRefs(useMainStore());
+const { profile, user } = storeToRefs(useMainStore());
 const { modals, notifications, dropdowns } = storeToRefs(useModalStore());
 const selectedPage = ref(0);
 const router = useRouter();

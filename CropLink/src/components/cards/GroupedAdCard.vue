@@ -1,12 +1,12 @@
 <template>
-    <span class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300" v-if="adGroup">
+    <span class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 cursor-pointer" v-if="adGroup" @click="goToSellerAds(adGroup.id, adGroup.companyName)">
         <span class="grid grid-cols-3">
             <span class="flex flex-row">
                 <div class="flex flex-col gap-1">
                     <span class="flex flex-row gap-2 items-end mb-2">
-                        <img :src=adGroup.storeLogoResized class="w-10 h-10 rounded-md object-cover bg-slate-500" @click="goToSellerAds(adGroup.id, adGroup.companyName)">
+                        <img :src=adGroup.storeLogoResized class="w-10 h-10 rounded-md object-cover bg-slate-500">
                         <span class="flex flex-col">
-                            <h1 class="text-md font-bold capitalize" @click="goToSellerAds(adGroup.id, adGroup.companyName)">{{ `${adGroup.companyName}'s ads` }}</h1>
+                            <h1 class="text-md font-bold capitalize">{{ `${adGroup.companyName}'s ads` }}</h1>
                             <div v-if="adGroup.verifiedSeller" class="flex flex-row gap-1 divide-x">
                                 <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
                                 <p class="text-xs italic pl-2">Verified</p>
