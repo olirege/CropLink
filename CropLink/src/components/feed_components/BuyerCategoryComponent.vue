@@ -26,10 +26,6 @@
             <div class="w-1/6 py-4 px-2 sticky top-24">
                 <h1 class="text-2xl font-bold mb-2 capitalize">Filters</h1>
                 <span class="divide-y">
-                    <div class="py-4 flex flex-row gap-2 items-center">
-                        <input type="checkbox" id="seeAll" v-model="filters.all"/>
-                        <label class="text-sm" for="seeAll" >See all</label>
-                    </div>
                     <div class="py-4">
                         <p class="text-sm mb-2">Cost per Ton</p>
                         <div class="flex flex-row gap-2 items-center">
@@ -54,7 +50,7 @@
                     </span>
                 </span>
             </div>
-            <div class="flex flex-col gap-2 w-5/6   " v-if="!isLoadingAds && filteredAds.length > 0" id="buyerAds">
+            <div class="flex flex-col gap-2 w-5/6 min-h-[500px]" v-if="!isLoadingAds && filteredAds.length > 0" id="buyerAds">
                 <BuyerStoreAdCard v-for="(ad,index) in filteredAds" :ad="ad" :key="index" :showButtons="false"/>
             </div>
             <div v-if="selectedCategory && isLoadingAds" class="w-full">
@@ -110,37 +106,28 @@ const filters = reactive({
     verifiedBuyer: false,
     certifiedOrganic: false,
     offersShipping: false,
-    all: true,
 })
 const filteredAds = computed(() => {
-    if(!ads.value.docs || ads.value.docs.length === 0) {
+    if (!ads.value.docs || ads.value.docs.length === 0) {
         return [];
     }
-    const filtered =  ads.value.docs.filter((ad) => {
-        if(filters.all) {
-            return true;
+    return ads.value.docs.filter(ad => {
+        let matchesFilters = true;
+        if (ad.minCostPerTon < filters.minCostPerTon || ad.maxCostPerTon > filters.maxCostPerTon) {
+            matchesFilters = false;
         }
-        const minCostPerTon = ad.minCostPerTon;
-        const maxCostPerTon = ad.maxCostPerTon;
-        const verifiedBuyer = ad.verifiedBuyer;
-        const certifiedOrganic = ad.certifiedOrganic;
-        const offersShipping = ad.offersShipping;
-        return minCostPerTon >= filters.minCostPerTon &&
-        maxCostPerTon <= filters.maxCostPerTon &&
-        verifiedBuyer === filters.verifiedBuyer &&
-        certifiedOrganic === filters.certifiedOrganic &&
-        offersShipping === filters.offersShipping;
-    })
-    if(!selectedCategory.value) {
-        return filtered;
-    } else if(!selectedVariety.value) {
-        return filtered;
-    } else {
-        return filtered.filter((ad) => {
-            return ad.variety === selectedVariety.value;
-        })
-    }
-})
+        if (filters.verifiedBuyer && !ad.verifiedBuyer) {
+            matchesFilters = false;
+        }
+        if (filters.certifiedOrganic && !ad.certifiedOrganic) {
+            matchesFilters = false;
+        }
+        if (filters.offersShipping && !ad.offersShipping) {
+            matchesFilters = false;
+        }
+        return matchesFilters;
+    });
+});
 const loadAds = async (category:string) => {
     isLoadingAds.value = true;
     ads.value = await getPaginatedCollectionGroup(

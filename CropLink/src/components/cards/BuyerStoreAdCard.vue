@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center shadow p-2 h-16 cursor-pointer">
+    <div class="flex items-center shadow p-2 h-16 cursor-pointer hover:bg-slate-300/20 transform transition-all" @click="onClick">
         <table class="table-fixed w-full border-collapse">
             <tbody>
                 <tr>
@@ -10,7 +10,7 @@
                             <p>~{{ ad.tons }} tons</p>
                         </span>
                     </td>
-                    <td ><p class="text-sm"><span v-currency="ad.minCostPerTon"/>-<span v-currency="ad.maxCostPerTon"/>/ ton</p></td>
+                    <td ><p class="text-sm truncate"><span v-currency="ad.minCostPerTon"/>-<span v-currency="ad.maxCostPerTon"/>/ ton</p></td>
                     <td >
                         <span class="flex flex-row items-center gap-2">
                             <MapPinIcon class="h-4 w-4"/>
@@ -55,5 +55,8 @@ const fromNow = (date:Timestamp) => {
     } else {
         return `just now`;
     }
+}
+const onClick = () => {
+    console.log('clicked');
 }
 </script>

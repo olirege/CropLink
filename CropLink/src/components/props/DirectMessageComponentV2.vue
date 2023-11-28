@@ -1,6 +1,6 @@
 <template>
     <template v-if="!open">
-        <div class="w-56 rounded rounded-t-md fixed bottom-0 right-1 h-10 bg-white z-10 border-x-2 border-t-2 flex justify-center items-center" @click="onOpen(true)">
+        <div class="w-56 rounded rounded-t-md fixed bottom-0 right-4 h-10 bg-white z-10 border-x-2 border-t-2 flex justify-center items-center" @click="onOpen(true)">
             <div class="flex justify-between items-center flex-row gap-4">
                 <span class="flex justify-center items-center flex-row gap-4">
                     <EnvelopeIcon class="h-6 w-6" />

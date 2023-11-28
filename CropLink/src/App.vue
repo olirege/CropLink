@@ -34,10 +34,7 @@
   <JobViewModal v-if="modals['viewjob']"/>
   <GigViewModal v-if="modals['viewgig']"/>
   <StateNotificationToast v-show="notifications.show"/>
-  <!-- <div class=" pl-6 h-24 w-full bg-sky-600 flex justify-start">
-    <h1 class="text-4xl font-bold text-white text-center pt-6 capitalize">{{ currentPageName }}</h1>
-  </div> -->
-  <div class="relative">
+  <div class="relative h-screen">
     <div class="h-24 w-full absolute top-0 left-0 bg-sky-600 -z-10"/>
     <div class="mx-6 flex flex-col border rounded-md z-1 bg-white p-4">
       <RouterView />
