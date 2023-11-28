@@ -23,13 +23,13 @@
                 <p class="text-xs">
                     Salary Min.
                 </p>
-                <p class="text-xl" v-currency="job.salaryMin"></p>
+                <p class="text-sm font-bold" v-currency="job.salaryMin"></p>
             </div>
             <div class="flex flex-col p-2">
                 <p class="text-xs">
                     Salary Max.
                 </p>
-                <p class="text-xl" v-currency="job.salaryMax"></p>
+                <p class="text-sm font-bold" v-currency="job.salaryMax"></p>
             </div>
         </div>
         <div class="w-full flex justify-end gap-4 pr-4 pb-4">

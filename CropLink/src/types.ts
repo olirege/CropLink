@@ -18,9 +18,9 @@ export type SellerAd = {
     id?: string;
     type: string;
     variety: string;
-    yieldTonnage: number;
+    pricePerTon: number;
+    tons: number;
     expectedHarvestDate: Date;
-    price: number;
     images: string[];
     resizedImages: string[];
     live: boolean;
@@ -36,9 +36,10 @@ export type BuyerAd = {
     uid?: string;
     id?: string;
     type: string;
-    yieldTonnage: number;
     requestDate: Date;
-    price: number;
+    minCostPerTon: number;
+    maxCostPerTon: number;
+    tons: number;
     live: boolean;
     postedOn?: string;
     createdAt: Date;

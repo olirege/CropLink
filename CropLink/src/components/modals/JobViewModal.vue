@@ -204,5 +204,17 @@ const onSubmitResume = async () => {
 }
 onMounted(async () => {
     await loadJob();
+    await increaseJobViewCount(modals.value['context'].__key);
 })
+const increasingViewCount = ref(false);
+const increaseJobViewCount = async (jobId:string) => {
+    if(!jobId) return;
+    console.log("jobId", jobId);
+    const { callFunction } = useFirebaseFunctionCall(
+            'increaseJobViewCount',
+            {jobId},
+            increasingViewCount,
+        );
+        await callFunction();
+}
 </script>

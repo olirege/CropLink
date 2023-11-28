@@ -43,7 +43,7 @@ import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { useModalStore } from '@/stores/modals';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
-import { convertTimestampToDate, useQuerySubscription } from '@/firebase/utils';
+import { convertTimestampToDate, useQuerySubscription, useFirebaseFunctionCall } from '@/firebase/utils';
 const { modals, notifications } = storeToRefs(useModalStore());
 const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const { profile } = storeToRefs(useMainStore());
@@ -146,6 +146,7 @@ const onPlaceBid = () => {
 }
 onMounted(async () => {
     await loadAd();
+    await increaseAdViewCount(props.adId);
     calculateTimeLeft();
 })
 onBeforeUnmount(() => {
@@ -160,9 +161,33 @@ onBeforeUnmount(() => {
 const isPostingAd = ref(false);
 const onPostAd = async (adId:string) => {
     if(!adId) return;
-    isPostingAd.value = true;
-    console.log("postAd", adId);
-    await useMainStore().postNewAd(adId);
-    isPostingAd.value = false;
+    const { callFunction } = useFirebaseFunctionCall(
+            'postAd',
+            {adId},
+            isPostingAd,
+            undefined,
+            undefined,
+            () => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
+                notifications.value.message = 'Ad is live!';
+            },
+            (error) => {
+                notifications.value.show = true;
+                notifications.value.type = NOTIFICATION_TYPES.ERROR;
+                notifications.value.message = 'Error while posting ad, please try again later';
+            },
+        );
+        await callFunction();
+}
+const increasingViewCount = ref(false);
+const increaseAdViewCount = async (adId:string) => {
+    if(!adId) return;
+    const { callFunction } = useFirebaseFunctionCall(
+            'increaseAdViewCount',
+            {adId},
+            increasingViewCount,
+        );
+        await callFunction();
 }
 </script>

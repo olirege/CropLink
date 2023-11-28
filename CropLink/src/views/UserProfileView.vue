@@ -101,16 +101,16 @@
                     </span>
                     <span class="flex flex-col gap-2 w-full">
                         <span class="space-y-2 w-full">
-                            <label class="block text-sm font-medium text-gray-700" for="name">Name</label>
+                            <label class="block text-sm font-medium text-gray-700" for="name">Company Name</label>
                             <input type="text" v-model="storeChange.companyName" class="bg-gray-200/70 p-2 rounded-md border-1 w-full" />
                         </span>
                         <span class="space-y-2 w-full">
-                            <label class="block text-sm font-medium text-gray-700" for="name">Email</label>
-                            <input type="text" v-model="storeChange.companyEmail" class="bg-gray-200/70 p-2 rounded-md border-1 w-full" />
+                            <label class="block text-sm font-medium text-gray-700" for="name">Company Email</label>
+                            <input type="email" v-model="storeChange.companyEmail" class="bg-gray-200/70 p-2 rounded-md border-1 w-full" />
                         </span>
                         <span class="space-y-2 w-full">
-                            <label class="block text-sm font-medium text-gray-700" for="name">Website</label>
-                            <input type="text" v-model="storeChange.companyWebsite" class="bg-gray-200/70 p-2 rounded-md border-1 w-full" />
+                            <label class="block text-sm font-medium text-gray-700" for="name">Company Website</label>
+                            <input type="url" v-model="storeChange.companyWebsite" class="bg-gray-200/70 p-2 rounded-md border-1 w-full" />
                         </span>
                         <span class="space-y-2 w-full">
                             <label class="block text-sm font-medium text-gray-700" for="name">Location</label>
@@ -170,7 +170,7 @@
                                      -
                                     <label class="text-sm font-medium text-gray-700" for="name">{{ plant.variety }}</label>
                                     -
-                                    <label class="text-sm font-medium text-gray-700" for="name">{{ plant.amount }}t</label>
+                                    <label class="text-sm font-medium text-gray-700" for="name">{{ plant.amount }} plants</label>
                                     <XCircleIcon @click="removeProduceFromPlants(plant)" class="w-6 h-6 pl-2"/>
                                 </span>
                             </div>
@@ -200,10 +200,24 @@
                                 </span>
                             </div>
                         </span>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700" for="images">Images</label>
+                            <input type="file" id="newStoreImages" ref="storeImages" name="newStoreImages" multiple @change="onFileChange" class="mt-1 p-2 w-full rounded-md border" />
+                            <div class="mt-4 flex overflow-y-auto" style="max-height: 150px;">
+                                <div v-for="(image, index) in storeChange.storeImagesResized" :key="index" class="mr-2 relative">
+                                    <img :src="image" class="w-16 h-16 object-cover" />
+                                    <button @click="removeStoreResizedImage(index)">Remove</button>
+                                </div>
+                                <div v-for="(image, index) in newStoreImages" :key="index" class="mr-2 relative">
+                                    <img :src="image.url" class="w-16 h-16 object-cover" />
+                                    <button @click="removeStoreImage(index)">Remove</button>
+                                </div>
+                            </div>
+                        </div>
                     </span>
                 </div>
                 <div class="flex justify-end">
-                    <button :disabled="!hasChanged" @click="onAcceptStoreChange" class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-36">
+                    <button @click="onAcceptStoreChange" class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-36">
                         Save
                     </button>
                 </div>
@@ -236,7 +250,7 @@
                     </span>
                 </div>
                 <div class="flex justify-end">
-                    <button :disabled="!hasChanged" @click="onAcceptPasswordChange" class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-36">
+                    <button @click="onAcceptPasswordChange" class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-36">
                         Save
                     </button>
                 </div>
@@ -311,14 +325,14 @@ const { subscribe:storeSub, unsubscribe:storeUnsub } = useDocumentSubscription(
     user.value.uid,
     (data) => {
         store.value = data;
-        storeChange.value = data;
+        storeChange.value = JSON.parse(JSON.stringify(data));
     },
     (error) => {
         notifications.value.show = true;
         notifications.value.type = NOTIFICATION_TYPES.ERROR;
         notifications.value.message = 'Error loading profile, please try again later.'       
     },
-    loading,
+    isLoadingStoreChange,
 )
 onMounted(async ()=>{
     await loadProduce();
@@ -329,7 +343,7 @@ onBeforeUnmount(()=>{
     profileUnsub();
     storeUnsub();
 })
-const hasChanged = ref(false);
+const newStoreImages = ref([]);
 const onFileChange = (e:any) => {
     const file = e.target.files[0];
     const reader = new FileReader();
@@ -347,9 +361,19 @@ const onFileChange = (e:any) => {
         if(e.target.name == 'storeBannerPic') {
             storeChange.value.storeBannerPic = reader.result as string;
         }
-        hasChanged.value = true;
+        if(e.target.name == 'newStoreImages') {
+            console.log("newStoreImages", newStoreImages.value)
+            newStoreImages.value.push({ file, url: reader.result as string });
+        }
     }
 }
+
+const removeStoreResizedImage = (index) => {
+    storeChange.value.storeImagesResized.splice(index, 1);
+};
+const removeStoreImage = (index) => {
+    newStoreImages.value.splice(index, 1);
+};
 const isLoadingProfileChanges = ref(false);
 const capabilities = [
     "Harvesting",
@@ -395,7 +419,9 @@ const addShippingMethodToShipping = () => {
     }
 }
 const removeShippingMethodFromShipping = (shippingMethod) => {
-    storeChange.value.shipping = storeChange.value.shipping.filter((method)=>method.type != shippingMethod.type && method.distance != shippingMethod.distance && method.weight != shippingMethod.weight);
+    storeChange.value.shipping = storeChange.value.shipping.filter((method) => {
+        return !(method.type === shippingMethod.type && method.distance === shippingMethod.distance && method.weight === shippingMethod.weight);
+    });
 }
 const storeMergeShipping = computed(()=> {
     const storeShipping = store.value?.shipping || [];
@@ -438,7 +464,9 @@ const addProduceToPlants = () => {
     }
 }
 const removeProduceFromPlants = (plant) => {
-    storeChange.value.plants = storeChange.value.plants.filter((p)=>p.type != plant.type && p.variety != plant.variety);
+    storeChange.value.plants = storeChange.value.plants.filter((p) => {
+        return !(p.type === plant.type && p.variety === plant.variety && p.amount === plant.amount);
+    });
 }
 const storeMergePlants = computed(()=>{
     const storePlants = store.value?.plants || [];
@@ -451,7 +479,6 @@ const storeMergePlants = computed(()=>{
     return removeDuplicates;
 })
 const onAcceptProfileChanges = async () => {
-    hasChanged.value = false;
     console.log("profileChanges", profileChanges.value)
     console.log("profile", profile.value)
     const changes = {};
@@ -542,6 +569,7 @@ const storeChange = ref({
     companyName: null,
     companyEmail: null,
     companyWebsite: null,
+    storeImagesResized: [],
 })
 const onAcceptStoreChange = async () => {
     const changes = {};
@@ -550,18 +578,22 @@ const onAcceptStoreChange = async () => {
             changes[key] = storeChange.value[key];
         }
     }
+    console.log("store changes", changes)
     const deepCopy = JSON.parse(JSON.stringify(changes));
     deepCopy.storeLogo = storeChange.value.storeLogo ? storeChange.value.storeLogo.split(",")[1] : null;
     deepCopy.storeBannerPic = storeChange.value.storeBannerPic ? storeChange.value.storeBannerPic.split(",")[1] : null;
+    if(newStoreImages.value.length > 0) {
+        deepCopy.newStoreImages = newStoreImages.value.map((image)=>image.url.split(",")[1]);
+    }
     Object.keys(deepCopy).forEach((key) => (deepCopy[key] == null) && delete deepCopy[key]);
-    Object.keys(deepCopy).forEach((key) => (deepCopy[key].length == 0) && delete deepCopy[key]);
-    console.log("deepcopy", deepCopy)
     const { callFunction } = useFirebaseFunctionCall(
         'updateStoreChanges',
         deepCopy,
         isLoadingStoreChange,
         undefined,
-        undefined,
+        ()=> {
+            newStoreImages.value = [];
+        },
         ()=> {
             notifications.value.show = true;
             notifications.value.type = NOTIFICATION_TYPES.SUCCESS;

@@ -8,13 +8,23 @@
             <span class="text-sm font-medium text-slate-300">Number of live ads</span>
             <p class="text-4xl font-bold text-slate-500">{{ numberOfLiveAds }}</p>
         </div>
-        <div class="p-2">
+        <div class="p-2 relative">
             <span class="text-sm font-medium text-slate-300">Total views</span>
-            <p class="text-4xl font-bold text-slate-500">0</p>
+            <p class="text-4xl font-bold text-slate-500">{{ adTotalViewCount }}</p>
+            <template v-if="isLoadingAdsViewCount">
+                <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
+                    <LoadingSpinner :isLoading="isLoadingAdsViewCount" class="z-20"/>
+                </div>
+            </template>
         </div>
-        <div class="p-2">
+        <div class="p-2 relative">
             <span class="text-sm font-medium text-slate-300">Number of bids</span>
-            <p class="text-4xl font-bold text-slate-500">0</p>
+            <p class="text-4xl font-bold text-slate-500">{{ adsTotalBids }}</p>
+            <template v-if="isLoadingBidViewCount">
+                <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
+                    <LoadingSpinner :isLoading="isLoadingBidViewCount" class="z-20"/>
+                </div>
+            </template>
         </div>
         <div class="p-2 flex items-center justify-center">
             <CardButton @click="onAddAd" :classes="'w-32 p-2'">Create an ad</CardButton>
@@ -23,7 +33,7 @@
     <span class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds">
        <SellerAdDashboardCard v-for="(ad,index) in ads.docs" :key="index" :ad="ad" />
    </span>
-   <div v-else-if="ads.docs && ads.docs.length == 0 && !isLoadingAds" class="h-96 p-2 flex items-center justify-center">
+   <div v-else-if="ads.docs && ads.docs.length == 0 && !isLoadingAds" class="h-96 p-2 flex items-center justify-center col-span-4">
        <div class="italic">No ads found</div>
     </div>
     <div v-else>
@@ -32,7 +42,7 @@
 </template>
 <script setup lang="ts">
 import type { SellerAd } from '@/types';
-import SellerAdDashboardCard from '../cards/SellerAdThumbnailCard.vue';
+import SellerAdDashboardCard from '../cards/SellerAdDashboardCard.vue';
 import { useModalStore } from '@/stores/modals';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
@@ -76,9 +86,13 @@ const { subscribe, unsubscribe } = useQuerySubscription(
 )
 onMounted( async ()=>{
     subscribe();
+    adsTotalBidsSub();
+    adsTotalViewCountSub();
 })
 onBeforeUnmount(() => {
     unsubscribe();
+    adsTotalBidsUnsub();
+    adsTotalViewCountUnsub();
 })
 const numberOfLiveAds = computed(() => {
     if(!ads.value.docs || ads.value.docs.length === 0) {
@@ -89,4 +103,36 @@ const numberOfLiveAds = computed(() => {
 const onAddAd = () => {
     modals.value['addad'] = true;
 }
+const adsTotalBids = ref(0);
+const isLoadingBidViewCount = ref(false);
+const { subscribe:adsTotalBidsSub , unsubscribe:adsTotalBidsUnsub} = useQuerySubscription(
+    import.meta.env.VITE_BIDS_COLLECTION,
+    [
+        ['sellerId', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        adsTotalBids.value = data.length;
+    },
+    undefined,
+    isLoadingBidViewCount,
+)
+const adTotalViewCount = ref(0);
+const isLoadingAdsViewCount = ref(false);
+const { subscribe:adsTotalViewCountSub , unsubscribe:adsTotalViewCountUnsub} = useQuerySubscription(
+    import.meta.env.VITE_ADS_COLLECTION,
+    [
+        ['uid', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        let totalViewCount = 0;
+        data.forEach((ad) => {
+            totalViewCount += (ad.viewCount ? ad.viewCount : 0);
+        })
+        adTotalViewCount.value = totalViewCount;
+    },
+    undefined,
+    isLoadingAdsViewCount,
+)
 </script>

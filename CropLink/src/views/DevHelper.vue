@@ -225,7 +225,7 @@ const createAds = async () => {
                 companyName: `Test Company_${Math.floor(Math.random() * 1000000)}`,
                 companyEmail: `test_${Math.floor(Math.random() * 1000000)}@test.com`,
                 companyWebsite: `https://test_${Math.floor(Math.random() * 1000000)}.com`,
-                verifiedSeller: true,
+                verifiedSeller:  Math.random() >= 0.5,
                 samples: arrayUnion({
                     adId: ad.id,
                     image: ad.images[0],
@@ -239,12 +239,12 @@ const createAds = async () => {
                 staffNumber: Math.floor(Math.random() * 100),
                 acreage: Math.floor(Math.random() * 100),
                 plants: [
-                    {'name': 'Apples', 'variety': 'Ambrosia', 'quantity': 100},
-                    {'name': 'Peaches', 'variety': 'Glohaven', 'quantity': 100},
-                    {'name': 'Pears', 'variety': 'Anjou', 'quantity': 100},
-                    {'name': 'Strawberries', 'variety': 'Albion', 'quantity': 100},
-                    {'name': 'Wine Grapes', 'variety': 'Merlot', 'quantity': 100},
-                    {'name': 'Table Grapes', 'variety': 'Red Globe', 'quantity': 100},
+                    {'name': 'Apples', 'variety': 'Ambrosia', 'amount': Math.floor(Math.random() * 3000)},
+                    {'name': 'Peaches', 'variety': 'Glohaven', 'amount': Math.floor(Math.random() * 3000)},
+                    {'name': 'Pears', 'variety': 'Anjou', 'amount': Math.floor(Math.random() * 3000)},
+                    {'name': 'Strawberries', 'variety': 'Albion', 'amount': Math.floor(Math.random() * 3000)},
+                    {'name': 'Wine Grapes', 'variety': 'Merlot', 'amount': Math.floor(Math.random() * 3000)},
+                    {'name': 'Table Grapes', 'variety': 'Red Globe', 'amount': Math.floor(Math.random() * 3000)},
                 ],
                 capabilities: [
                     'Harvesting',
@@ -267,11 +267,21 @@ const createAds = async () => {
                     'Other',
                 ],
                 shipping: [
-                    {'distance': Math.floor(Math.random() * 100), 'type': 'Trailer', 'weight': Math.floor(Math.random() * 100)},
-                    {'distance': Math.floor(Math.random() * 100), 'type': 'Truck', 'weight': Math.floor(Math.random() * 100)},
+                    {'distance': Math.floor(Math.random() * 100), 'type': 'Trailer', 'weight': Math.floor(Math.random() * 1000)},
+                    {'distance': Math.floor(Math.random() * 100), 'type': 'Truck', 'weight': Math.floor(Math.random() * 25000)},
                 ],
                 rating: Math.floor(Math.random() * 5),
+                reviewsCount: Math.floor(Math.random() * 100),
                 location: "Kelowna, BC",
+                storeImagesResized: [
+                    "https://storage.googleapis.com/croplink-30e3c.appspot.com/users/jnxX7x0PwlfjDKFt7GTVUNQQN533/hss4y9uo6rd3bsf7yezo6g_resized.jpg?GoogleAccessId=firebase-adminsdk-wxai1%40croplink-30e3c.iam.gserviceaccount.com&Expires=1899936000&Signature=aOdp0f9iLBxaVAbofZJLnM2gAHEX4Rk3AXkd%2FzYKYTplPCtW%2FR%2BvLIJE9pXFcvfJY34fdcZIdSY%2Feb3Kx2pMYJkDNeWU0kUseIwLlEXNRNxlT3N%2BUZMI2ya5r%2FJ9vmOgSQfZWSmysAeOlZ%2BvnI2C8JE2FngsdrnTSveHwVEFlAkPVCdm1S4kevspUMeXU7%2BmKpNcOO6WJxcMb4qlOSQhYyyOIvNTD%2B%2F3lIgrXrbecM22qOcd0gFqAeRwqqPqx2AoEVvj9Fi8h%2BHv2m5YfEO7CktHNFk%2B93iYc6S7bMD8EAVSu3kuRPsLLRiafWyon2F8VODCONRp7HhZu2EHd%2BNAZw%3D%3D",
+                    "https://storage.googleapis.com/croplink-30e3c.appspot.com/users/jnxX7x0PwlfjDKFt7GTVUNQQN533/1h4sjkq3hi9glkv6lmyfnt_resized.jpg?GoogleAccessId=firebase-adminsdk-wxai1%40croplink-30e3c.iam.gserviceaccount.com&Expires=1899936000&Signature=b98k5ij%2BZ%2Fk0PoXOzqJFJgsZygV1SBA%2BBwF8nUdErB%2F9W0mPN9J%2F3S3GdDqr5%2FNmJZ3dc11ksZkYSj6WhM2VzPD4J%2BoN5OfDZyUtHCXTHgwyJh%2BcXlwP3tDgA%2FPCN7Dq3wgogZZVNx7yc88L0EbdvVxeX9ChQ8XOW9BA7xDyCrWygQgFMoAAA%2BAcUkwTD8i75gqWYmqj4ofTSk66yYc5QCAUwkEeIOfQMcUACpeexxlzcWFwjxT6m%2FlneijtGu4hOiBL0Rs2WipG%2FziY1wso%2BRL2hM1LXE3mdYlL9KVjqNlBOh5%2FRu49wbaIx8G5Zb%2F6KqjxmKpv0BUPGfJpqOKmNg%3D%3D",
+                    "https://storage.googleapis.com/croplink-30e3c.appspot.com/users/jnxX7x0PwlfjDKFt7GTVUNQQN533/vii3nnqako7ki5ezc6ajvs_resized.jpg?GoogleAccessId=firebase-adminsdk-wxai1%40croplink-30e3c.iam.gserviceaccount.com&Expires=1899936000&Signature=SjIsW7Aq9suoKodCgSsIGcxoHSoe5BuiP248Znww5zQSQD766gVl2kAPGTPf6gcWJ38XeeY2tYEsXudgYauswy25IVNQrQTGDm2W6Eh6nYjWM3D3ltpEexnFdm87Dna8O%2FcYeHqWt9J4ootEezkYGXXjYViyFWlpPZzo7H%2FIn0cogK9z2rZAvCoXABA3bhjcyQWSBxqs0juiQ7p0dAIqim4U6igxQScvJbSyfSlorGxyKDeTi1GpTfq7Y4ih4d5rYUE3rrUBnaSabeGQsFsYvZsyoq1bIV0guP0HqNwFzHuIzsKpk%2FOZGBiPT%2F1qzigWMh0Wijt4fx7TkBq8iaxDEA%3D%3D",
+                ],
+                storeBannerPic: "https://storage.googleapis.com/croplink-30e3c.appspot.com/users/jnxX7x0PwlfjDKFt7GTVUNQQN533/vf5b8hmz5atuihfweh24q.jpg?GoogleAccessId=firebase-adminsdk-wxai1%40croplink-30e3c.iam.gserviceaccount.com&Expires=1899936000&Signature=Bb%2FQFPT9a7TlnNhU9X4MxOyAKSRK%2B20ckrPG7CAPyBhTuQSzMOGyekMjmPOaVOTiCTHgo4z1VySptDkUxkyM6DK%2BWQ2YQjvbFb7JZQ2pAHPrGv%2FAxVTHrwoQK%2BbCHks9AOBtDLRRg2rY0qr%2FdR921ImG2E8MsTL8tiNfoTRF2CNJ8G023dwZssXsgzWSpAEZH%2BPJODCz10CJ%2F2YDUUfB%2B93rhuuAT5Dp33Ehf%2FIS%2FCbFlYDKHORpDEJhfRv%2FyG1adP10RKASeZU4s%2FKB9OpmvL7Mf9n2qOAiBeZgLrzoUF7RHHYWYYGgmLICZ%2BGWR5BMBen0N07F4Km16VDKuP%2Fz4w%3D%3D",
+                storeLogo: "https://storage.googleapis.com/croplink-30e3c.appspot.com/users/jnxX7x0PwlfjDKFt7GTVUNQQN533/64h8oqa261ty25hiu149i.jpg?GoogleAccessId=firebase-adminsdk-wxai1%40croplink-30e3c.iam.gserviceaccount.com&Expires=1899936000&Signature=UJS7uxjBz2N%2FuWol5Au8bjZkb0mVJdkvl5pkoHhWw9Ofa8%2FkPpHN5MalQMnYvJcLZgtJXS5xM8g3NQTLBwQYoIxXFf6eGq%2BJkRJ%2FSAySszBrkaUL%2FR0tVlRa2Dm5kSYK4YsHHkH9272lGiJWL56v1NiMAnprRy7OtrhWW8vM%2BifzTzzah7ET%2Fj6%2FV8GVyj0UO%2FxP3XAqIugukqt7zZUq3%2BzAXyLKPnxtC9JOMX0X1S2%2B8QBjobTYjKvdpjHrEVE6Y6nG00YNz2GkHpUo3UYoanrm0x%2Bw0tjtZmtqicuG3VmjlHQr95Bl0QF77gqc8lYBjPcED7nzKLMRRykuEd7tFg%3D%3D",
+                storeLogoResized: "https://storage.googleapis.com/croplink-30e3c.appspot.com/users/jnxX7x0PwlfjDKFt7GTVUNQQN533/64h8oqa261ty25hiu149i_resized.jpg?GoogleAccessId=firebase-adminsdk-wxai1%40croplink-30e3c.iam.gserviceaccount.com&Expires=1899936000&Signature=kIZP4MylTu6QJ%2F9Mn1TrcwlZzEukFLzQzQxWZCRdpDgJCzlm9oKmtCo%2B2XfJur%2FUlOXOj4Uh82PUNQWp7JcMOd36OZhSkQN%2FBi7Tf8vfgeJxa31kB2bAZkNuL08KhW8yDsW13b0vkcN40QAQB0V0zNvtUJXMLYNoO6wyi5fJmQKdQAgMugVrndTnJuUBhIu37zWKTrfxSzDuhRegjoJ4VoQj6JT8l1IZLnb%2BCctDhVUXrXXBsn7xw2zc3x0hhA40RoBgjl8wvbM9IV6HCB4JnxvaekrNZgqcKbDAZSOXlUMpAMiwlRKOXb13vtT8Nuaawv6VflBjyBCEJXDmc%2FR0YA%3D%3D",
+                storeBannerResized: "https://storage.googleapis.com/croplink-30e3c.appspot.com/users/jnxX7x0PwlfjDKFt7GTVUNQQN533/vf5b8hmz5atuihfweh24q_resized.jpg?GoogleAccessId=firebase-adminsdk-wxai1%40croplink-30e3c.iam.gserviceaccount.com&Expires=1899936000&Signature=iT6eHAjaNw7attFistnBnU8vSAJIP78dwNCz%2FnfiIXnRJ4Zv7Xy9drjALLMwpF5dLKDbo18rSPUS8PFCjA79gK8i7fO0VzMfOuKY%2BKC%2F5V4I7U00IRR6LFRUWtM7PuEdnolaR0HT7CMJWWGbyzRiutY6L4xRqe5X%2BhEi4512rGAwzbYgWwAcOX0NqxFVgEDq6ILjVyFnBvheMPUMGL0MCJRP3SVs%2B25G42XSthddUw%2BB2wcAAvONEpO17DPo4GxWLmz1XBA1JoF%2BkjokoNmHJmncJnl38onqjtZJFGUJtakt%2FLLcIqeaS8wNGROXiPRtRfsoUtboTvuLfycR6hYhJw%3D%3D",
             }
             const adRefMain = doc(db, AD_COLLECTION, sellers[seller].uid);
             await setDoc(adRefMain, updateStoreFront, {merge: true});
@@ -281,24 +291,26 @@ const createAds = async () => {
     } else if ( adType.value == 'buyer') {
         for (const buyer in buyers) {
             const chosenProduct = Object.keys(prodTypes)[Math.floor(Math.random() * Object.keys(prodTypes).length)];
+            const minCostPerTon = Math.floor(Math.random() * 100);
+            const maxCostPerTon = minCostPerTon + Math.floor(Math.random() * 100);
             const ad = {
                 adType: adType.value,
-                biddingEndTime: Timestamp.fromDate(new Date()),
                 createdAt: Timestamp.fromDate(new Date()),
-                requestDate: Timestamp.fromDate(new Date()),
                 id: `testad_${Math.floor(Math.random() * 1000000)}`,
                 uid: buyers[buyer].uid,
                 type: chosenProduct,
                 variety: prodTypes[chosenProduct],
-                yieldTonnage: 100,
-                price: 100,
+                minCostPerTon: minCostPerTon,
+                maxCostPerTon: maxCostPerTon,
+                tons: Math.floor(Math.random() * 100),
+                certifiedOrganic: Math.random() >= 0.5,
+                verifiedBuyer: Math.random() >= 0.5,
+                offersShipping: Math.random() >= 0.5,
                 live: true,
                 postedOn: Timestamp.fromDate(new Date()),
                 updatedAt: Timestamp.fromDate(new Date()),
                 status: 'pending',
-                reviewsCount: Math.floor(Math.random() * 100),
-                averageResponseTime: Math.floor(Math.random() * 100),
-                averageRating: Math.floor(Math.random() * 5),
+                location: "Kelowna, BC",
             }
             const adMainRef = doc(db, AD_COLLECTION, buyers[buyer].uid);
             await setDoc(adMainRef, {id: buyers[buyer].uid})
@@ -330,6 +342,7 @@ const createBids = async () =>{
             const bid = {
                 adId: sellerAds[ad].id,
                 id: bidId,
+                sellerId: sellerAds[ad].uid,
                 buyerId: buyers[Math.floor(Math.random() * buyers.length)].uid,
                 price: Math.floor(Math.random() * 1000),
                 createdAt: new Date,
@@ -432,13 +445,27 @@ const deleteUsers = async () => {
 const isLoadingDeleteAds = ref(false);
 const deleteAds = async () => {
     isLoadingDeleteAds.value = true;
-    const q = query(collection(db, AD_COLLECTION), where("id", ">=", "test_"));
-    const querySnapshot = await getDocs(q);
+    const qStore = query(collection(db, AD_COLLECTION), where("id", ">=", "test_"));
+    const querySnapshot = await getDocs(qStore);
     const users = querySnapshot.docs.map(doc => {return {data:doc.data(), id: doc.id}});
     const promises = [];
     for (const user in users) {
         const adRef = doc(db, AD_COLLECTION, users[user].id);
         promises.push(deleteDoc(adRef));
+    }
+    const qAds = query(collectionGroup(db, AD_COLLECTION), where("id", ">=", "test_"));
+    const querySnapshotAds = await getDocs(qAds);
+    const usersAds = querySnapshotAds.docs.map(doc => {return {data:doc.data(), id: doc.id}});
+    for (const user in usersAds) {
+        const adRef = doc(db, AD_COLLECTION, users[user].id);
+        promises.push(deleteDoc(adRef));
+    }
+    const qBids = query(collectionGroup(db, BIDS_COLLECTION), where("id", ">=", "test_"));
+    const querySnapshotBids = await getDocs(qBids);
+    const usersBids = querySnapshotBids.docs.map(doc => {return {data:doc.data(), id: doc.id}});
+    for (const user in usersBids) {
+        const bidRef = doc(db, BIDS_COLLECTION, users[user].id);
+        promises.push(deleteDoc(bidRef));
     }
     await Promise.all(promises);
     isLoadingDeleteAds.value = false;

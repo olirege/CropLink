@@ -1,13 +1,10 @@
 <template>
     <div class="bg-white p-4 rounded-xl shadow transition-shadow duration-300 hover:shadow-xl">
-        <h3 class="text-xl font-semibold mb-2 capitalize">
-            {{ `${ad.variety}` }}
-        </h3>
         <div v-if="!isLoadingSellerInfo && sellerInfo">
             <span class="flex flex-row gap-2 items-end mb-2 bg-gradient-to-r from-sky-500/50 to-white rounded-md">
-                <img :src=sellerInfo.profilePicResized class="w-10 h-10 rounded-md object-cover bg-slate-500 cursor-pointer" @click="goToSellerAds(sellerInfo.id, sellerInfo.name)">
+                <img :src=sellerInfo.storeLogoResized class="w-10 h-10 rounded-md object-cover bg-slate-500 cursor-pointer" @click="goToSellerAds(sellerInfo.id, sellerInfo.companyName)">
                 <span class="flex flex-col">
-                    <h1 class="text-md font-bold capitalize cursor-pointer" @click="goToSellerAds(sellerInfo.id, sellerInfo.name)">{{ `${sellerInfo.name}'s ads` }}</h1>
+                    <h1 class="text-md font-bold capitalize cursor-pointer" @click="goToSellerAds(sellerInfo.id, sellerInfo.companyName)">{{ `${sellerInfo.companyName}` }}</h1>
                     <div v-if="sellerInfo.verifiedSeller" class="flex flex-row gap-1">
                         <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
                         <p class="text-xs italic"><span class="text-sky-500 font-bold">v</span>erified</p>
@@ -19,6 +16,9 @@
         <div v-else class="w-full flex items-center justify-center h-24">
             <LoadingSpinner :isLoading="isLoadingSellerInfo"/>
         </div>
+        <h3 class="text-xl font-semibold mb-2 capitalize">
+            {{ `${ad.variety}` }}
+        </h3>
         <div class="w-full h-96 object-cover rounded-lg">
             <template v-if="ad.images && ad.images.length > 0">
                 <ImageCarousel :images="ad.resizedImages" :classes="'h-96'"/>
@@ -41,12 +41,12 @@
                         <td class="border px-4 py-2 text-sm">{{ ad.variety }}</td>
                     </tr>
                     <tr>
-                        <td class="border px-4 py-2 text-sm font-medium bg-slate-100">Yield Tonnage:</td>
-                        <td class="border px-4 py-2 text-sm">{{ ad.yieldTonnage }}</td>
+                        <td class="border px-4 py-2 text-sm font-medium bg-slate-100">Price per Ton:</td>
+                        <td class="border px-4 py-2 text-sm">{{ ad.pricePerTon }}</td>
                     </tr>
                     <tr>
-                        <td class="border px-4 py-2 text-sm font-medium bg-slate-100">Price:</td>
-                        <td class="border px-4 py-2 text-sm">{{ ad.price }}</td>
+                        <td class="border px-4 py-2 text-sm font-medium bg-slate-100">Quantity:</td>
+                        <td class="border px-4 py-2 text-sm">{{ ad.tons }}</td>
                     </tr>
                     <template v-if="showMore">
                         <tr>

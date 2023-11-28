@@ -7,15 +7,15 @@
                 <strong>Id:</strong> {{ ad.id }}
             </p>
         <p class="text-sm mb-2">
-            <strong>Yield Tonnage:</strong> {{ ad.yieldTonnage }}
+            <span v-currency="ad.minCostPerTon"/>-<span v-currency="ad.maxCostPerTon"/>/ton
         </p>
+        <p class="text-sm mb-2">
+            <strong>Quantity:</strong> ~ {{ ad.tons }} tons
+        </p>
+        <div class="flex justify-end mt-2 space-x-4" v-if="showButtons">
         <p class="text-sm mb-2">
             <strong>Request Date:</strong> {{ ad.requestDate }}
         </p>
-        <p class="text-sm mb-2">
-            <strong>Price:</strong> {{ ad.price }}
-        </p>
-        <div class="flex justify-end mt-2 space-x-4" v-if="showButtons">
                 <CardButton 
                 @click="onEditAd(ad.id as string)"
                 >

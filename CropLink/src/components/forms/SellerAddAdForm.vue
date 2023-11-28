@@ -22,12 +22,12 @@
         placeholder="Select a Variety"
         :disabled="!newCrop.type"
         />
-        <label class="block text-sm font-medium text-gray-700" for="yieldTonnage">Yield Tonnage</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="yieldTonnage" v-model="newCrop.yieldTonnage">
+        <label class="block text-sm font-medium text-gray-700" for="pricePerTon">Price per Ton</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="pricePerTon" v-model="newCrop.pricePerTon">
+        <label class="block text-sm font-medium text-gray-700" for="tons">Quantity</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="tons" v-model="newCrop.tons">tons
         <label class="block text-sm font-medium text-gray-700" for="expectedHarvestDate">Expected Harvest Date</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="date" id="expectedHarvestDate" v-model="newCrop.expectedHarvestDate">
-        <label class="block text-sm font-medium text-gray-700" for="price">Price</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="price" v-model="newCrop.price">
         <label class="block text-sm font-medium text-gray-700" for="biddingEndTime">Bidding End Time (Bidding ends at 17:00 EST)</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="date" id="biddingEndTime" v-model="newCrop.biddingEndTime">
     </div>
@@ -87,9 +87,9 @@ const today = new Date().toISOString().split("T")[0].split("-").reverse().join("
 const newCrop = reactive({
     type: "",
     variety: "",
-    yieldTonnage: 0,
+    pricePerTon: 0,
+    tons: 0,
     expectedHarvestDate: today,
-    price: 0,
     biddingEndTime: today,
 });
 const isLoading = ref(false);
@@ -123,7 +123,7 @@ const onConfirm = async () => {
     }
 }
 const validateCrop = ()=>{
-    if(newCrop.type === "" || newCrop.variety === "" || newCrop.yieldTonnage === 0 || !newCrop.expectedHarvestDate || newCrop.price === 0 || images.value.length === 0 || !newCrop.biddingEndTime) {
+    if(newCrop.type === "" || newCrop.variety === "" || newCrop.pricePerTon === 0 || !newCrop.expectedHarvestDate || newCrop.tons === 0 || images.value.length === 0 || !newCrop.biddingEndTime) {
         return false;
     }
     return true;

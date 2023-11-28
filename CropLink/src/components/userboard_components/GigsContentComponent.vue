@@ -10,7 +10,12 @@
         </div>
         <div class="p-2 h-16">
             <span class="text-sm font-medium text-slate-300">Total views</span>
-            <p class="text-2xl font-bold text-slate-500">0</p>
+            <p class="text-2xl font-bold text-slate-500">{{ gigsTotalViewCount }}</p>
+            <template v-if="isLoadingGigsViewCount">
+                <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
+                    <LoadingSpinner :isLoading="isLoadingGigsViewCount" class="z-20"/>
+                </div>
+            </template>
         </div>
         <div class="p-2 flex flex-col justify-between h-16">
             <span class="text-sm font-medium text-slate-300">Milestones Total</span>
@@ -26,7 +31,7 @@
         <span class="grid grid-flow-row space-y-4" v-if="gigs.docs && gigs.docs.length > 0 && !isLoadingGigs" >
             <GigCard v-for="(gig,index) in gigs.docs" :key="index" :gig="gig" @edit="onEditGigPost" @remove="onRemoveGigPost"/>
         </span>
-        <span v-else-if="gigs.docs && gigs.docs.length == 0 && !isLoadingGigs" class="h-96 p-2 flex items-center justify-center">
+        <span v-else-if="gigs.docs && gigs.docs.length == 0 && !isLoadingGigs" class="h-96 p-2 flex items-center justify-center col-span-4">
             <p class="italic">No gig posts</p>
         </span>
         <div v-else="isLoadingGigs">
@@ -95,9 +100,11 @@ const onEditGigPost = (gigId:string) => {
 
 onMounted(async () => {
     subscribe();
+    gigsTotalViewCountSub();
 })
 onBeforeUnmount(() => {
     unsubscribe();
+    gigsTotalViewCountUnsub();
 })
 const milestonesTotal = computed(() => {
     if(!gigs.value.docs || gigs.value.docs.length === 0) {
@@ -118,4 +125,22 @@ const numberOfLiveGigs = computed(() => {
     }
     return gigs.value.docs.filter((gig) => gig.live == true).length;
 })
+const gigsTotalViewCount = ref(0);
+const isLoadingGigsViewCount = ref(false);
+const { subscribe:gigsTotalViewCountSub , unsubscribe:gigsTotalViewCountUnsub} = useQuerySubscription(
+    import.meta.env.VITE_ADS_COLLECTION,
+    [
+        ['posterId', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        let totalViewCount = 0;
+        data.forEach((gig) => {
+            totalViewCount += (gig.viewCount ? gig.viewCount : 0);
+        })
+        gigsTotalViewCount.value = totalViewCount;
+    },
+    undefined,
+    isLoadingGigsViewCount,
+)
 </script>

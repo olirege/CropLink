@@ -1,12 +1,12 @@
 <template>
     <span class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300" v-if="adGroup">
-        <span class="grid grid-cols-2 gap-2">
-            <span>
-                <div class="flex flex-row justify-between">
+        <span class="grid grid-cols-3">
+            <span class="flex flex-row">
+                <div class="flex flex-col gap-1">
                     <span class="flex flex-row gap-2 items-end mb-2">
-                        <img :src=adGroup.profilePicResized class="w-10 h-10 rounded-md object-cover bg-slate-500" @click="goToSellerAds(adGroup.id, adGroup.name)">
+                        <img :src=adGroup.storeLogoResized class="w-10 h-10 rounded-md object-cover bg-slate-500" @click="goToSellerAds(adGroup.id, adGroup.companyName)">
                         <span class="flex flex-col">
-                            <h1 class="text-md font-bold capitalize" @click="goToSellerAds(adGroup.id, adGroup.name)">{{ `${adGroup.name}'s ads` }}</h1>
+                            <h1 class="text-md font-bold capitalize" @click="goToSellerAds(adGroup.id, adGroup.companyName)">{{ `${adGroup.companyName}'s ads` }}</h1>
                             <div v-if="adGroup.verifiedSeller" class="flex flex-row gap-1 divide-x">
                                 <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
                                 <p class="text-xs italic pl-2">Verified</p>
@@ -16,50 +16,54 @@
                             </div>
                         </span>
                     </span>
-                </div>
-                <div v-if="adGroup.rating">
-                    <p class="italic"><strong>{{ adGroup.rating }}</strong>/5 rating</p>
-                </div>
-                <span class="grid grid-cols-3 gap-2 w-full divide-x">
-                    <div class="p-2">
-                        <p class="text-xl text-slate-400 mb-2 font-bold">Machinery</p>
-                        <ul class="list-disc pl-6">
-                            <li v-for="machine in adGroup.machinery">
-                                <p class="text-xs italic">{{ machine }}</p>
+                    <div v-if="adGroup.rating">
+                        <p class="italic"><strong>{{ adGroup.rating }}</strong>/5 rating</p>
+                    </div>
+                    <div v-else>
+                        <p>Producer not yet rated.</p>
+                    </div>
+                    <span class="flex flex-row w-full divide-x">
+                        <div class="flex flex-col p-2">
+                            <p class="text-md mb-2 font-bold">Shipping</p>
+                            <li v-for="method in adGroup.shipping.slice(0,2)" class="flex flex-col p-2">
+                                <p class="text-xs">{{ method.type }}</p>
+                                <p class="text-xs italic pl-1">Up to {{ method.distance }}KMs</p>
+                                <p class="text-xs italic pl-1">Max: {{ method.weight }}KGs</p>
                             </li>
-                        </ul>
-                    </div>
-                    <div class="p-2">
-                        <p class="text-xl text-slate-400 mb-2 font-bold">Plants</p>
-                        <span>
-                            <div v-for="plant in adGroup.plants" class="flex flex-row gap-1 items-center justify-between w-full space-y-1">
-                                <p class="text-xs truncate ...">{{ plant.variety }}</p>
-                                <p class="text-xs">{{ plant.quantity }}</p>
-                            </div>
-                        </span>
-                    </div>
-                    <div class="p-2">
-                        <p class="text-xl text-slate-400 mb-2 font-bold">Shipping</p>
-                        <li v-for="method in adGroup.shipping" class="inline space-x-2">
-                            <p>{{ method.type }}</p>
-                            <p class="text-xs italic">Up to {{ method.distance }}KMs</p>
-                            <p class="text-xs italic">Max: {{ method.weight }}KGs</p>
-                        </li>
-                    </div>
-                </span>
+                        </div>
+                        <div class="flex flex-col p-2 space-y-2">
+                            <p class="text-md mb-2 font-bold">Plants</p>
+                            <li v-for="plant in adGroup.plants.slice(0,5)" class="flex flex-row justify-between gap-2">
+                                <p class="text-xs italic">{{ plant.variety }}</p>
+                                <p class="text-xs italic">{{ plant.amount }}</p>         
+                            </li>
+                        </div>
+                    </span>
+                </div>
             </span>
-            <div class="flex flex-wrap">
-                <span v-for="sample in adGroup.samples">
-                    <img :src=sample.image :alt=sample.name class="w-32 h-32 object-cover" @click="goToAd(sample.adId)">
-                </span>
-            </div>
+            <template v-if="!isLoadingAds && liveAds.length > 0">
+                <div class="flex flex-row justify-between gap-2">
+                    <SellerAdCarouselCard  v-for="ad in liveAds" :ad="ad" :key="ad.adId"/>
+                </div>
+            </template>
+            <template v-if="adGroup && adGroup.storeImagesResized && adGroup.storeImagesResized.length > 0">
+                <div class="flex flex-row justify-center">
+                    <div class="w-56">
+                        <ImageCarousel :images="adGroup.storeImagesResized" :classes="'h-56 w-56'"/>
+                    </div>
+                </div>
+            </template>
         </span>
     </span>
 </template>
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { CheckCircleIcon } from '@heroicons/vue/20/solid';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import ImageCarousel from '../props/ImageCarousel.vue';
+import { getPaginatedCollectionGroupWhereWhere } from '@/firebase/utils';
+import type { SellerAd, BuyerAd } from '@/types';
+import SellerAdCarouselCard from './SellerAdCarouselCard.vue';
 const props = defineProps({
     adGroup: {
         type: Object,
@@ -67,7 +71,6 @@ const props = defineProps({
     }
 })
 const amountOfTime = computed(() => {
-    // display amount of time since member joined
     const now = new Date();
     const joined = new Date(props.adGroup.createdAt.toDate().toString());
     const diff = now.getTime() - joined.getTime();
@@ -87,8 +90,15 @@ const goToSellerAds = (sellerId: string, sellerName: string) => {
     console.log("go to seller ads", sellerId)
     router.push({name: 'seller-ads', params: {id: sellerId, sellerName: sellerName},});
 }
-const goToAd = (adId: string) => {
-    console.log("go to ad", adId)
-    router.push({name: 'ad', params: {adId: adId},});
-}
+const liveAds = ref([] as SellerAd[]|BuyerAd[]);
+const isLoadingAds = ref(true);
+onMounted(async() => {
+    isLoadingAds.value = true;
+    const promises = [];
+    promises.push(getPaginatedCollectionGroupWhereWhere('ads', 'live', '==', true, 'uid', '==', props.adGroup.id, ['postedOn','desc'], 3).then((paginatedAds)=>{
+        liveAds.value = paginatedAds.docs as SellerAd[]|BuyerAd[];
+        isLoadingAds.value = false;
+    }));
+    await Promise.all(promises);
+})
 </script>

@@ -21,11 +21,11 @@
         <div class="grid grid-cols-2 divide-x px-4 mb-2">
             <div class="flex flex-col p-2 justify-between">
                 <p class="text-xs italic">Number of milestones</p>
-                <p class="text-2xl">{{ gig.milestones.length }}</p>
+                <p class="text-sm font-bold">{{ gig.milestones.length }}</p>
             </div>
             <div class="flex flex-col p-2 justify-between">
                 <p class="text-xs italic">Total</p>
-                <p class="text-2xl" v-currency="milestonesTotal"></p>
+                <p class="text-sm font-bold" v-currency="milestonesTotal"></p>
             </div>
         </div>
         <div class="w-full flex justify-end gap-4" v-if="showButtons">

@@ -203,5 +203,16 @@ const onSubmitResume = async () => {
 }
 onMounted(async () => {
     await loadGig();
+    await increaseGigViewCount(modals.value['context'].__key);
 })
+const increasingViewCount = ref(false);
+const increaseGigViewCount = async (gigId:string) => {
+    if(!gigId) return;
+    const { callFunction } = useFirebaseFunctionCall(
+            'increaseGigViewCount',
+            {gigId},
+            increasingViewCount,
+        );
+        await callFunction();
+}
 </script>

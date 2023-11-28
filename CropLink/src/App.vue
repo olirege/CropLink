@@ -1,7 +1,7 @@
 <template>
   <header  class="relative bg-sky-600 text-white sticky top-0 z-10">
     <div class="pb-3 px-6  w-full">
-      <div class="mx-auto flex items-center h-24 border-sky-700/50 border-b">
+      <div class="mx-auto flex items-center h-16 border-sky-700/50 border-b">
         <div class="flex items-center">
           <img src="@/assets/croplink_logo.png" alt="CropLink Logo" class="w-12 h-12 mx-10 rounded-full">
         </div>
@@ -39,7 +39,7 @@
   </div> -->
   <div class="relative">
     <div class="h-24 w-full absolute top-0 left-0 bg-sky-600 -z-10"/>
-    <div class="mx-6 flex flex-col border rounded-md z-1 bg-white">
+    <div class="mx-6 flex flex-col border rounded-md z-1 bg-white p-4">
       <RouterView />
     </div>
   </div>

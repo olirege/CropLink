@@ -1,11 +1,11 @@
 <template>
     <div class="p-5 flex flex-col gap-4">
-        <span>
-            <div id="seller-ad-banner" class="w-full h-64 relative  bg-gradient-to-r from-white to-sky-500/40">
-                <img :src="sellerSignature.bannerPic" class="bg-slate-500 w-full h-48 object-cover rounded-t-md" ref="bannerPic" v-if="!isLoadingProfile">
+        <span class="shadow border rounded-md">
+            <div id="seller-ad-banner" class="w-full h-64 relative  bg-gradient-to-r from-white to-sky-500/40 rounded-t-md">
+                <img :src="sellerSignature.storeBannerPic" class="bg-slate-500 w-full h-48 object-cover rounded-t-md" ref="bannerPic" v-if="!isLoadingProfile">
                 <div v-else class="bg-slate-500 w-full h-48 animate-pulse"></div>
                 <div class="absolute bottom-5 left-20 flex flex-row">
-                    <img :src="sellerSignature.profilePicResized" class="z-9 border-4 border-white rounded-full w-32 h-32 bg-indigo-500" ref="profilePic" v-if="!isLoadingProfile">
+                    <img :src="sellerSignature.storeLogoResized" class="z-9 border-4 border-white rounded-full w-32 h-32 bg-indigo-500" ref="profilePic" v-if="!isLoadingProfile">
                     <div v-else class="z-10 border-4 border-white rounded-full w-32 h-32 bg-indigo-500 animate-pulse"></div>
                     <div class="relative ml-5 p-1">
                         <div class="absolute bottom-1 text-xl font-bold truncate flex flex-row">
@@ -16,13 +16,13 @@
                 <div class="absolute bottom-5 right-20">
                     <button class="border-2 border p-1 w-32 rounded-md flex flex-row items-center justify-center gap-2 bg-white" @click="onMessage">
                         <EnvelopeIcon class="w-6 h-6"/>
-                        <p>Message</p>
+                        <p>Contact</p>
                     </button>
                 </div>
             </div>
-            <div v-if="!isLoadingProfile" class="flex flex-col gap-2 p-4  bg-gradient-to-r from-white to-sky-500/40 mb-4">
+            <div v-if="!isLoadingProfile" class="flex flex-col gap-2 p-4  bg-gradient-to-r from-white to-sky-500/40 rounded-b-md">
                 <div class="flex flex-row items-center gap-2">
-                    <span class="flex flex-row gap-1 items-center">
+                    <span class="flex flex-row gap-1 items-center" v-if="sellerSignature.verifiedSeller">
                         <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
                         <p>Verified</p>
                     </span>
@@ -41,20 +41,27 @@
                 <span class="p-4">
                     <div class="border-b p-4 flex flex-row gap-2 divide-x" v-if="!isLoadingProfile">
                         <div class="flex flex-row gap-2 px-4 py-2">
-                            <p class="font-bold"><span class="text-6xl">{{ sellerSignature.rating }}</span> /5</p>
-                            <span class="flex flex-col justify-end">
-                                <p class="font-bold">{{ storeRating }}</p>
-                                <p>({{ sellerSignature.reviewsCount }} <span class="text-xs text-slate-400">reviews</span>)</p>
-                            </span>
+                            <template v-if="sellerSignature.rating > 0">
+                                <p class="font-bold"><span class="text-6xl">{{ sellerSignature.rating }}</span> /5</p>
+                                <span class="flex flex-col justify-end">
+                                    <p class="font-bold">{{ storeRating }}</p>
+                                    <p>({{ sellerSignature.reviewsCount ? sellerSignature.reviewsCount : 0  }} <span class="text-xs text-slate-400">reviews</span>)</p>
+                                </span>
+                            </template>
+                            <template v-else>
+                                <p class="font-bold">Not yet rated</p>
+                            </template>
                         </div>
                         <span class="flex flex-col justify-center items-center px-4 py-2">
-                            <p class="italic text-sm">average response rate</p>
-                            <p class="font-bold"> {{"≤" + sellerSignature.averageResponseTime }} hrs</p>
+                            <template v-if="sellerSignature.averageResponseTime">
+                                <p class="italic text-sm">average response rate</p>
+                                <p class="font-bold"> {{"≤" + sellerSignature.averageResponseTime }} hrs</p>
+                            </template>
                         </span>
                     </div>
                     <span class="grid grid-cols-4 gap-2 w-full divide-x py-4">
                         <div class="p-4">
-                            <p class="text-xl text-slate-400 mb-2 font-bold">Machinery</p>
+                            <p class="text-xl font-bold">Machinery</p>
                             <ul class="list-disc pl-6">
                                 <li v-for="machine in sellerSignature.machinery">
                                     <p class="text-xs italic">{{ machine }}</p>
@@ -62,16 +69,16 @@
                             </ul>
                         </div>
                         <div class="p-4">
-                            <p class="text-xl text-slate-400 mb-2 font-bold">Plants</p>
+                            <p class="text-xl mb-2 font-bold">Plants</p>
                             <span>
                                 <div v-for="plant in sellerSignature.plants" class="flex flex-row gap-1 items-center justify-between w-full space-y-1">
                                     <p class="text-xs truncate ...">{{ plant.variety }}</p>
-                                    <p class="text-xs">{{ plant.quantity }}</p>
+                                    <p class="text-xs">{{ plant.amount }}</p>
                                 </div>
                             </span>
                         </div>
                         <div class="p-4 space-y-2">
-                            <p class="text-xl text-slate-400 mb-2 font-bold">Shipping</p>
+                            <p class="text-xl mb-2 font-bold">Shipping</p>
                             <div v-for="method in sellerSignature.shipping" class="flex flex-col">
                                 <p>{{ method.type }}</p>
                                 <p class="text-xs italic pl-2">Up to {{ method.distance }}KMs</p>
@@ -79,7 +86,7 @@
                             </div>
                         </div>
                         <div class="p-4">
-                            <p class="text-xl text-slate-400 mb-2 font-bold">Capabilities</p>
+                            <p class="text-xl mb-2 font-bold">Capabilities</p>
                             <li v-for="capability in sellerSignature.capabilities" class="text-xs inline space-x-2">
                                 <p>{{ capability }}</p>
                             </li>
@@ -87,18 +94,13 @@
                     </span>
                 </span>
                 <div class="grid grid-cols-3 p-4">
-                    <img class="bg-slate-500 rounded-md flex h-96 w-96 w-min-96 col-span-2 object-cover" src="@/assets/crop_1.png"/>
-                    <div class="grid grid-rows-3">
-                        <div class="flex items-center justify-center">
-                            <img class="bg-slate-500 rounded-md h-28 w-28 object-cover" src="@/assets/crop_2.png"/>
+                    <template v-if="sellerSignature.storeImagesResized && sellerSignature.storeImagesResized.length > 0 ">
+                        <img class="bg-slate-500 rounded-l-md flex col-span-2 object-cover" :src="sellerSignature.storeImagesResized[0]"/>
+                        <div>
+                            <img class="bg-slate-500 rounded-tr-md object-cover" :src="sellerSignature.storeImagesResized[1]"/>
+                            <img class="bg-slate-500 rounded-br-md object-cover" :src="sellerSignature.storeImagesResized[2]"/>
                         </div>
-                        <div class="flex items-center justify-center">
-                            <img class="bg-slate-500 rounded-md h-28 w-28 object-cover" src="@/assets/crop_3.png"/>
-                        </div>
-                        <div class="flex items-center justify-center">
-                            <img class="bg-slate-500 rounded-md h-28 w-28 object-cover" src="@/assets/crop_4.png"/>
-                        </div>
-                    </div>
+                    </template>
                 </div>
             </span>
         </span>
@@ -171,7 +173,7 @@ import { useMainStore } from '@/stores/main';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import { ref, onMounted, type Ref, computed } from 'vue';
 import type { SellerAd, BuyerAd, Job, Gig } from '@/types';
-import { getPaginatedCollectionGroupWhereWhere, getDocument } from '@/firebase/utils';
+import { getPaginatedCollectionGroupWhereWhere, getDocument, useFirebaseFunctionCall } from '@/firebase/utils';
 import { EnvelopeIcon } from '@heroicons/vue/24/outline';
 import { CheckCircleIcon } from '@heroicons/vue/20/solid';
 import SellerAdThumbnailCard from '@/components/cards/SellerAdThumbnailCard.vue';
@@ -252,6 +254,7 @@ onMounted(async() => {
         liveGigs.value = paginatedGigs.docs as Gig[];
         isLoadingGigs.value = false;
     }));
+    promises.push(increaseStoreViewCount(props.id));
     await Promise.all(promises);
 })
 const amountOfTime = computed(() => {
@@ -281,4 +284,14 @@ const storeRating = computed(() => {
     if (rating >= 3 && rating < 4) return 'Good'
     if (rating >= 4 && rating < 5) return 'Excellent'
 })
+const increasingStoreViewCount = ref(false);
+const increaseStoreViewCount = async (adId:string) => {
+    if(!adId) return;
+    const { callFunction } = useFirebaseFunctionCall(
+            'increaseStoreViewCount',
+            {adId},
+            increasingStoreViewCount,
+        );
+        await callFunction();
+}
 </script>

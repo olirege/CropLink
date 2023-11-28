@@ -25,7 +25,7 @@ const isLoadingAds = ref(false);
 const adGroups = ref([]);
 const loadAds = async () => {
     isLoadingAds.value = true;
-    adGroups.value = await getPaginatedDocuments('ads', ['updatedAt','desc'], 3);
+    adGroups.value = await getPaginatedDocuments('ads', ['updatedAt','desc'], 6);
     isLoadingAds.value = false;
 }
 const onViewMore = async () => {

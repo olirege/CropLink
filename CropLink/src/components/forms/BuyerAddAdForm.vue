@@ -2,12 +2,19 @@
     <div class="space-y-4 mb-4">
         <label class="block text-sm font-medium text-gray-700" for="type">Type</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="text" id="type" v-model="newRequest.type">
-        <label class="block text-sm font-medium text-gray-700" for="yieldTonnage">Yield Tonnage</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="yieldTonnage" v-model="newRequest.yieldTonnage">
+        <div class="flex flex-row gap-2 justify-between items-center">
+            <label class="block text-sm font-medium text-gray-700" for="costPerTon">Cost per ton</label>
+            <input class="mt-1 p-2 w-full rounded-md border" type="number" id="costPerTon" v-model="newRequest.minCostPerTon">
+            <input class="mt-1 p-2 w-full rounded-md border" type="number" id="minCostPerTon" v-model="newRequest.maxCostPerTon">
+        </div>
         <label class="block text-sm font-medium text-gray-700" for="requestDate">Request Date</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="date" id="requestDate" v-model="newRequest.requestDate">
-        <label class="block text-sm font-medium text-gray-700" for="price">Price</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="price" v-model="newRequest.price">
+        <label class="block text-sm font-medium text-gray-700" for="tons">Quantity</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="tons" v-model="newRequest.tons">tons
+        <div class="flex flex-row items-center gap-2 justify-between">
+            <input class="mt-1 p-2 w-full rounded-md border" type="checkbox" id="certifiedOrganic" v-model="newRequest.certifiedOrganic">
+            <label class="block text-sm font-medium text-gray-700" for="certifiedOrganic">Certified Organic</label>
+        </div>
     </div>
     <div class="flex justify-end space-x-2 mt-4">
         <button 

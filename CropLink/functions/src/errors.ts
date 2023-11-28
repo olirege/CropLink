@@ -9,6 +9,7 @@ export const ERROR_CODES:ERROR_CODES = {
     "ad-does-not-exist": "This ad does not exist.",
     "ad-already-live": "This ad is already live.",
     "ad-not-live": "This ad was not live.",
+    "ad-not-seller": "This action isn't allowed for this ad.",
     "bid-not-found": "This bid was not found.",
     "bid-already-cancelled": "This bid has already been cancelled.",
     "bid-already-accepted": "This bid has already been accepted.",

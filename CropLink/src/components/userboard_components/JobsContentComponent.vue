@@ -10,7 +10,12 @@
         </div>
         <div class="p-2">
             <span class="text-sm font-medium text-slate-300">Total views</span>
-            <p class="text-4xl font-bold text-slate-500">0</p>
+            <p class="text-4xl font-bold text-slate-500">{{jobsTotalViewCount}}</p>
+            <template v-if="isLoadingJobsViewCount">
+                <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
+                    <LoadingSpinner :isLoading="isLoadingJobsViewCount" class="z-20"/>
+                </div>
+            </template>
         </div>
         <div class="p-2 flex items-center justify-center">
             <CardButton :classes="'w-full'" @click="onCreateJobPost">
@@ -22,7 +27,7 @@
         <span class="grid grid-flow-row space-y-4" v-if="jobs.docs && jobs.docs.length > 0 && !isLoadingJobs" >
             <JobCard v-for="(job,index) in jobs.docs" :key="index" :job="job" @edit="onEditJobPost" @remove="onRemoveJobPost"/>
         </span>
-        <span v-else-if="jobs.docs && jobs.docs.length == 0 && !isLoadingJobs" class="h-96 p-2 flex items-center justify-center">
+        <span v-else-if="jobs.docs && jobs.docs.length == 0 && !isLoadingJobs" class="h-96 p-2 flex items-center justify-center col-span-4">
             <p class="italic">No job posts</p>
         </span>
         <div v-else="isLoadingJobs">
@@ -97,8 +102,28 @@ const numberOfLiveJobs = computed(() => {
 })
 onMounted(async () => {
     subscribe();
+    jobsTotalViewCountSub();
 })
 onBeforeUnmount(() => {
     unsubscribe();
+    jobsTotalViewCountUnsub();
 })
+const jobsTotalViewCount = ref(0);
+const isLoadingJobsViewCount = ref(false);
+const { subscribe:jobsTotalViewCountSub , unsubscribe:jobsTotalViewCountUnsub} = useQuerySubscription(
+    import.meta.env.VITE_ADS_COLLECTION,
+    [
+        ['posterId', '==', user.value.uid]
+    ],
+    ['createdAt', 'desc'],
+    (data) => {
+        let totalViewCount = 0;
+        data.forEach((job) => {
+            totalViewCount += (job.viewCount ? job.viewCount : 0);
+        })
+        jobsTotalViewCount.value = totalViewCount;
+    },
+    undefined,
+    isLoadingJobsViewCount,
+)
 </script>

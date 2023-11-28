@@ -47,6 +47,9 @@
   });
   const onChange = (value) => {
     console.log('onChange', value);
+    if (value === selectedValue.value) {
+      value = null;
+    }
     selectedValue.value = value
     emits('update:modelValue', value);
   };

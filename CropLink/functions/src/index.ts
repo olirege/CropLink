@@ -148,27 +148,28 @@ export const updateProfile = onCall(callableOptions, async (request:CallableRequ
             });
             bannerPicResizedSignedUrls.push(resizedSignedUrl);
         }
-        const profile = {
-            ...request.data,
-            profilePic: profilePicSignedUrls[0],
-            profilePicResized: profilePicResizedSignedUrls[0],
-            bannerPic: bannerPicSignedUrls[0],
-            bannerPicResized: bannerPicResizedSignedUrls[0],
+        const images: { [key: string]: string } = {
+            profilePic: profilePicSignedUrls[0] ? profilePicSignedUrls[0] : "",
+            profilePicResized: profilePicResizedSignedUrls[0] ? profilePicResizedSignedUrls[0] : "",
+            bannerPic: bannerPicSignedUrls[0] ? bannerPicSignedUrls[0] : "",
+            bannerPicResized: bannerPicResizedSignedUrls[0] ? bannerPicResizedSignedUrls[0] : "",
         };
-        for (const key in profile) {
-            if (profile[key] === "") {
-                delete profile[key];
+        for (const key in images) {
+            if (images[key] == "") {
+                delete images[key];
             }
         }
+        const profile = {
+            ...request.data,
+            ...images,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
         logger.info("updateProfile", "profile", profile);
         await admin.firestore().collection("users").doc(uid).set(profile, { merge: true });
         logger.info("updateProfile", "success");
         await admin.firestore().collection("ads").doc(uid).set({
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            profilePic: profile.profilePic,
-            bannerPic: profile.bannerPic,
-            profilePicResized: profile.profilePicResized,
-            bannerPicResized: profile.bannerPicResized,
+           ...images,
         }, { merge: true });
         logger.info("updateProfile", "success");
         return profile;
@@ -178,7 +179,6 @@ export const updateProfile = onCall(callableOptions, async (request:CallableRequ
     }
 });
 export const updateStoreChanges = onCall(callableOptions, async (request:CallableRequest) => {
-    // logger.info("updateStoreChanges", request);
     if (!request.auth) {
         throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
     }
@@ -190,13 +190,80 @@ export const updateStoreChanges = onCall(callableOptions, async (request:Callabl
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
     try {
+        const adRef = admin.firestore().collection("ads").doc(uid);
+        const adDoc = await adRef.get();
+        if (!adDoc.exists) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+        }
+        const ad = adDoc.data();
         const BUCKET_PREFIX = process.env.BUCKETURL;
         const logoSignedUrls = [];
         const logoResizedSignedUrls = [];
         const storeBannerPicSignedUrls = [];
         const storeBannerPicResizedSignedUrls = [];
+        const newStoreImagesSignedUrls = [];
+        const newStoreImagesResizedSignedUrls = [];
         const bucket = getStorage().bucket();
-        logger.info("updateStoreChanges", "request.data", request.data);
+        if (ad?.storeImagesResized && ad?.storeImagesResized.length > 0) {
+            const resizedImagesToDelete = ad?.storeImagesResized.filter((image:string) => !request.data.storeImagesResized.includes(image));
+            const originalImagesToDelete = resizedImagesToDelete.map((image:string) => {
+                const resizedImageNameWithoutResized = image.replace("_resized", "");
+                return resizedImageNameWithoutResized;
+            });
+            for (const image of resizedImagesToDelete) {
+                await deleteFileFromBucket(image, bucket, BUCKET_PREFIX as string);
+            }
+            for (const image of originalImagesToDelete) {
+                await deleteFileFromBucket(image, bucket, BUCKET_PREFIX as string);
+            }
+        }
+        if (request.data.storeImagesResized && request.data.storeImagesResized.length > 0) {
+            request.data.storeImages = request.data.storeImagesResized.map((image:string) => {
+                const originalImageNameWithoutResized = image.replace("_resized", "");
+                return originalImageNameWithoutResized;
+            });
+        }
+        if (request.data.newStoreImages && request.data.newStoreImages.length > 0) {
+            for (const image of request.data.newStoreImages) {
+                const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                const filename = `${imageId}.jpg`;
+                const bucketPath= `${`users/${uid}/` + filename}`;
+                const file = bucket.file(bucketPath);
+                const base64EncodedImageString = image.replace(/^data:image\/\w+;base64,/, "");
+                const imageBuffer = Buffer.from(base64EncodedImageString, "base64");
+                await file.save(imageBuffer, { contentType: "image/jpeg" });
+                const imagePath = `${BUCKET_PREFIX + `users/${uid}/` + filename}`;
+                const _imageUrl = new URL(imagePath);
+                const imageUrl = _imageUrl.pathname.substring(1);
+                const imageRef = bucket.file(imageUrl);
+                const [signedUrl] = await imageRef.getSignedUrl({
+                    action: "read",
+                    expires: "03-17-2030",
+                });
+                newStoreImagesSignedUrls.push(signedUrl);
+                const resizedImageFilename = `${imageId}_resized.jpg`;
+                const resizedImageBucketPath= `${`users/${uid}/` + resizedImageFilename}`;
+                const resizedImageFile = bucket.file(resizedImageBucketPath);
+                const resizedImageBuffer = await sharp(imageBuffer)
+                .resize(500, 500, {
+                    fit: "contain",
+                    background: { r: 0, g: 0, b: 0, alpha: 1 },
+                })
+                .jpeg()
+                .toBuffer();
+                await resizedImageFile.save(resizedImageBuffer, { contentType: "image/jpeg" });
+                const resizedImagePath = `${BUCKET_PREFIX + `users/${uid}/` + resizedImageFilename}`;
+                const _resizedImageUrl = new URL(resizedImagePath);
+                const resizedImageUrl = _resizedImageUrl.pathname.substring(1);
+                const resizedImageRef = bucket.file(resizedImageUrl);
+                const [resizedSignedUrl] = await resizedImageRef.getSignedUrl({
+                    action: "read",
+                    expires: "03-17-2030",
+                });
+                newStoreImagesResizedSignedUrls.push(resizedSignedUrl);
+            }
+            delete request.data.newStoreImages;
+        }
         if ( request.data.storeLogo && request.data.storeLogo.length > 0) {
             logger.info("updateStoreChanges", "request.data.storeLogo", request.data.storeLogo);
             const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -236,7 +303,6 @@ export const updateStoreChanges = onCall(callableOptions, async (request:Callabl
             });
             logoResizedSignedUrls.push(resizedSignedUrl);
         }
-        logger.info("updateStoreChanges", "request.data.storeBannerPic", request.data.storeBannerPic);
         if ( request.data.storeBannerPic && request.data.storeBannerPic.length > 0) {
             const imageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             const filename = `${imageId}.jpg`;
@@ -275,19 +341,20 @@ export const updateStoreChanges = onCall(callableOptions, async (request:Callabl
             });
             storeBannerPicResizedSignedUrls.push(resizedSignedUrl);
         }
+        request.data.storeImages ? request.data.storeImages = [...request.data.storeImages, ...newStoreImagesSignedUrls] : request.data.storeImages = [...newStoreImagesSignedUrls];
+        request.data.storeImagesResized ? request.data.storeImagesResized = [...request.data.storeImagesResized, ...newStoreImagesResizedSignedUrls] : request.data.storeImagesResized = [...newStoreImagesResizedSignedUrls];
         const changes = {
             ...request.data,
-            storeLogo: logoSignedUrls[0],
-            storeLogoResized: logoResizedSignedUrls[0],
-            storeBannerPic: storeBannerPicSignedUrls[0],
-            storeBannerPicResized: storeBannerPicResizedSignedUrls[0],
+            storeLogo: logoSignedUrls[0] ? logoSignedUrls[0] : "",
+            storeLogoResized: logoResizedSignedUrls[0] ? logoResizedSignedUrls[0] : "",
+            storeBannerPic: storeBannerPicSignedUrls[0] ? storeBannerPicSignedUrls[0] : "",
+            storeBannerPicResized: storeBannerPicResizedSignedUrls[0] ? storeBannerPicResizedSignedUrls[0] : "",
         };
         for (const key in changes) {
             if (changes[key] === "") {
                 delete changes[key];
             }
         }
-        logger.info("updateStoreChanges", "changes", changes);
         await admin.firestore().collection("ads").doc(uid).set({
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             ...changes,
@@ -648,10 +715,19 @@ export const placeBid = onCall(callableOptions, async (request:CallableRequest) 
             await bidDoc.ref.set({ status: "cancelled", updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
         }
     }
+    const adDoc = await adRef.get();
+    const ad = adDoc.docs[0].data() as Ad;
+    if (!adDoc.docs[0].exists) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["ad-not-live"]);
+    } else if (ad.adType === "buyer") {
+        throw new HttpsError("invalid-argument", ERROR_CODES["ad-not-seller"]);
+    }
+    const sellerId = ad.uid;
     try {
         const bidId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const bid = {
             adId: adId,
+            sellerId: sellerId,
             id: bidId,
             buyerId: uid,
             price: request.data.price,
@@ -1526,6 +1602,90 @@ export const removeApplication = onCall(callableOptions, async (request:Callable
             }
         }
         await appRef.delete();
+        return { success: true };
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const increaseAdViewCount = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("increaseAdViewCount", request);
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const adId = request.data.adId;
+        const adRef = admin.firestore().collectionGroup("ads").where("id", "==", adId);
+        const adDocs = await adRef.get();
+        if (adDocs.empty) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["ad-does-not-exist"]);
+        }
+        const adData = adDocs.docs[0].data();
+        const adViewCount = adData.viewCount ? adData.viewCount + 1 : 1;
+        await admin.firestore().collection("ads").doc(adData.uid).collection("ads").doc(adId).set({ viewCount: adViewCount }, { merge: true });
+        return { success: true };
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const increaseSellerStoreViewCount = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("increaseSellerStoreViewCount", request);
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const sellerId = request.data.sellerId;
+        const adRef = admin.firestore().collection("ads").where("id", "==", sellerId);
+        const adDocs = await adRef.get();
+        if (adDocs.empty) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["ad-does-not-exist"]);
+        }
+        const adData = adDocs.docs[0].data();
+        const adViewCount = adData.viewCount ? adData.viewCount + 1 : 1;
+        await admin.firestore().collection("ads").doc(sellerId).set({ viewCount: adViewCount }, { merge: true });
+        return { success: true };
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const increaseGigViewCount = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("increaseGigViewCount", request);
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const gigId = request.data.gigId;
+        const gigRef = admin.firestore().collectionGroup("gigs").where("gigId", "==", gigId);
+        const gigDocs = await gigRef.get();
+        if (gigDocs.empty) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["ad-does-not-exist"]);
+        }
+        const gigData = gigDocs.docs[0].data();
+        const gigViewCount = gigData.viewCount ? gigData.viewCount + 1 : 1;
+        await admin.firestore().collection("gigs").doc(gigData.posterId).collection("gigs").doc(gigId).set({ viewCount: gigViewCount }, { merge: true });
+        return { success: true };
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
+});
+export const increaseJobViewCount = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("increaseJobViewCount", request);
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const jobId = request.data.jobId;
+        const jobRef = admin.firestore().collectionGroup("jobs").where("jobId", "==", jobId);
+        const jobDocs = await jobRef.get();
+        if (jobDocs.empty) {
+            throw new HttpsError("invalid-argument", ERROR_CODES["ad-does-not-exist"]);
+        }
+        const jobData = jobDocs.docs[0].data();
+        const jobViewCount = jobData.viewCount ? jobData.viewCount + 1 : 1;
+        await admin.firestore().collection("jobs").doc(jobData.posterId).collection("jobs").doc(jobId).set({ viewCount: jobViewCount }, { merge: true });
         return { success: true };
     } catch (error:any) {
         logger.error(error);

@@ -2,7 +2,7 @@
     <div class="carousel">
       <div class="carousel-inner" :style="{ transform: `translateX(-${currentIndex * 100}%)` }">
         <div class="carousel-item" v-for="(image, index) in images" :key="index">
-          <img :src="(image as string)" class="w-full object-cover rounded-lg" :class="classes" v-if="image"/>
+          <img :src="(image as string)" class="object-cover rounded-lg" :class="classes" v-if="image"/>
         </div>
       </div>
       <ChevronLeftIcon v-if="images.length > 1" @click="prev" class="carousel-prev"/>
@@ -21,7 +21,7 @@ const props = defineProps({
     },
     classes: {
       type: String,
-      default: 'h-48'
+      default: 'w-full h-48'
     }
 })
 const currentIndex = ref(0);
@@ -60,7 +60,7 @@ const prev = () => {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    color: rgba(0,0,0,0.5);
+    color: rgba(255,255,255,1);
     border: none;
   }
   .carousel-prev {

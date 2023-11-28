@@ -25,13 +25,11 @@
             <div class="flex flex-row justify-end">
                 <p class="text-sm bg-slate-200/50 p-2 italic rounded-md w-auto">{{ isFirestoreTimestamp(ad.createdAt) ? fromNow(ad.createdAt) : gig.createdAt  }}</p>
             </div>
-            <div class="flex flex-row gap-2 text-sm">
-                <strong class="font-semibold">Yield Tonnage:</strong> 
-                <p>{{ ad.yieldTonnage }}</p>
+            <div class="flex flex-row gap-2 text-sm justify-between gap-2">
+                <p class="font-semibold" v-currency="ad.pricePerTon">/ton</p> 
             </div>
-            <div class="flex flex-row gap-2 text-sm">
-                <strong class="font-semibold">Price:</strong>
-                <p v-currency="ad.price"></p>
+            <div class="flex flex-row gap-2 text-sm justify-between gap-2">
+                <p class="font-semibold">{{ ad.tons }} tons</p>
             </div>
             <div class="flex justify-end space-x-4 mt-4">
                 <template v-if="showButtons">

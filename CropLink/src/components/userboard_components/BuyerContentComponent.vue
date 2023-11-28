@@ -19,7 +19,7 @@
     <span class="grid grid-flow-col gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds">
        <BuyerAdCard v-for="(ad,index) in ads.docs" :key="index" :ad="ad" />
    </span>
-   <div v-if="ads.docs && ads.docs.length == 0 && !isLoadingAds" class="h-96 p-2 flex items-center justify-center">
+   <div v-if="ads.docs && ads.docs.length == 0 && !isLoadingAds" class="h-96 p-2 flex items-center justify-center col-span-4">
        <div class="italic">No ads found</div>
     </div>
     <div v-else>

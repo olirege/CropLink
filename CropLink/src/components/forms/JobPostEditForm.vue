@@ -14,15 +14,18 @@
         v-model="newJob.type"
         placeholder="Select an Employment Type"
         />
-        <div class="mb-4">
+        <div class="mb-4 mt-4">
           <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
           <input v-model="newJob.location" type="text" id="location" name="location" class="mt-1 p-2 w-full border rounded-md" required />
         </div>
         <div class="mb-4">
           <label for="salary" class="block text-sm font-medium text-gray-700">Salary</label>
-          <input v-model="job.salaryMin" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
-          <span class="text-sm text-gray-500">to</span>
-          <input v-model="job.salaryMax" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
+          <div class="flex flex-row gap-2 items-center">
+            <span class="text-sm text-gray-500">from</span>
+            <input v-model="job.salaryMin" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
+            <span class="text-sm text-gray-500">to</span>
+            <input v-model="job.salaryMax" type="number" id="salary" name="salary" class="mt-1 p-2 w-full border rounded-md" required />
+          </div>
         </div>
         <div class="mb-4 space-y-2">
           <span class="w-full flex items-center justify-between">
