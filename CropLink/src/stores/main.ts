@@ -73,7 +73,6 @@ export const useMainStore = defineStore('MainStore', () => {
   }
   const setProfile = (newProfile: any) => {
     console.log('setProfile', newProfile)
-    if(!newProfile) throw new Error('No profile') 
     profile.value = newProfile
   }
   const getProfile = async () => {

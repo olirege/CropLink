@@ -1,12 +1,12 @@
 <template>
-  <div class="grid grid-cols-2 h-[500px]">
-    <div class="flex flex-col items-center  justify-center">
-      <img src="@/assets/croplink_logo.png" alt="CropLink Logo" class="rounded-full w-3/5">
+  <div class="flex flex-col items-center sm:grid sm:grid-cols-2 sm:h-[500px]">
+    <div class="flex flex-col items-center  justify-center my-6">
+      <img src="@/assets/croplink_logo.png" alt="CropLink Logo" class="rounded-full w-2/5 sm:w-3/5">
     </div>
-    <div class="flex flex-col gap-6 items-center justify-center relative">
-      <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-6 relative">
+      <div class="flex flex-col gap-2 items-center justify-center">
         <p class="text-6xl font-bold">CropLink</p>
-        <p class="text-2xl pl-2 italic">Connect Farmers and Buyers now</p>
+        <p class="text-lg sm:text-2xl pl-2 italic">Connect Farmers and Buyers now</p>
       </div>
       <div id="firebaseui-auth-container"></div>
     </div>

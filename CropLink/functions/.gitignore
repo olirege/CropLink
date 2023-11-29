@@ -7,7 +7,6 @@ typings/
 
 # Node.js dependency directory
 node_modules/
-service/service.json
-
+service/
 # System Files
 .env
