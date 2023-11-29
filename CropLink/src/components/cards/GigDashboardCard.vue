@@ -1,11 +1,11 @@
 <template>
-    <span class="relative bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 mb-4">
+    <span class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-300 mb-4 relative">
         <template v-if="isLoading">
             <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
                 <LoadingSpinner :isLoading="isLoading" class="z-20"/>
             </div>
         </template>
-        <div class="flex flex-row justify-between p-4">
+        <div class="flex flex-col sm:flex-row justify-between p-2 gap-2 sm:p-4">
             <div class="flex flex-row gap-4 items-center" v-if="gig.live">
                 <span class="w-2 h-2 bg-green-500 rounded-full"></span>
                 <p class="text-sm text-green-500">LIVE</p>
@@ -17,26 +17,26 @@
             <p class="text-sm bg-slate-200/50 p-2 italic rounded-md">{{ isFirestoreTimestamp(gig.createdAt) ? fromNow(gig.createdAt) : gig.createdAt  }}</p>
         </div>
         <div class="flex flex-row border-top">
-            <p class="text-xl capitalize">{{ gig.title }}</p>
+            <p class="text-lg capitalize my-2 pl-2 sm:pl-4 truncate">{{ gig.title }}</p>
         </div>
-        <div class="flex flex-row gap-2 mb-2 items-center">
+        <div class="flex flex-row gap-1 pl-2 sm:pl-4 mb-2">
             <MapPinIcon class="w-5 h-5 text-slate-500"/>
             <p class="text-sm truncate italic text-slate-500">{{ gig.location }}</p>
         </div>
-        <div class="flex flex-row gap-4 p-4">
-            <p class="text-sm">{{ gig.description.substring(0,197) + '...' }}</p>
+        <div class="flex flex-row gap-4 p-2 sm:p-4">
+            <p class="text-sm truncate md:text-clip">{{ gig.description.substring(0,197) + '...' }}</p>
         </div>
-        <div class="grid grid-cols-2 divide-x px-4 mb-2">
+        <div class="flex sm:flex-row flex-col gap-2 sm:gap-4 divide-y sm:divide-y-0 sm:divide-x sm:px-2 sm:px-4 mb-2">
             <div class="flex flex-col p-2 justify-between">
-                <p class="text-xs italic">Number of milestones</p>
+                <p class="text-xs italic">Milestones</p>
                 <p class="text-2xl">{{ gig.milestones.length }}</p>
             </div>
             <div class="flex flex-col p-2 justify-between">
                 <p class="text-xs italic">Total</p>
-                <p class="text-2xl" v-currency="milestonesTotal"></p>
+                <p class="text-xl sm:text-2xl" v-currency="milestonesTotal"></p>
             </div>
         </div>
-        <div class="w-full flex justify-end gap-4" v-if="showButtons">
+        <div class="w-full flex justify-end gap-4 pr-4 pb-4" v-if="showButtons">
             <template v-if="showButtons">
                 <ArrowUpTrayIcon  v-if="!gig.live" @click="onPost(gig.gigId)" class="w-5 h-5 cursor-pointer text-cyan-600" />
                 <ArrowDownTrayIcon  v-if="gig.live" @click="onTakedown(gig.gigId)" class="w-5 h-5 cursor-pointer text-cyan-600" />

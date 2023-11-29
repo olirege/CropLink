@@ -1,15 +1,15 @@
 <template>
     <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-5">
-        <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of ads</span>
+        <div class="p-1 sm:p-2">
+            <span class="text-sm font-medium text-slate-300">Created</span>
             <p class="text-4xl font-bold text-slate-500">{{ ads.docs && ads.docs.length }}</p> 
         </div>
-        <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of live ads</span>
+        <div class="p-1 sm:p-2">
+            <span class="text-sm font-medium text-slate-300">Live</span>
             <p class="text-4xl font-bold text-slate-500">{{ numberOfLiveAds }}</p>
         </div>
-        <div class="p-2 relative">
-            <span class="text-sm font-medium text-slate-300">Total views</span>
+        <div class="p-1 sm:p-2 relative">
+            <span class="text-sm font-medium text-slate-300">Views</span>
             <p class="text-4xl font-bold text-slate-500">{{ adTotalViewCount }}</p>
             <template v-if="isLoadingAdsViewCount">
                 <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
@@ -17,8 +17,8 @@
                 </div>
             </template>
         </div>
-        <div class="p-2 relative">
-            <span class="text-sm font-medium text-slate-300">Number of bids</span>
+        <div class="p-1 sm:p-2 relative">
+            <span class="text-sm font-medium text-slate-300">Bids</span>
             <p class="text-4xl font-bold text-slate-500">{{ adsTotalBids }}</p>
             <template v-if="isLoadingBidViewCount">
                 <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
@@ -26,11 +26,11 @@
                 </div>
             </template>
         </div>
-        <div class="p-2 flex items-center justify-center">
-            <CardButton @click="onAddAd" :classes="'w-32 p-2'">Create an ad</CardButton>
+        <div class="p-1 sm:p-2 flex items-center justify-center">
+            <CardButton @click="onAddAd" :classes="'w-full'">Create ad</CardButton>
         </div>
     </div>
-    <span class="p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds">
+    <span class="p-2 sm:p-4 grid gap-2 sm:gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4" v-if="ads.docs && ads.docs.length > 0 && !isLoadingAds">
        <SellerAdDashboardCard v-for="(ad,index) in ads.docs" :key="index" :ad="ad" />
    </span>
    <div v-else-if="ads.docs && ads.docs.length == 0 && !isLoadingAds" class="h-96 p-2 flex items-center justify-center col-span-4">

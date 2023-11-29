@@ -1,6 +1,6 @@
 <template>
-    <div class="grid grid-cols-1 p-5 divide-y">
-        <div class="grid grid-cols-2 gap-x-4 p-5">
+    <div class="grid grid-cols-1 divide-y">
+        <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-x-4 p-2 sm:p-4">
             <span>
                 <h2 class="text-2xl font-semibold mb-2 capitalize">
                     Personal Information
@@ -65,7 +65,7 @@
                 <LoadingSpinner :isLoading="loading" />
             </div>
         </div>
-        <div class="grid grid-cols-2 gap-x-4 p-5">
+        <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-x-4 p-2 sm:p-4">
             <span>
                 <h2 class="text-2xl font-semibold mb-2 capitalize">
                     Store Page Information
@@ -131,7 +131,7 @@
                             <div class="grid grid-cols-3 divide-x">
                                 <span v-for="capability in capabilities" class="flex flex-row items-center justify-start gap-2 pl-2">
                                     <input type="checkbox" :value="capability" v-model="storeChange.capabilities" />
-                                    <label class="text-sm font-medium text-gray-700" for="name">{{ capability }}</label>
+                                    <label class="text-xs sm:text-sm font-medium text-gray-700" for="name">{{ capability }}</label>
                                 </span>
                             </div>
                         </span>
@@ -140,23 +140,23 @@
                             <div class="grid grid-cols-3 divide-x">
                                 <span v-for="machine in machinery" class="flex flex-row items-center justify-start gap-2 pl-2">
                                     <input type="checkbox" :value="machine" v-model="storeChange.machinery" />
-                                    <label class="text-sm font-medium text-gray-700" for="name">{{ machine }}</label>
+                                    <label class="text-xs sm:text-sm font-medium text-gray-700" for="name">{{ machine }}</label>
                                 </span>
                             </div>
                         </span>
                         <span class="space-y-2 w-full">
-                            <label class="block text-sm font-medium text-gray-700" for="name">Plants</label>
+                            <label class="block text-sm font-medium text-gray-700" for="name">Plant Count</label>
                             <div class="flex flex-row gap-2 items-center">
                                 <Listbox
                                 :items="produce"
                                 v-model="produceToAdd.type"
-                                placeholder="Select a Produce"
+                                placeholder="Produce"
                                 itemLabel="id"
                                 />
                                 <Listbox
                                 :items="selectableVariety"
                                 v-model="produceToAdd.variety"
-                                placeholder="Select a Variety"
+                                placeholder="Variety"
                                 :disabled="!produceToAdd.type"
                                 />
                                 <input type="number" v-model="produceToAdd.amount" class="bg-gray-200/70 p-2 rounded-md border-1 w-1/3 text-sm" placeholder="Amount"/>
@@ -181,7 +181,7 @@
                                 <Listbox
                                 :items="shipping"
                                 v-model="shippingMethodToAdd.type"
-                                placeholder="Select a Shipping Method"
+                                placeholder="Method"
                                 />
                                 <input type="text" v-model="shippingMethodToAdd.distance" class="bg-gray-200/70 p-2 rounded-md border-1 w-1/3 text-sm" placeholder="Distance(km)" />
                                 <input type="text" v-model="shippingMethodToAdd.weight" class="bg-gray-200/70 p-2 rounded-md border-1 w-1/3 text-sm" placeholder="Weight(kg)"/>
@@ -223,7 +223,7 @@
                 </div>
             </span>
         </div>
-        <div class="grid grid-cols-2 gap-x-4 p-5">
+        <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-x-4 p-2 sm:p-4">
             <span>
                 <h2 class="text-2xl font-semibold mb-2 capitalize">
                     Change Password
@@ -256,12 +256,12 @@
                 </div>
             </span>
         </div>
-        <div class="grid grid-cols-2 gap-x-4 p-5">
+        <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-x-4 p-2 sm:p-4">
             <span>
                 <h2 class="text-2xl font-semibold mb-2 capitalize">
                     Delete Account
                 </h2>
-                <p class="text-md mb-2 italic w-48">
+                <p class="text-md mb-2 italic sm:w-48">
                     No longer interested in using CropLink? Delete your account here. This action is irreversible. All your data will be deleted.
                 </p>
             </span>

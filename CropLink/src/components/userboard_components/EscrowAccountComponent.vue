@@ -1,5 +1,5 @@
 <template>
-    <div class="grid grid-cols-2 gap-x-4 p-5">
+    <div class="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-x-4 p-2 sm:p-4">
         <div>
             <h1 class="text-2xl font-semibold mb-2 capitalize">Escrow Account Details</h1>
             <p class="text-md mb-2 italic w-64">
@@ -23,7 +23,7 @@
                 <p class="text-xs"> 
                     If you do not have an escrow account, you can create one by clicking the button below.
                 </p>
-                <div class="flex justify-end">
+                <div class="flex justify-end pb-8 sm:pb-0">
                     <CardButton
                     v-if="!showSignupForm"
                     @click="toggleSignupForm">

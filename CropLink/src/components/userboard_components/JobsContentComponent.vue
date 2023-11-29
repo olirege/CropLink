@@ -1,15 +1,15 @@
 <template>
     <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-4">
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of Jobs</span>
+            <span class="text-sm font-medium text-slate-300">Created</span>
             <p class="text-4xl font-bold text-slate-500">{{ jobs.docs && jobs.docs.length }}</p> 
         </div>
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of live posts</span>
+            <span class="text-sm font-medium text-slate-300">Live</span>
             <p class="text-4xl font-bold text-slate-500">{{ numberOfLiveJobs }}</p>
         </div>
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Total views</span>
+            <span class="text-sm font-medium text-slate-300">Views</span>
             <p class="text-4xl font-bold text-slate-500">{{jobsTotalViewCount}}</p>
             <template v-if="isLoadingJobsViewCount">
                 <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
@@ -19,11 +19,11 @@
         </div>
         <div class="p-2 flex items-center justify-center">
             <CardButton :classes="'w-full'" @click="onCreateJobPost">
-                Create a job post
+                Create job
             </CardButton>
         </div>
     </div>
-    <span class="p-4 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <span class="p-2 sm:p-4 grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         <template v-if="jobs.docs && jobs.docs.length > 0 && !isLoadingJobs" >
             <JobCard v-for="(job,index) in jobs.docs" :key="index" :job="job" @edit="onEditJobPost" @remove="onRemoveJobPost"/>
         </template>

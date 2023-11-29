@@ -14,16 +14,16 @@
             </span>
         </span>
         <span class="grid grid-row-3 sm:grid-cols-3 gap-4">
-            <span class="flex flex-row p-2 sm:p-0" @click="goToSellerAds(adGroup.id, adGroup.companyName)">
-                <div class="flex flex-col gap-1">
+            <span class="flex flex-row sm:p-2 sm:p-0" @click="goToSellerAds(adGroup.id, adGroup.companyName)">
+                <div class="flex flex-col gap-1 w-full">
                     <div v-if="adGroup.rating">
                         <p class="italic"><strong>{{ adGroup.rating }}</strong>/5 rating</p>
                     </div>
                     <div v-else>
                         <p>Producer not yet rated.</p>
                     </div>
-                    <span class="flex-row w-full divide-x flex">
-                        <div class="flex flex-col p-2">
+                    <span class="flex-row justify-between w-full divide-x flex gap-2">
+                        <div class="flex flex-col sm:p-2 w-full">
                             <p class="text-md mb-2 font-bold">Shipping</p>
                             <li v-for="method in adGroup.shipping.slice(0,2)" class="flex flex-col p-2">
                                 <p class="text-xs">{{ method.type }}</p>
@@ -31,8 +31,8 @@
                                 <p class="text-xs italic pl-1">Max: {{ method.weight }}KGs</p>
                             </li>
                         </div>
-                        <div class="flex flex-col p-2 space-y-2">
-                            <p class="text-md mb-2 font-bold">Plants</p>
+                        <div class="flex flex-col sm:p-2 space-y-2 pl-2 w-full">
+                            <p class="text-md mb-2 font-bold">Plant Count</p>
                             <li v-for="plant in adGroup.plants.slice(0,5)" class="flex flex-row justify-between gap-2">
                                 <p class="text-xs italic">{{ plant.variety }}</p>
                                 <p class="text-xs italic">{{ plant.amount }}</p>         

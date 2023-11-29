@@ -1,20 +1,20 @@
 <template>
       <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-3">
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of Applications</span>
+            <span class="text-sm font-medium text-slate-300">Recieved</span>
             <p class="text-4xl font-bold text-slate-500">{{ applications.docs ? applications.docs.length : 0 }}</p> 
         </div>
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of Gigs Applications</span>
+            <span class="text-sm font-medium text-slate-300">Gigs</span>
             <p class="text-4xl font-bold text-slate-500">{{ numberOfGigs }}</p>
         </div>
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of Jobs Application</span>
+            <span class="text-sm font-medium text-slate-300">Jobs</span>
             <p class="text-4xl font-bold text-slate-500">{{ numberOfJobs }}</p>
         </div>
     </div>
-    <div class="p-4">
-        <div class="flex flex-row gap-4 h-6 mb-2 items-center">
+    <div class="sm:p-4">
+        <div class="flex flex-row gap-4 h-6 sm:mb-2 items-center p-4">
             <div class="flex flex-row gap-2 items-center">
                 <input type="checkbox" class="w-4 h-4" v-model="filterByGig"/>
                 <p class="text-sm font-medium text-slate-300">Gig</p>
@@ -27,21 +27,21 @@
         <table  v-if="applications.docs && applications.docs.length > 0 && !isLoadingApplication"  class="table-fixed w-full border-collapse">
             <thead class="border-y">
                 <tr class="text-left">
-                    <th class="py-4">Application ID</th>
+                    <th class="py-4 hidden sm:table-cell">ID</th>
                     <th class="py-4">Name</th>
-                    <th class="py-4">Email</th>
-                    <th class="py-4">For</th>
-                    <th class="py-4">Recieved On</th>
+                    <th class="py-4 hidden sm:table-cell">Email</th>
+                    <th class="py-4 hidden sm:table-cell">For</th>
+                    <th class="py-4">Recieved</th>
                     <th class="py-4">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <template v-for="(application,index) in filteredApplications" :key="index">
                     <tr>
-                        <td class="py-2">{{ application.applicationId.substring(0,5) }}</td>
+                        <td class="py-2 hidden sm:table-cell">{{ application.applicationId.substring(0,5) }}</td>
                         <td class="py-2 capitalize truncate">{{ application.name }}</td>
-                        <td class="py-2 truncate">{{ application.email }}</td>
-                        <td class="py-2">
+                        <td class="py-2 truncate hidden sm:table-cell">{{ application.email }}</td>
+                        <td class="py-2 hidden sm:table-cell">
                             <div class="flex flex-row gap-2 items-center">
                                 <div class="rounded-full w-2 h-2 " :class="{
                                     'bg-green-500': application.parentType == 'gig',
@@ -50,7 +50,7 @@
                                 <p class="pb-1 capitalize">{{ application.parentType }}</p>
                             </div>
                         </td>
-                        <td class="py-2 italic">
+                        <td class="py-2 italic text-xs sm:text-base">
                         {{ isFirestoreTimestamp(application.createdAt) ? fromNow(application.createdAt) : application.createdAt }}
                         </td>
                         <td class="relative">
@@ -126,6 +126,11 @@ const onRemove = (applicationId:string) => {
 }
 const showIframe = ref('');
 const onView = (applicationId:string) => {
+    // check if mobile then if so download
+    if(window.innerWidth < 768) {
+        window.open(applications.value.docs.find((application) => application.applicationId === applicationId)?.resume);
+        return;
+    }
     if(showIframe.value === applicationId) {
         showIframe.value = '';
         return;

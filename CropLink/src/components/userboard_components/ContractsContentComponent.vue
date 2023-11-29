@@ -1,43 +1,43 @@
 <template>
     <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-3">
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of Pending Contracts</span>
+            <span class="text-sm font-medium text-slate-300">Pending</span>
             <p class="text-4xl font-bold text-slate-500">{{ numberOfPendingContracts }}</p> 
         </div>
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of Accepted contracts</span>
-            <p class="text-4xl font-bold text-slate-500">{{ numberOfAcceptedContracts }}</p>
+            <span class="text-sm font-medium text-slate-300">Accepted</span>
+            <p class="text-4xl text-4xl font-bold text-slate-500">{{ numberOfAcceptedContracts }}</p>
         </div>
         <div class="p-2">
-            <span class="text-sm font-medium text-slate-300">Number of Rejected contracts</span>
-            <p class="text-4xl font-bold text-slate-500">{{ numberOfRejectedContracts }}</p>
+            <span class="text-sm font-medium text-slate-300">Rejected</span>
+            <p class="text-4xl text-4xl font-bold text-slate-500">{{ numberOfRejectedContracts }}</p>
         </div>
     </div>
-    <div class="p-4">
+    <div class="sm:p-4">
         <table  v-if="contracts.docs && contracts.docs.length > 0 && !isLoadingContracts" class="table-fixed w-full border-collapse">
             <thead class="border-b">
                 <tr class="text-left">
-                    <th class="pb-4">Contract ID</th>
-                    <th class="pb-4">User</th>
-                    <th class="pb-4">Ad ID</th>
-                    <th class="pb-4">Status</th>
-                    <th class="pb-4">Updated At</th>
-                    <th class="pb-4">Created At</th>
-                    <th class="pb-4">Action</th>
+                    <th class="p-2 sm:pb-4 hidden sm:table-cell">Contract ID</th>
+                    <th class="p-2 sm:pb-4">User</th>
+                    <th class="p-2 sm:pb-4 hidden sm:table-cell">Ad ID</th>
+                    <th class="p-2 sm:pb-4">Status</th>
+                    <th class="p-2 sm:pb-4">Updated</th>
+                    <th class="p-2 sm:pb-4 hidden sm:table-cell">Created</th>
+                    <th class="p-2 sm:pb-4">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(contract,index) in contracts.docs" :key="index">
-                    <td class="py-2">{{ contract.id.substring(0,5) }}</td>
+                    <td class="py-2 hidden sm:table-cell">{{ contract.id.substring(0,5) }}</td>
                     <td class="py-2">
                         <div class="flex flex-row justify-start items-center">
                             <img :src="contract.userSignature.profilePic" class="w-8 h-8 rounded-full"/>
-                            <p class="pl-2">{{ contract.userSignature.name }}</p>
+                            <p class="pl-2 truncate">{{ contract.userSignature.name }}</p>
                         </div>
                     </td>
-                    <td class="py-2"> {{ contract.adId.substring(0,5) }}</td>
+                    <td class="py-2 hidden sm:table-cell"> {{ contract.adId.substring(0,5) }}</td>
                     <td class="py-2">
-                        <span class="flex flex-row w-3/4 gap-2 items-center justify-start px-1">
+                        <span class="flex flex-row sm:w-3/4 gap-1 sm:gap-2 items-center justify-start px-1">
                             <span 
                             class="w-3 h-3 rounded-full"
                             :class="{
@@ -46,15 +46,15 @@
                                 'bg-yellow-500': contract.status == 'pending',
                             }"
                             />
-                            <p class="pb-1 italic capitalize">
+                            <p class="italic capitalize">
                                 {{ contract.status }}
                             </p>
                         </span>
                     </td>
                     <td class="py-2">{{ fromNow(contract.updatedAt) }}</td>
-                    <td class="py-2">{{ fromNow(contract.createdAt) }}</td>
+                    <td class="py-2 hidden sm:table-cell">{{ fromNow(contract.createdAt) }}</td>
                     <td class="py-2 w-5">
-                        <button class=":text-cyan-600" @click="onViewContract(contract.adId)">View</button>
+                        <button class="text-cyan-600 font-bold italic" @click="onViewContract(contract.adId)">View</button>
                     </td>
                 </tr>
             </tbody>

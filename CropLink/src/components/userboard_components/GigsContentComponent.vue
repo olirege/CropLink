@@ -1,15 +1,15 @@
 <template>
-    <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-5">
+    <div class="h-32 flex flex-row items-center divide-x border-y px-2 grid grid-cols-4 sm:grid-cols-5">
         <div class="p-2 h-16">
-            <span class="text-sm font-medium text-slate-300">Number of Gigs</span>
+            <span class="text-sm font-medium text-slate-300">Created</span>
             <p class="text-2xl font-bold text-slate-500">{{ gigs.docs && gigs.docs.length }}</p> 
         </div>
         <div class="p-2 h-16">
-            <span class="text-sm font-medium text-slate-300">Number of live posts</span>
+            <span class="text-sm font-medium text-slate-300">Live</span>
             <p class="text-2xl font-bold text-slate-500">{{ numberOfLiveGigs }}</p>
         </div>
         <div class="p-2 h-16">
-            <span class="text-sm font-medium text-slate-300">Total views</span>
+            <span class="text-sm font-medium text-slate-300">Views</span>
             <p class="text-2xl font-bold text-slate-500">{{ gigsTotalViewCount }}</p>
             <template v-if="isLoadingGigsViewCount">
                 <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
@@ -17,17 +17,17 @@
                 </div>
             </template>
         </div>
-        <div class="p-2 flex flex-col justify-between h-16">
-            <span class="text-sm font-medium text-slate-300">Milestones Total</span>
+        <div class="p-2 flex-col justify-between h-16 hidden sm:flex ">
+            <span class="text-sm font-medium text-slate-300">Total</span>
             <p class="text-2xl font-bold text-slate-500" v-currency="milestonesTotal"></p>
         </div>
         <div class="p-2 flex items-center justify-center">
             <CardButton :classes="'w-full'" @click="onCreateGigPost">
-            Create a gig post
+            Create gig
             </CardButton>
         </div>
     </div>
-    <span class="p-4 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <span class="p-2 sm:p-4 grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         <template v-if="gigs.docs && gigs.docs.length > 0 && !isLoadingGigs" >
             <GigCard v-for="(gig,index) in gigs.docs" :key="index" :gig="gig" @edit="onEditGigPost" @remove="onRemoveGigPost"/>
         </template>

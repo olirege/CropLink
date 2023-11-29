@@ -1,13 +1,13 @@
 <template>
-    <div class="relative bg-white p-4 rounded-xl shadow transition-shadow duration-300 hover:shadow-xl">
+    <div class="relative bg-white p-2 rounded-xl shadow transition-shadow duration-300 hover:shadow-xl">
         <template v-if="isPostingAd">
             <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
                 <LoadingSpinner :isLoading="isPostingAd" class="z-20"/>
             </div>
         </template>
-        <div class="relative w-full h-52 bg-gray-200 rounded-xl overflow-hidden">
+        <div class="relative w-full h-32 sm:h-52 sm:bg-gray-200 rounded-xl overflow-hidden">
             <template v-if="ad.images && ad.images.length > 0">
-                <ImageCarousel :images="ad.resizedImages" class="h-full object-cover"/>
+                <ImageCarousel :images="ad.resizedImages" class="h-32 sm:h-full object-cover"/>
             </template>
             <template v-else>
                 <div class="flex items-center justify-center h-full">
@@ -15,28 +15,28 @@
                 </div>
             </template>
         </div>
-        <div class="mt-4">
-            <h3 class="text-2xl font-bold">{{ ad.variety }}</h3>
-            <div class="flex flex-row justify-between">
-            <div class="flex flex-row gap-4 items-center" v-if="ad.live">
-                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                <p class="text-sm text-green-500">LIVE</p>
+        <div class="sm:mt-2 space-y-2">
+            <h3 class="text-lg sm:text-2xl font-bold">{{ ad.variety }}</h3>
+            <div class="flex flex-col gap-2 justify-between">
+                <div class="flex flex-row gap-4 items-center" v-if="ad.live">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    <p class="text-sm text-green-500">LIVE</p>
+                </div>
+                <div class="flex flex-row gap-4 items-center" v-else>
+                    <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                    <p class="text-sm text-red-500">NOT LIVE</p>
+                </div>
+                <p class="text-sm bg-slate-200/50 p-2 italic rounded-md">{{ isFirestoreTimestamp(ad.createdAt) ? fromNow(ad.createdAt) : gig.createdAt  }}</p>
             </div>
-            <div class="flex flex-row gap-4 items-center" v-else>
-                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-                <p class="text-sm text-red-500">NOT LIVE</p>
-            </div>
-            <p class="text-sm bg-slate-200/50 p-2 italic rounded-md">{{ isFirestoreTimestamp(ad.createdAt) ? fromNow(ad.createdAt) : gig.createdAt  }}</p>
-            </div>
-            <div class="flex flex-row justify-between w-full">
+            <div class="flex flex-col justify-between w-full">
                 <div class="flex flex-row gap-2 text-sm justify-between gap-2">
-                    <p class="font-semibold" v-currency="ad.pricePerTon">/ton</p> 
+                    <p class="font-semibold truncate" v-currency="ad.pricePerTon">/ton</p> 
                 </div>
                 <div class="flex flex-row gap-2 text-sm justify-between gap-2">
-                    <p class="font-semibold">{{ ad.tons }} tons</p>
+                    <p class="font-semibold truncate">{{ ad.tons }} tons</p>
                 </div>
             </div>
-            <div class="flex justify-end space-x-4 mt-4">
+            <div class="flex justify-between sm:justify-end sm:space-x-4 mt-4">
                 <template v-if="showButtons">
                     <ArrowUpTrayIcon class="h-5 w-5 text-cyan-600" v-if="!ad.live" @click="onPostAd(ad.id)" title="Post ad'"/>
                     <ArrowDownTrayIcon class="h-5 w-5 text-cyan-600" v-if="ad.live" @click="onTakedownAd(ad.id)" title="Take down ad"/>

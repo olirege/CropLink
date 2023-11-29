@@ -2,7 +2,7 @@
     <div class="w-full">
         <div class="w-full" v-if="profile">
             <TabGroup>
-                <TabList class="w-full flex space-x-1 p-1">
+                <TabList class="w-full flex justify-between sm:justify-start sm:space-x-1 p-1">
                     <Tab
                         v-for="(category,key,index) in TAB_CATEGORIES"
                         as="template"
@@ -12,7 +12,7 @@
                         >
                             <button
                             :class="[
-                            'w-24 rounded-lg py-2.5 text-sm font-medium cursor-pointer',
+                            'sm:w-24 rounded-lg py-2.5 text-sm font-medium cursor-pointer',
                             selected
                                 ? 'text-blue-500 focus:outline-none'
                                 : 'text-slate-500',

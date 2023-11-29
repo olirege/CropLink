@@ -5,7 +5,7 @@
                 <LoadingSpinner :isLoading="isLoading" class="z-20"/>
             </div>
         </template>
-        <div class="flex flex-row justify-between p-4">
+        <div class="flex flex-col sm:flex-row justify-between p-2 gap-2 sm:p-4">
             <div class="flex flex-row gap-4 items-center" v-if="job.live">
                 <span class="w-2 h-2 bg-green-500 rounded-full"></span>
                 <p class="text-sm text-green-500">LIVE</p>
@@ -14,19 +14,19 @@
                 <span class="w-2 h-2 bg-red-500 rounded-full"></span>
                 <p class="text-sm text-red-500">NOT LIVE</p>
             </div>
-            <p class="text-sm bg-slate-200/50 p-2 italic rounded-md">{{ isFirestoreTimestamp(job.createdAt) ? fromNow(job.createdAt) : job.createdAt  }}</p>
+            <p class="text-sm bg-slate-200/50 p-2 italic rounded-md text-end">{{ isFirestoreTimestamp(job.createdAt) ? fromNow(job.createdAt) : job.createdAt  }}</p>
         </div>
         <div class="flex flex-row gap-4 bg-gradient-to-r from-sky-600/50 mb-2">
-            <p class="text-xl capitalize my-2 text-white pl-4">{{ job.title }}</p>
+            <p class="text-xl capitalize my-2 text-white pl-2 sm:pl-4 truncate">{{ job.title }}</p>
         </div>
-        <div class="flex flex-row gap-1 pl-4 mb-2">
+        <div class="flex flex-row gap-1 pl-2 sm:pl-4 mb-2">
             <MapPinIcon class="w-5 h-5"/>
             <p class="text-sm truncate italic text-slate-500">{{ job.location }}</p>
         </div>
-        <div class="flex flex-row gap-4 p-4">
-            <p class="text-sm">{{ job.description.substring(0,197) + '...' }}</p>
+        <div class="flex flex-row gap-4 p-2 sm:p-4">
+            <p class="text-sm truncate md:text-clip">{{ job.description.substring(0,197) + '...' }}</p>
         </div>
-        <div class="flex flex-row gap-4 divide-x px-4 mb-2">
+        <div class="flex sm:flex-row flex-col gap-2 sm:gap-4 divide-y sm:divide-y-0 sm:divide-x sm:px-2 sm:px-4 mb-2">
             <div class="flex flex-col p-2">
                 <p class="text-xs">
                     Salary Min.
