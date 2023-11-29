@@ -1,6 +1,12 @@
 <template>
+    <div class="flex flex-row gap-1 sm:gap-2 h-16 sm:p-4 sm:justify-end items-center sm:hidden">
+        <JobCategoryFilterDropdownMenu
+            :filters="filters"
+            @updateFilters="updateFilters"
+        />
+    </div>
      <span class="flex flex-row gap-2 relative w-full">
-        <div class="w-1/6 py-4 px-2 sticky top-24 h-64">
+        <div class="w-1/6 py-4 px-2 sticky top-24 h-64 hidden sm:block">
             <h1 class="text-2xl font-bold mb-2 capitalize">Filters</h1>
             <span class="divide-y">
                 <div class="py-4">
@@ -13,7 +19,7 @@
                 </div>
             </span>
         </div>
-        <div class="p-6 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+        <div class="grid grid-cols-2 md:grid-cols-3 w-full gap-2 sm:p-2">
             <template v-if="filteredJobs.length > 0 && !isLoadingJobs">
                 <JobCard :job="(liveJob as Job)" :showButtons="false" v-for="(liveJob,index) of filteredJobs" :key="index"/>
             </template>
@@ -36,6 +42,7 @@ import type { Job } from '@/types';
 import { getPaginatedCollectionGroupWhere } from '@/firebase/utils';
 import JobCard from '@/components/cards/JobStoreCard.vue';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
+import JobCategoryFilterDropdownMenu from '@/components/props/JobCategoryFilterDropdownMenu.vue';
 const liveJobs:Ref<Job[]> = ref([]);
 const isLoadingJobs = ref(false);
 const filters = reactive({
@@ -47,6 +54,9 @@ const filteredJobs = computed(() => {
         return job.salaryMin >= filters.min && job.salaryMax <= filters.max
     })
 })
+const updateFilters = (newFilters) => {
+    filters.value = { ...newFilters };
+};
 onMounted(async() => {
     isLoadingJobs.value = true;
     const paginatedJobs = await getPaginatedCollectionGroupWhere('jobs', 'live', '==', true, ['updatedAt','desc'], 25)

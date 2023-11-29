@@ -1,13 +1,13 @@
 <template>
-    <div class="relative bg-white p-4 rounded-xl shadow transition-shadow duration-300 hover:shadow-xl">
+    <div class="relative bg-white p-2 sm:p-4 rounded-xl shadow transition-shadow duration-300 hover:shadow-xl">
         <template v-if="isPostingAd">
             <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
                 <LoadingSpinner :isLoading="isPostingAd" class="z-20"/>
             </div>
         </template>
-        <div class="relative w-full h-52 bg-gray-200 rounded-xl overflow-hidden">
+        <div class="relative w-full h-32 sm:h-52 sm:bg-gray-200 rounded-xl overflow-hidden">
             <template v-if="ad.images && ad.images.length > 0">
-                <ImageCarousel :images="ad.resizedImages" class="h-full object-cover"/>
+                <ImageCarousel :images="ad.resizedImages" :classes="'h-32 sm:h-full object-cover'"/>
             </template>
             <template v-else>
                 <div class="flex items-center justify-center h-full">
@@ -15,7 +15,7 @@
                 </div>
             </template>
         </div>
-        <div class="mt-4 space-y-2">
+        <div class="sm:mt-4 space-y-2">
             <h3 class="text-2xl font-bold">{{ ad.variety }}</h3>
             <div>
                 <div class="flex flex-row gap-2 items-center justify-center mb-2 rounded-md h-10 border-y">

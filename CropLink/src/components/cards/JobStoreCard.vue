@@ -6,7 +6,7 @@
             </div>
         </template>
         <div class="flex flex-row gap-4">
-            <p class="text-xl capitalize my-2 pl-4">{{ job.title }}</p>
+            <p class="text-xl capitalize my-2 pl-4 truncate">{{ job.title }}</p>
         </div>
         <div class="flex flex-row justify-between p-4">
             <p class="text-sm bg-slate-200/50 p-2 italic rounded-md">{{ isFirestoreTimestamp(job.createdAt) ? fromNow(job.createdAt) : job.createdAt  }}</p>
@@ -18,7 +18,7 @@
         <div class="flex flex-row gap-4 p-4">
             <p class="text-sm">{{ job.description.substring(0,197) + '...' }}</p>
         </div>
-        <div class="flex flex-row gap-4 divide-x px-4 mb-2">
+        <div class="grid gap-2 divide-y px-2 sm:px-4 mb-2">
             <div class="flex flex-col p-2">
                 <p class="text-xs">
                     Salary Min.
@@ -33,12 +33,6 @@
             </div>
         </div>
         <div class="w-full flex justify-end gap-4 pr-4 pb-4">
-            <template v-if="showButtons">
-                <ArrowUpTrayIcon v-if="!job.live" @click="onPost(job.jobId)" class="w-5 h-5 cursor-pointer text-cyan-600" />
-                <ArrowDownTrayIcon v-if="job.live" @click="onTakedown(job.jobId)" class="w-5 h-5  cursor-pointer text-cyan-600" />
-                <TrashIcon @click="onRemove(job.jobId)" class="w-5 h-5  cursor-pointer text-cyan-600" />
-                <PencilIcon @click="onEdit(job.jobId)" class="w-5 h-5  cursor-pointer text-cyan-600" />
-            </template>
             <EyeIcon @click="onView(job.jobId)" class="w-5 h-5  cursor-pointer text-cyan-600" />
         </div>
     </span>

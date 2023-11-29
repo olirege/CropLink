@@ -8,7 +8,12 @@
                 <img :src="variety.imageUrl" class="object-cover h-full w-full"/>
             </span>
         </div>
-        <div class="flex flex-row gap-2 h-16 p-4 justify-end">
+        <div class="flex flex-row gap-1 sm:gap-2 h-16 sm:p-4 sm:justify-end items-center">
+            <BuyerCategoryFilterDropdownMenu
+                :filters="filters"
+                :selectableVariety="selectableVariety"
+                @updateFilters="updateFilters"
+            />
             <Listbox
             :items="produce"
             v-model="selectedCategory"
@@ -23,7 +28,7 @@
             />
         </div>
         <span class="flex flex-row gap-2 relative w-full">
-            <div class="w-1/6 py-4 px-2 sticky top-24 h-64">
+            <div class="w-1/6 py-4 px-2 sticky top-24 h-64 hidden sm:block">
                 <h1 class="text-2xl font-bold mb-2 capitalize">Filters</h1>
                 <span class="divide-y">
                     <div class="py-4">
@@ -50,7 +55,7 @@
                     </span>
                 </span>
             </div>
-            <div class="flex flex-col gap-2 w-5/6 min-h-[500px]" v-if="!isLoadingAds && filteredAds.length > 0" id="buyerAds">
+            <div class="flex flex-col gap-2 w-fill sm:w-5/6 min-h-[500px]" v-if="!isLoadingAds && filteredAds.length > 0" id="buyerAds">
                 <BuyerStoreAdCard v-for="(ad,index) in filteredAds" :ad="ad" :key="index" :showButtons="false"/>
             </div>
             <div v-if="selectedCategory && isLoadingAds" class="w-full">
@@ -79,6 +84,7 @@ import { getPaginatedCollectionGroup } from '@/firebase/utils';
 import Listbox from '@/components/props/Listbox.vue';
 import BuyerStoreAdCard from '../cards/BuyerStoreAdCard.vue';
 import LoadingSpinner from '../props/LoadingSpinner.vue';
+import BuyerCategoryFilterDropdownMenu from '../props/BuyerCategoryFilterDropdownMenu.vue';
 const produce = vueRef([]);
 const isLoading = vueRef(false);
 const selectedCategory = vueRef('');
@@ -107,6 +113,9 @@ const filters = reactive({
     certifiedOrganic: false,
     offersShipping: false,
 })
+const updateFilters = (newFilters) => {
+    filters.value = { ...newFilters };
+};
 const filteredAds = computed(() => {
     if (!ads.value.docs || ads.value.docs.length === 0) {
         return [];

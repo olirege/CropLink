@@ -1,19 +1,19 @@
 <template>
-    <div class="p-5 flex flex-col gap-4">
+    <div class="sm:p-4 flex flex-col gap-2 sm:gap-4">
         <span class="rounded-md">
             <div id="seller-ad-banner" class="w-full h-96 relative">
                 <img :src="sellerSignature.storeBannerPic" class="bg-slate-500 w-full h-80 object-cover rounded-md" ref="bannerPic" v-if="!isLoadingProfile">
                 <div v-else class="bg-slate-500 w-full h-48 animate-pulse"></div>
-                <div class="absolute bottom-0 left-20 flex flex-row">
+                <div class="absolute bottom-0 left-4 sm:left-20 flex flex-row">
                     <img :src="sellerSignature.storeLogoResized" class="z-9 border-4 border-white rounded-full w-36 h-36 bg-indigo-500" ref="profilePic" v-if="!isLoadingProfile">
                     <div v-else class="z-10 border-4 border-white rounded-full w-36 h-36 bg-indigo-500 animate-pulse"></div>
-                    <div class="relative ml-5 p-1">
+                    <div class="relative ml-5 p-1 hidden sm:block">
                         <div class="absolute bottom-1 truncate flex flex-row">
                             <p class="text-4xl font-bold">{{ props.sellerName }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="absolute bottom-20 right-20">
+                <div class="absolute bottom-20 right-4 sm:right-20">
                     <button class="bg-slate-600/70 px-4 py-2 rounded-md flex flex-row gap-2 items-center"
                         @click="onMessage">
                         <EnvelopeIcon class="w-6 h-6 text-white"/>
@@ -22,22 +22,10 @@
                 </div>
             </div>
         </span>
-        <div class="flex flex-row gap-4 pt-6 border-y mt-4 sticky bg-white top-16 h-16 z-[9]">
-            <div @click="scrollTo('Information')" :class="tab == 'Information' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
-                Information
-            </div>
-            <div @click="scrollTo('Reviews')" :class="tab == 'Reviews' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
-                Reviews
-            </div>
-            <div @click="scrollTo('Work Opportunities')" :class="tab == 'Work Opportunities' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
-                Work Opportunities
-            </div>  
-            <div @click="scrollTo('Product Listings')" :class="tab == 'Product Listings' ? 'text-cyan-500 underline' : ''" class="font-bold hover:underline">
-                Product Listings
-            </div>
+        <div class="relative p-1 sm:hidden">
+            <p class="text-2xl font-bold">{{ props.sellerName }}</p>
         </div>
-        <span class="border rounded-md shadow">
-            <div v-if="!isLoadingProfile" class="flex flex-col gap-2 p-4 rounded-b-md">
+        <div v-if="!isLoadingProfile" class="flex flex-col gap-2 sm:p-4 rounded-b-md sm:hidden">
                 <div class="flex flex-row items-center gap-2">
                     <span class="flex flex-row gap-1 items-center" v-if="sellerSignature.verifiedSeller">
                         <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
@@ -52,9 +40,39 @@
                     <p>{{ sellerSignature.location }}</p>
                 </div>
             </div>
-            <span class="grid grid-cols-2 gap-4" id="Information">
-                <span class="p-4">
-                    <div class="border-b p-4 flex flex-row gap-2 divide-x" v-if="!isLoadingProfile">
+        <div class="hidden sm:flex flex-row gap-4 pt-6 border-y mt-4 sticky bg-white top-16 h-16 z-[9]">
+            <div @click="scrollTo('Information')" :class="tab == 'Information' ? 'text-cyan-500 underline' : ''" class="cursor-pointer font-bold hover:underline">
+                Information
+            </div>
+            <div @click="scrollTo('Reviews')" :class="tab == 'Reviews' ? 'text-cyan-500 underline' : ''" class="cursor-pointer font-bold hover:underline">
+                Reviews
+            </div>
+            <div @click="scrollTo('Work Opportunities')" :class="tab == 'Work Opportunities' ? 'text-cyan-500 underline' : ''" class="cursor-pointer font-bold hover:underline">
+                Work Opportunities
+            </div>  
+            <div @click="scrollTo('Product Listings')" :class="tab == 'Product Listings' ? 'text-cyan-500 underline' : ''" class="cursor-pointer font-bold hover:underline">
+                Product Listings
+            </div>
+        </div>
+        <span class="border rounded-md shadow">
+            <div v-if="!isLoadingProfile" class="flex flex-col gap-2 p-4 rounded-b-md hidden">
+                <div class="flex flex-row items-center gap-2">
+                    <span class="flex flex-row gap-1 items-center" v-if="sellerSignature.verifiedSeller">
+                        <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
+                        <p>Verified</p>
+                    </span>
+                    <p class="p-1 px-2">{{ amountOfTime }}</p>
+                    <p class="p-1 px-2">{{ sellerSignature.staffNumber }} staff</p>
+                    <p class="p-1 px-2">{{ sellerSignature.acreage }} acres</p>
+                </div>
+                <div class="flex flex-row gap-2 italic">
+                    <MapPinIcon class="w-5 h-5"/>
+                    <p>{{ sellerSignature.location }}</p>
+                </div>
+            </div>
+            <span class="grid grid-rows-2 sm:grid-rows-1 sm:grid-cols-2" id="Information">
+                <span class="flex items-center justify-center">
+                    <div class="sm:p-4 flex flex-row gap-2 divide-x" v-if="!isLoadingProfile">
                         <div class="flex flex-row gap-2 px-4 py-2">
                             <template v-if="sellerSignature.rating > 0">
                                 <p class="font-bold"><span class="text-6xl">{{ sellerSignature.rating }}</span> /5</p>
@@ -68,45 +86,13 @@
                             </template>
                         </div>
                         <span class="flex flex-col justify-center items-center px-4 py-2">
-                            <template v-if="sellerSignature.averageResponseTime">
+                            <!-- <template v-if="sellerSignature.averageResponseTime"> -->
                                 <p class="italic text-sm">average response rate</p>
-                                <p class="font-bold"> {{"≤" + sellerSignature.averageResponseTime }} hrs</p>
-                            </template>
+                                <!-- <p class="font-bold"> {{"≤" + sellerSignature.averageResponseTime }} hrs</p> -->
+                                <p class="font-bold"> {{"≤" + 2 }} hrs</p>
+                            <!-- </template> -->
                         </span>
                     </div>
-                    <span class="grid grid-cols-4 gap-2 w-full divide-x py-4">
-                        <div class="p-4">
-                            <p class="text-xl font-bold">Machinery</p>
-                            <ul class="list-disc pl-6">
-                                <li v-for="machine in sellerSignature.machinery">
-                                    <p class="text-xs italic">{{ machine }}</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="p-4">
-                            <p class="text-xl mb-2 font-bold">Plants</p>
-                            <span>
-                                <div v-for="plant in sellerSignature.plants" class="flex flex-row gap-1 items-center justify-between w-full space-y-1">
-                                    <p class="text-xs truncate ...">{{ plant.variety }}</p>
-                                    <p class="text-xs">{{ plant.amount }}</p>
-                                </div>
-                            </span>
-                        </div>
-                        <div class="p-4 space-y-2">
-                            <p class="text-xl mb-2 font-bold">Shipping</p>
-                            <div v-for="method in sellerSignature.shipping" class="flex flex-col">
-                                <p>{{ method.type }}</p>
-                                <p class="text-xs italic pl-2">Up to {{ method.distance }}KMs</p>
-                                <p class="text-xs italic pl-2">Max: {{ method.weight }}KGs</p>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <p class="text-xl mb-2 font-bold">Capabilities</p>
-                            <li v-for="capability in sellerSignature.capabilities" class="text-xs inline space-x-2">
-                                <p>{{ capability }}</p>
-                            </li>
-                        </div>
-                    </span>
                 </span>
                 <div class="grid grid-cols-3 p-4">
                     <template v-if="sellerSignature.storeImagesResized && sellerSignature.storeImagesResized.length > 0 ">
@@ -119,14 +105,49 @@
                 </div>
             </span>
         </span>
-        <span v-if="liveJobs.length > 0 && liveGigs.length > 0" class="border rounded-md shadow p-5" id="Work Opportunities">
+        <span class="sm:grid flex flex-col sm:grid-cols-4 gap-2 w-full divide-y sm:divide-y-0 sm:divide-x py-4 shadow border rounded-md">
+            <div class="p-2 sm:p-4">
+                <p class="text-xl font-bold">Machinery</p>
+                <ul class="list-disc pl-6">
+                    <li v-for="machine in sellerSignature.machinery">
+                        <p class=" italic">{{ machine }}</p>
+                    </li>
+                </ul>
+            </div>
+            <div class="p-2 sm:p-4">
+                <p class="text-xl mb-2 font-bold">Plant Count</p>
+                <span>
+                    <div v-for="plant in sellerSignature.plants" class="flex flex-row gap-1 items-center justify-between w-full space-y-1">
+                        <p class="truncate ...">{{ plant.variety }}</p>
+                        <p class="">{{ plant.amount }}</p>
+                    </div>
+                </span>
+            </div>
+            <div class="p-2 sm:p-4 space-y-2">
+                <p class="text-xl mb-2 font-bold">Shipping</p>
+                <div v-for="method in sellerSignature.shipping" class="flex flex-col">
+                    <p>{{ method.type }}</p>
+                    <p class="italic pl-2">Up to {{ method.distance }}KMs</p>
+                    <p class="italic pl-2">Max: {{ method.weight }}KGs</p>
+                </div>
+            </div>
+            <div class="p-2 sm:p-4">
+                <p class="text-xl mb-2 font-bold">Capabilities</p>
+                <ul class="list-disc pl-4">
+                    <li v-for="capability in sellerSignature.capabilities">
+                        <p>{{ capability }}</p>
+                    </li>
+                </ul>
+            </div>
+        </span>
+        <span v-if="liveJobs.length > 0 && liveGigs.length > 0" class="border rounded-md shadow p-2 sm:p-4" id="Work Opportunities">
             <div class="flex items-center justify-start h-12 bg-gradient-to-r from-sky-500/40 to-white rounded-t-md">
                 <h2 class="pl-2 text-white text-2xl font-bold p-1">Work Opportunities</h2>
             </div>
-            <div class="flex flex-col gap-6 w-full p-2">
+            <div class="flex flex-col gap-6 w-full sm:p-2">
                 <div class="relative flex flex-col h-full w-full h-96" v-if="liveJobs.length > 0">
                     <h2 class="text-xl font-bold italic my-2 pl-2">Job Openings</h2>
-                    <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveJobs.length > 0">
+                    <div class="grid gap-x-2 sm:gap-x-6 gap-y-2 sm:gap-y-10 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveJobs.length > 0">
                         <JobCard :job="(job as Job)" v-for="job in liveJobs.slice(0,MAX_JOBS)"/>
                     </div>
                     <div v-else-if="liveJobs.length == 0">
@@ -143,7 +164,7 @@
                 </div>
                 <div class="flex flex-col h-full w-full relative h-96" v-if="liveGigs.length > 0">
                     <h2 class="text-xl font-bold italic my-2 pl-2">Small Gigs</h2>
-                    <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveGigs.length > 0">
+                    <div class="grid grid-cols-2 gap-x-2 sm:gap-x-6 gap-y-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveGigs.length > 0">
                         <GigCard :gig="(gig as Gig)" v-for="gig in liveGigs.slice(0,MAX_GIGS)"/>
                     </div>
                     <div v-else-if="liveGigs.length == 0">
@@ -160,11 +181,11 @@
                 </div>
             </div>
         </span>
-        <div class="p-5 border rounded-md shadow" v-if="liveAds.length > 0" id="Product Listings">
+        <div class="p-2 sm:p-4 border rounded-md shadow" v-if="liveAds.length > 0" id="Product Listings">
             <div class="flex items-center justify-start h-12 bg-gradient-to-r from-sky-500/40 to-white rounded-t-md">
                 <h2 class="pl-2 text-white text-2xl font-bold p-1">Product listings</h2>
             </div>
-            <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveAds.length > 0 && !isLoadingAds">
+            <div class="grid grid-cols-2 gap-x-2 sm:gap-x-6 gap-y-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveAds.length > 0 && !isLoadingAds">
                 <div v-for="ad in liveAds">
                     <template v-if="ad.adType == ACCOUNT_TYPES.SELLER">
                         <SellerAdThumbnailCard :ad="(ad as SellerAd)" :showButtons="false"/>

@@ -5,6 +5,7 @@ import { getFunctions } from 'firebase/functions';
 import { firebaseConfig } from "./config";
 import { getStorage, ref } from "firebase/storage";
 import * as firebaseui from "firebaseui";
+import './firebase-ui.css'
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app); 
 export const functions = getFunctions(app, "northamerica-northeast1");

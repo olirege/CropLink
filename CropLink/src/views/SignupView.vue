@@ -1,17 +1,25 @@
 <template>
-  <div>
-      <h1>This is a signup page</h1>
+  <div class="grid grid-cols-2 h-[500px]">
+    <div class="flex flex-col items-center  justify-center">
+      <img src="@/assets/croplink_logo.png" alt="CropLink Logo" class="rounded-full w-3/5">
+    </div>
+    <div class="flex flex-col gap-6 items-center justify-center relative">
+      <div class="flex flex-col gap-2">
+        <p class="text-6xl font-bold">CropLink</p>
+        <p class="text-2xl pl-2 italic">Connect Farmers and Buyers now</p>
+      </div>
       <div id="firebaseui-auth-container"></div>
-      <div id="loader">Loading...</div>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
-import { auth, ui } from '../firebase/main';
-import { onMounted, onBeforeUnmount } from 'vue';
+import { ui } from '../firebase/main';
+import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { EmailAuthProvider } from 'firebase/auth';
 import { useMainStore } from '@/stores/main';
 import { useRouter } from 'vue-router';
 const router = useRouter();
+const isLoading = ref(true);
 onMounted(() => {
   const uiConfig = 
   {
@@ -24,9 +32,8 @@ onMounted(() => {
       ],
       signInSuccessUrl: '/',
       callBacks: {
-        uiShown: () => {
-          console.log("uiShown")
-          document.getElementById('loader')!.style.display = 'none';
+        uiShown: (e) => {
+          console.log(e)
         },
         signInSuccessWithAuthResult: (authResult:any) => {
           console.log(authResult)
@@ -48,3 +55,8 @@ onBeforeUnmount(() => {
   ui.delete();
 });
 </script>
+<style scoped>
+body #firebaseui-auth-container {
+  position: relative;
+}
+</style>

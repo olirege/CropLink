@@ -1,24 +1,27 @@
 <template>
-    <div class="flex items-center shadow p-2 h-16 cursor-pointer hover:bg-slate-300/20 transform transition-all" @click="onClick">
+    <div class="flex items-center shadow px-2 sm:p-2 h-16 cursor-pointer hover:bg-slate-300/20 transform transition-all" @click="onClick">
         <table class="table-fixed w-full border-collapse">
             <tbody>
                 <tr>
-                    <td ><p>{{ ad.variety }}</p></td>
+                    <td><p class="truncate">{{ ad.variety }}</p></td>
                     <td >
-                        <span class="flex flex-row items-center gap-2">
-                            <ScaleIcon class="h-4 w-4" />
-                            <p>~{{ ad.tons }} tons</p>
-                        </span>
+                        <div class="flex flex-col sm:table-cell">
+                            <span class="flex flex-row items-center gap-2">
+                                <ScaleIcon class="h-4 w-4" />
+                                <p class="text-xs sm:text-sm">~{{ ad.tons }} tons</p>
+                            </span>
+                            <p class="sm:hidden text-xs sm:text-sm truncate"><span v-currency="ad.minCostPerTon"/>-<span v-currency="ad.maxCostPerTon"/>/ ton</p>
+                        </div>
                     </td>
-                    <td ><p class="text-sm truncate"><span v-currency="ad.minCostPerTon"/>-<span v-currency="ad.maxCostPerTon"/>/ ton</p></td>
-                    <td >
+                    <td class="hidden sm:table-cell"><p class="text-sm truncate"><span v-currency="ad.minCostPerTon"/>-<span v-currency="ad.maxCostPerTon"/>/ ton</p></td>
+                    <td class="hidden sm:table-cell">
                         <span class="flex flex-row items-center gap-2">
                             <MapPinIcon class="h-4 w-4"/>
                             <p>{{ ad.location }}</p>
                         </span>
                     </td>
-                    <td ><p class="italic text-sm">{{ ad.certifiedOrganic ? 'Certified Organic' : 'Not Certified Organic' }}</p></td>
-                    <td ><p class="italic bg-slate-200 p-1 rounded-md text-center">{{ fromNow(ad.postedOn)}}</p></td>
+                    <td class="hidden sm:table-cell"><p class="italic text-sm">{{ ad.certifiedOrganic ? 'Certified Organic' : 'Not Certified Organic' }}</p></td>
+                    <td class="sm:table-cell"><p class="italic bg-slate-200 p-1 rounded-md text-center">{{ fromNow(ad.postedOn)}}</p></td>
                 </tr>
             </tbody>
         </table>

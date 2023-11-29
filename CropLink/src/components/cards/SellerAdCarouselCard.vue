@@ -1,8 +1,8 @@
 <template>
-    <div class="relative bg-white rounded-xl" @click="onViewAd(ad.adId)">
-        <div class="relative w-full h-28 rounded-xl overflow-hidden">
+    <div class="relative bg-white rounded-xl flex flex-col gap-2" @click="onViewAd(ad.adId)">
+        <div class="relative w-full max-h-32 rounded-xl overflow-hidden">
             <template v-if="ad.images && ad.images.length > 0">
-                <ImageCarousel :images="ad.resizedImages" :classes="'h-32 w-32'"/>
+                <ImageCarousel :images="ad.resizedImages" :classes="'max-h-32 w-32'"/>
             </template>
             <template v-else>
                 <div class="flex items-center justify-center h-full">
@@ -10,12 +10,12 @@
                 </div>
             </template>
         </div>
-        <div class="mt-4 space-y-2">
+        <div class="max-h-32">
             <h3 class="text-1xl font-bold">{{ ad.variety }}</h3>
             <div class="flex flex-row gap-2 text-sm justify-between">
                 <p class="font-semibold" v-currency="ad.pricePerTon">/tons</p> 
             </div>
-            <div class="flex flex-row gap-2 text-sm justify-between">
+            <div class="flex flex-row gap-2 text-sm">
                 <p>{{ ad.tons }}</p>tons
             </div>
         </div>
