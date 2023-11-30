@@ -32,6 +32,10 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 const initApp = () => {
+    const loadingElement = document.getElementById('main__loading');
+    if (loadingElement) {
+      loadingElement.remove();
+    }
     app = createApp(App)
     app.use(createPinia())
     app.directive('currency', currency)

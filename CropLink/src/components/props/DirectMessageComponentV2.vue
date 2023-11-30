@@ -11,7 +11,7 @@
         </div>
     </template>
     <template v-if="open">
-        <div class="w-80 h-96 fixed bottom-0 right-1 bg-white z-10 border-4 rounded-t-md shadow-md">
+        <div class="w-full h-full sm:w-80 sm:h-96 fixed bottom-0 sm:right-1 bg-white z-10 border-4 rounded-t-md shadow-md">
             <div class="p-4 w-full mx-auto rounded-lg flex flex-col space-y-4">
                 <div class="flex justify-between items-center flex-row gap-4 border-b pb-2" @click="onOpen(false)">
                     <h1 class="text-xl font-semibold">Messaging</h1>
@@ -32,7 +32,7 @@
         </div>
     </template>
     <template v-if="openDm">
-        <div class="w-96 h-5/6 fixed bottom-0 right-1 bg-white z-10 border-4 rounded-t-md shadow-md">
+        <div class="w-full h-full sm:w-96 sm:h-5/6 fixed bottom-0 sm:right-1 bg-white z-10 border-4 rounded-t-md shadow-md">
             <div class="flex flex-col h-full p-4 w-full mx-auto rounded-lg space-y-4">
                 <div class="flex justify-between items-center flex-row gap-4 border-b pb-2" @click="onViewDm('',false)">
                     <h1 class="text-xl font-semibold">Send a Message</h1>

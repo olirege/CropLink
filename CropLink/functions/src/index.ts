@@ -1087,7 +1087,7 @@ export const createTransaction = onCall(callableOptions, async (request:Callable
         if (response.data) {
             const transactionRef = admin.firestore().collection("transactions").doc(request.data.contractId);
             logger.info("createTransaction transactionRef", transactionRef);
-            await transactionRef.set({ ...response.data, ...escrowPayload, sellerId: contractData.sellerId, buyerId: contractData.buyerId, createdAt: admin.firestore.FieldValue.serverTimestamp(), contractId: contractData.id });
+            await transactionRef.set({ ...response.data, ...escrowPayload, sellerId: contractData.sellerId, buyerId: contractData.buyerId, createdAt: admin.firestore.FieldValue.serverTimestamp(), contractId: contractData.id, adId: contractData.adId });
             return { landingPage: response.data.landing_page, transactionId: response.data.id };
         } else {
             throw new HttpsError("internal", ERROR_CODES["internal"]);

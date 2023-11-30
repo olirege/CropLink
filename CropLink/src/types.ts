@@ -140,3 +140,6 @@ export type Application = {
     email?: string;
     phone?: string;
 };
+export type Transaction = {
+    [key: string]: any;
+}

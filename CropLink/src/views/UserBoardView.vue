@@ -47,6 +47,9 @@
                     <ContractContentComponent/>
                 </TabPanel>
                 <TabPanel>
+                    <TransactionContentComponent/>
+                </TabPanel>
+                <TabPanel>
                     <JobsContentComponent/>
                 </TabPanel>
                 <TabPanel>
@@ -74,14 +77,16 @@ import GigsContentComponent from '@/components/userboard_components/GigsContentC
 import ApplicationsContentComponent from '@/components/userboard_components/ApplicationsContentComponent.vue';
 import ContractContentComponent from '@/components/userboard_components/ContractsContentComponent.vue';
 import JobsContentComponent from '@/components/userboard_components/JobsContentComponent.vue';
+import TransactionContentComponent from '@/components/userboard_components/TransactionContentComponent.vue';
 const { profile } = storeToRefs(useMainStore());
 const ACCOUNT_TYPES = useMainStore().ACCOUNT_TYPES;
 const selectedTab:Ref<number> = ref(0);
 const TAB_CATEGORIES = {
     ADS: "Ads",
     CONTRACTS: "Contracts",
-    JOBS: "Job posts",
+    TRANSACTIONS: "Transactions",
+    JOBS: "Jobs",
     GIGS: "Gigs",
-    APPLICATIONS: "Applications",
+    APPLICATIONS: "Resumes",
 }
 </script>

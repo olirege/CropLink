@@ -1,12 +1,12 @@
 <template>
-    <div class="sticky top-0">
-        <div class="border rounded-md p-4 flex flex-col gap-4" v-if="transaction.id">
+    <div class="sm:sticky sm:top-0">
+        <div class="border rounded-md p-2 sm:p-4 flex flex-col gap-4" v-if="transaction.id">
             <div class="flex flex-row justify-between gap-4">
                 <label>Escrow Transaction:</label> 
                 <p class="font-bold">{{ transaction.id }}#</p>
             </div>
             <p>{{ transaction.description }}</p>
-            <div class="ml-2 flex flex-col">
+            <div class="sm:ml-2 flex flex-col">
                 <div class="flex flex row gap-4">
                     <label class="font-bold">Amount:</label>
                     <p>{{ transaction.items[0].schedule[0].amount }}</p>
@@ -19,30 +19,34 @@
                     <label class="font-bold">Buyer:</label>
                     <p>{{ transaction.items[0].schedule[0].payer_customer }}</p>
                 </div>
-                <div class="flex flex-col gap-4 p-2">
+                <div class="flex flex-col gap-2 sm:gap-4 mt-2 ">
                     <label class="font-bold">Payment status:</label>
                     <div class="flex flex-row gap-4 justify-between">
-                        <div class="flex flex-col">
+                        <div class="flex flex-col items-center p-2">
                             <label>Sent</label>
-                            <p>{{ transaction.items[0].schedule[0].status.payment_sent }}</p>
+                            <CheckIcon class="text-green-500 w-5 h-5" v-if="transaction.items[0].schedule[0].status.payment_sent" />
+                            <XMarkIcon v-else class="text-red-500 w-5 h-5"/>
                         </div>
-                        <div class="flex flex-col">
+                        <div class="flex flex-col items-center p-2">
                             <label>Recieved</label>
-                            <p>{{ transaction.items[0].schedule[0].status.payment_sent }}</p>
+                            <CheckIcon class="text-green-500 w-5 h-5" v-if="transaction.items[0].schedule[0].status.payment_sent" />
+                            <XMarkIcon v-else class="text-red-500 w-5 h-5"/>
                         </div>
-                        <div class="flex flex-col">
+                        <div class="flex flex-col items-center p-2">
                             <label>Secured</label>
-                            <p>{{ transaction.items[0].schedule[0].status.secured }}</p>
+                            <CheckIcon class="text-green-500 w-5 h-5" v-if="transaction.items[0].schedule[0].status.secured" />
+                            <XMarkIcon v-else class="text-red-500 w-5 h-5"/>
                         </div>
-                        <div class="flex flex-col">
+                        <div class="flex flex-col items-center p-2">
                             <label>Disbursed</label>
-                            <p>{{ transaction.items[0].schedule[0].status.disbursed_to_beneficiary }}</p>
+                            <CheckIcon class="text-green-500 w-5 h-5" v-if="transaction.items[0].schedule[0].status.disbursed_to_beneficiary" />
+                            <XMarkIcon v-else class="text-red-500 w-5 h-5"/>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-else>
+        <div v-else class="flex items-center justify-center h-[300px]">
             <LoadingSpinner :isLoading="isLoadingTransaction" />
         </div>
         <CardButton @click="goToLandingPage" :classes="'w-full'">View</CardButton>
@@ -56,6 +60,7 @@ import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import { useModalStore } from '@/stores/modals';
 import { storeToRefs } from 'pinia';
 import { useFirebaseFunctionCall } from '@/firebase/utils';
+import { CheckIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 const { notifications } = storeToRefs(useModalStore());
 const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const props = defineProps({

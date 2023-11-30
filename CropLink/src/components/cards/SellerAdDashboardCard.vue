@@ -133,7 +133,7 @@ const onEditAd = async (adId:string) => {
     if(!adId) return;
     console.log("removeAd", adId);
     modals.value['editad'] = true;
-    modals.value['context'] = ad;
+    modals.value['context'] = props.ad;
 }
 const onContactWinner = (adId:string) => {
     if(!adId) return;

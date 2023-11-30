@@ -18,18 +18,18 @@
         <div class="flex flex-row gap-4 p-4">
             <p class="text-sm">{{ job.description.substring(0,197) + '...' }}</p>
         </div>
-        <div class="grid gap-2 divide-y px-2 sm:px-4 mb-2">
+        <div class="flex flex-col gap-2 sm:gap-4 divide-y sm:px-2 sm:px-4 mb-2">
             <div class="flex flex-col p-2">
                 <p class="text-xs">
                     Salary Min.
                 </p>
-                <p class="text-sm font-bold" v-currency="job.salaryMin"></p>
+                <p class="text-xl" v-currency="job.salaryMin"></p>
             </div>
             <div class="flex flex-col p-2">
                 <p class="text-xs">
                     Salary Max.
                 </p>
-                <p class="text-sm font-bold" v-currency="job.salaryMax"></p>
+                <p class="text-xl" v-currency="job.salaryMax"></p>
             </div>
         </div>
         <div class="w-full flex justify-end gap-4 pr-4 pb-4">

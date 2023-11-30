@@ -6,7 +6,7 @@
             <p class="block text-sm font-medium text-gray-700" v-if="!dm.lastContext">{{ dm.lastSender? `${dm.lastSender.substring(0,5)} says:` : '' }}</p>
             <p class="block text-sm font-medium text-gray-700" v-else-if="dm.lastContext && dm.lastContext.__key == 'invitation'">{{ dm.lastSender? `${dm.lastSender.substring(0,5)} invited you to chat` : '' }}</p>
             <p class="block text-sm font-medium text-gray-700" v-else-if="dm.lastContext && dm.lastContext.__key == 'application'">{{ dm.lastSender? `${dm.lastSender.substring(0,5)} responded to your application` : '' }}</p>
-            <p class="block text-sm text-gray-500 truncate italic">{{ dm.lastMessage ? dm.lastMessage : '' }}</p>
+            <p class="block text-sm text-gray-500 truncate italic" v-else>{{ dm.lastMessage ? dm.lastMessage : '' }}</p>
         </div>
     </span>
 </template>

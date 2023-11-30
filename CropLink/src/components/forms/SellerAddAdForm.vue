@@ -24,8 +24,8 @@
         />
         <label class="block text-sm font-medium text-gray-700" for="pricePerTon">Price per Ton</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="number" id="pricePerTon" v-model="newCrop.pricePerTon">
-        <label class="block text-sm font-medium text-gray-700" for="tons">Quantity</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="tons" v-model="newCrop.tons">tons
+        <label class="block text-sm font-medium text-gray-700" for="tons">Quantity(tons)</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="tons" v-model="newCrop.tons">
         <label class="block text-sm font-medium text-gray-700" for="expectedHarvestDate">Expected Harvest Date</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="date" id="expectedHarvestDate" v-model="newCrop.expectedHarvestDate">
         <label class="block text-sm font-medium text-gray-700" for="biddingEndTime">Bidding End Time (Bidding ends at 17:00 EST)</label>

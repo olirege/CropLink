@@ -1,8 +1,8 @@
 <template>
     <div class="relative bg-white rounded-xl flex flex-col gap-2" @click="onViewAd(ad.adId)">
-        <div class="relative w-full max-h-32 rounded-xl overflow-hidden">
+        <div class="relative w-full min-h-32 max-h-32 rounded-xl overflow-hidden">
             <template v-if="ad.images && ad.images.length > 0">
-                <ImageCarousel :images="ad.resizedImages" :classes="'max-h-32 w-32'"/>
+                <ImageCarousel :images="ad.resizedImages" :classes="'min-h-32 max-h-32 max-w-32 min-w-32'"/>
             </template>
             <template v-else>
                 <div class="flex items-center justify-center h-full">

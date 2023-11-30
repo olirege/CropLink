@@ -1,13 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="/src/assets/croplink_logo.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CropLink</title>
-  </head>
-  <body>
-    <div id="app" class="overflow-y-scroll min-h-screen h-screen"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/src/assets/croplink_logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CropLink</title>
+</head>
+<body>
+  <div id="main__loading" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  ">
+    <img src="/src/assets/croplink_logo_small.png" alt="Loading" style="
+      border-radius: 9999px;
+    ">
+  </div>
+  <div id="app" style="
+    overflow-y: scroll;
+    min-height: 100vh;
+    height: 100vh;
+  "></div>
+  <script type="module" src="/src/main.ts"></script>
+  <script>
+    window.onload = function() {
+      const loading = document.getElementById('main__loading');
+      loading.style.display = 'none';
+    }
+  </script>
+</body>
 </html>

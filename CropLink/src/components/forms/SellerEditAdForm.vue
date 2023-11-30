@@ -14,24 +14,35 @@
 
         </div>
         <label class="block text-sm font-medium text-gray-700" for="type">Type</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="text" id="type" v-model="newCrop.type">
+        <Listbox
+        :items="produces"
+        v-model="newCrop.type"
+        placeholder="Select a Produce"
+        itemLabel="id"
+        />
         <label class="block text-sm font-medium text-gray-700" for="variety">Variety</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="text" id="variety" v-model="newCrop.variety">
-        <label class="block text-sm font-medium text-gray-700" for="yieldTonnage">Yield Tonnage</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="yieldTonnage" v-model="newCrop.yieldTonnage">
+        <Listbox
+        :items="selectableVariety"
+        v-model="newCrop.variety"
+        placeholder="Select a Variety"
+        :disabled="!newCrop.type"
+        />
+        <label class="block text-sm font-medium text-gray-700" for="pricePerTon">Price per Ton</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="pricePerTon" v-model="newCrop.pricePerTon">
+        <label class="block text-sm font-medium text-gray-700" for="tons">Quantity(tons)</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="tons" v-model="newCrop.tons">
         <label class="block text-sm font-medium text-gray-700" for="expectedHarvestDate">Expected Harvest Date</label>
         <input class="mt-1 p-2 w-full rounded-md border" type="date" id="expectedHarvestDate" v-model="newCrop.expectedHarvestDate">
-        <label class="block text-sm font-medium text-gray-700" for="price">Price</label>
-        <input class="mt-1 p-2 w-full rounded-md border" type="number" id="price" v-model="newCrop.price">
+        <label class="block text-sm font-medium text-gray-700" for="biddingEndTime">Bidding End Time (Bidding ends at 17:00 EST)</label>
+        <input class="mt-1 p-2 w-full rounded-md border" type="date" id="biddingEndTime" v-model="newCrop.biddingEndTime">
     </div>
     <div class="flex justify-end space-x-2 mt-4">
-        <button 
+        <CardButton 
         @click="$emit('close')"
         type="button"
-        class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
             Cancel
-        </button>
+        </CardButton>
         <ButtonWithLoading 
         @click="onConfirm"
         :isLoading="isLoading"
@@ -41,12 +52,15 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, reactive, type PropType } from 'vue';
+import { ref, reactive, type PropType, type Ref, computed, onMounted } from 'vue';
 import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { storeToRefs } from 'pinia';
 import { useModalStore } from '@/stores/modals';
 import { useFirebaseFunctionCall } from '@/firebase/utils';
 import { type SellerAd } from '@/types';
+import Listbox from '@/components/props/Listbox.vue';
+import { useMainStore } from '@/stores/main';
+import CardButton from '@/components/props/CardButton.vue';
 const { notifications } = storeToRefs(useModalStore());
 const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const props = defineProps({
@@ -85,7 +99,8 @@ const deepAdCopy = JSON.parse(JSON.stringify(props.ad));
 const newCrop = reactive({
     type: deepAdCopy.type,
     variety: deepAdCopy.variety,
-    yieldTonnage: deepAdCopy.yieldTonnage,
+    pricePerTon: deepAdCopy.pricePerTon,
+    tons: deepAdCopy.tons,
     expectedHarvestDate: deepAdCopy.expectedHarvestDate,
     price: deepAdCopy.price,
     resizedImages: deepAdCopy.resizedImages,
@@ -124,4 +139,27 @@ const onConfirm = async () => {
     await callFunction();
     emits("close")
 }
+
+const isLoadingProduce = ref(false);
+const produces:Ref<Produce[]> = ref([]);
+const loadProduce = async () => {
+    isLoadingProduce.value = true;
+    produces.value = await useMainStore().getProduce() as Produce[];
+    console.log("produce", produces.value);
+    isLoadingProduce.value = false;
+};
+const selectableVariety = computed(()=>{
+    if(newCrop.type === "") {
+        return [];
+    }
+    const produce = produces.value.find((produce)=>produce.id === newCrop.type);
+    if(produce) {
+        return produce.sub;
+    }
+    return [];
+})
+onMounted(async () => {
+    console.log("mounted");
+    await loadProduce();
+})
 </script>

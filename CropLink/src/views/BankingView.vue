@@ -1,7 +1,7 @@
 <template>
-    <div class="grid grid-cols-2 gap-x-4 p-5">
+    <div class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-x-4 sm:p-4">
         <SellerAdCard :ad="ad" :showButtons="false" v-if="contract && contract.type == 'sell'"/>
-        <GigDetailCard :gig="contract.context" :showButtons="false" v-else-if="contract && contract.type == 'gig'"/>
+        <GigDetailCard :gig="contract.context" :showButtons="false" v-else-if="contract && contract.type == 'gig'" class="sm:order-first order-last"/>
         <div v-else>
             <p>
                 Failed to load ad

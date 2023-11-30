@@ -13,7 +13,7 @@
                 </div>
             </span>
         </span>
-        <span class="grid grid-row-3 sm:grid-cols-3 gap-4">
+        <span class="grid grid-row-3 sm:grid-col-2 md:grid-cols-3 gap-4">
             <span class="flex flex-row sm:p-2 sm:p-0" @click="goToSellerAds(adGroup.id, adGroup.companyName)">
                 <div class="flex flex-col gap-1 w-full">
                     <div v-if="adGroup.rating">
@@ -42,12 +42,12 @@
                 </div>
             </span>
             <template v-if="!isLoadingAds && liveAds.length > 0">
-                <div class="flex flex-row justify-between gap-2">
+                <div class="m-auto inline grid grid-cols-3 gap-2">
                     <SellerAdCarouselCard  v-for="ad in liveAds" :ad="ad" :key="ad.adId"/>
                 </div>
             </template>
             <template v-if="adGroup && adGroup.storeImagesResized && adGroup.storeImagesResized.length > 0">
-                <div class="flex flex-row sm:justify-center">
+                <div class="m-auto">
                     <div class="sm:w-56">
                         <ImageCarousel :images="adGroup.storeImagesResized" :classes="'sm:h-56 sm:w-56'"/>
                     </div>

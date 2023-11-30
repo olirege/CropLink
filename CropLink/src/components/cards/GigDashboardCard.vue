@@ -26,7 +26,7 @@
         <div class="flex flex-row gap-4 p-2 sm:p-4">
             <p class="text-sm truncate md:text-clip">{{ gig.description.substring(0,197) + '...' }}</p>
         </div>
-        <div class="flex sm:flex-row flex-col gap-2 sm:gap-4 divide-y sm:divide-y-0 sm:divide-x sm:px-2 sm:px-4 mb-2">
+        <div class="flex flex-col gap-2 divide-y px-2">
             <div class="flex flex-col p-2 justify-between">
                 <p class="text-xs italic">Milestones</p>
                 <p class="text-2xl">{{ gig.milestones.length }}</p>

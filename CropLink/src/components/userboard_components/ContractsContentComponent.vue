@@ -6,11 +6,11 @@
         </div>
         <div class="p-2">
             <span class="text-sm font-medium text-slate-300">Accepted</span>
-            <p class="text-4xl text-4xl font-bold text-slate-500">{{ numberOfAcceptedContracts }}</p>
+            <p class="text-4xl font-bold text-slate-500">{{ numberOfAcceptedContracts }}</p>
         </div>
         <div class="p-2">
             <span class="text-sm font-medium text-slate-300">Rejected</span>
-            <p class="text-4xl text-4xl font-bold text-slate-500">{{ numberOfRejectedContracts }}</p>
+            <p class="text-4xl font-bold text-slate-500">{{ numberOfRejectedContracts }}</p>
         </div>
     </div>
     <div class="sm:p-4">
