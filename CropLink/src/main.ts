@@ -4,11 +4,16 @@ import { auth }  from "./firebase/main";
 import { getDocument } from "./firebase/utils";
 import { useMainStore } from './stores/main';
 import currency from './directives/currency';
-import { storeToRefs } from 'pinia';
 let app: any;
 let profile: any;
+const dev = process.env.NODE_ENV === 'development';
 onAuthStateChanged(auth, async (user) => {
+    if (!dev) {
+        devByPass()
+        return;
+    } 
     if (user) {
+        console.log("User is signed in", user)
         try {
             profile = await getDocument("users", user.uid)
             if(profile) {
@@ -41,4 +46,13 @@ const initApp = () => {
     app.directive('currency', currency)
     app.use(router)
     app.mount('#app')
+}
+const devByPass = async () => {
+    console.log("TRIAL MODE")
+    const profile = await getDocument("users", import.meta.env.VITE_DEV_USER_UID)
+    if(profile) {
+        if(!app) initApp();
+        useMainStore().setProfile(profile);
+        useMainStore().setUser({uid: import.meta.env.VITE_DEV_USER_UID});
+    }
 }

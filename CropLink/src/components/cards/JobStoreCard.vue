@@ -16,9 +16,9 @@
             <p class="text-sm truncate italic text-slate-500">{{ job.location }}</p>
         </div>
         <div class="flex flex-row gap-4 p-4">
-            <p class="text-sm">{{ job.description.substring(0,197) + '...' }}</p>
+            <p class="text-sm capitalize">{{ job.description.substring(0,197) + '...' }}</p>
         </div>
-        <div class="flex flex-col gap-2 sm:gap-4 divide-y sm:px-2 sm:px-4 mb-2">
+        <div class="flex flex-col gap-2 sm:gap-4 divide-y sm:px-2 sm:px-4 mb-2 justify-end">
             <div class="flex flex-col p-2">
                 <p class="text-xs">
                     Salary Min.

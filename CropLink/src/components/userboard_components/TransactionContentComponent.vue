@@ -34,10 +34,49 @@
                         <p class="truncate">{{ transaction.parties[0].customer }}</p>
                         <p class="truncate">{{ transaction.parties[1].customer }}</p>
                     </td>
-                    <td class="py-2 sm:text-base text-xs">
-                        <div class="flex flex-row gap-2 justify-between items-center w-3/4 sm:w-5/6"><p>Sent:</p><p :class="{'bg-red-500 rounded-full w-3 h-3': fetchTransactionStatus(transaction).payment_sent == false, 'bg-green-500 rounded-full w-3 h-3': fetchTransactionStatus(transaction).payment_sent == true}"></p></div>
-                        <div class="flex flex-row gap-2 justify-between items-center w-3/4 sm:w-5/6"><p>Recieved:</p><p :class="{'bg-red-500 rounded-full w-3 h-3': fetchTransactionStatus(transaction).payment_received == false, 'bg-green-500 rounded-full w-3 h-3': fetchTransactionStatus(transaction).payment_received == true}"></p></div>
-                        <div class="flex flex-row gap-2 justify-between items-center w-3/4 sm:w-5/6"><p>Disbursed:</p><p :class="{'bg-red-500 rounded-full w-3 h-3': fetchTransactionStatus(transaction).disbursed_to_beneficiary == false, 'bg-green-500 rounded-full w-3 h-3': fetchTransactionStatus(transaction).disbursed_to_beneficiary == true}"></p></div>
+                    <td class="py-2 sm:text-base text-xs space-y-1">
+                        <div class="flex flex-row gap-2 items-center w-1/2 justify-center rounded-md"
+                        :class="{
+                            'text-green-500': fetchTransactionStatus(transaction).payment_sent == true,
+                            'text-red-500': fetchTransactionStatus(transaction).payment_sent == false,
+                            'bg-green-500/20': fetchTransactionStatus(transaction).payment_sent == true,
+                            'bg-red-500/20': fetchTransactionStatus(transaction).payment_sent == false,
+                            'border border-green-500': fetchTransactionStatus(transaction).payment_sent == true,
+                            'border border-red-500': fetchTransactionStatus(transaction).payment_sent == false,
+                        }"
+                        >
+                            <p>Sent</p>
+                            <CheckIcon class="w-4 h-4 text-green-500" v-if="fetchTransactionStatus(transaction).payment_sent == true"/>
+                            <XMarkIcon class="w-4 h-4 text-red-500" v-else/>
+                        </div>
+                        <div class="flex flex-row gap-2 items-center w-1/2 justify-center rounded-md"
+                        :class="{
+                            'text-green-500': fetchTransactionStatus(transaction).payment_received == true,
+                            'text-red-500': fetchTransactionStatus(transaction).payment_received == false,
+                            'bg-green-500/20': fetchTransactionStatus(transaction).payment_received == true,
+                            'bg-red-500/20': fetchTransactionStatus(transaction).payment_received == false,
+                            'border border-green-500': fetchTransactionStatus(transaction).payment_received == true,
+                            'border border-red-500': fetchTransactionStatus(transaction).payment_received == false,
+                        }"
+                        >
+                            <p>Recieved</p>
+                            <CheckIcon class="w-4 h-4 text-green-500" v-if="fetchTransactionStatus(transaction).payment_received == true"/>
+                            <XMarkIcon class="w-4 h-4 text-red-500" v-else/>
+                        </div>
+                        <div class="flex flex-row gap-2 items-center w-1/2 justify-center rounded-md"
+                        :class="{
+                            'text-green-500': fetchTransactionStatus(transaction).disbursed_to_beneficiary == true,
+                            'text-red-500': fetchTransactionStatus(transaction).disbursed_to_beneficiary == false,
+                            'bg-green-500/20': fetchTransactionStatus(transaction).disbursed_to_beneficiary == true,
+                            'bg-red-500/20': fetchTransactionStatus(transaction).disbursed_to_beneficiary == false,
+                            'border border-green-500': fetchTransactionStatus(transaction).disbursed_to_beneficiary == true,
+                            'border border-red-500': fetchTransactionStatus(transaction).disbursed_to_beneficiary == false,
+                        }"
+                        >
+                            <p>Disbursed</p>
+                            <CheckIcon class="w-4 h-4 text-green-500" v-if="fetchTransactionStatus(transaction).disbursed_to_beneficiary == true"/>
+                            <XMarkIcon class="w-4 h-4 text-red-500" v-else/>
+                        </div>
                     </td>
                     <td class="py-2 w-5 text-center sm:text-left">
                         <button class="text-cyan-600 font-bold italic" @click="onViewTransaction(transaction.adId, transaction.contractId)">View</button>
@@ -63,6 +102,7 @@ import { useQuerySubscription } from '@/firebase/utils';
 import { useModalStore } from '@/stores/modals';
 import { useRouter } from 'vue-router';
 import { Timestamp } from 'firebase/firestore';
+import { CheckIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 const router = useRouter();
 const NOTIFICATION_TYPES = useModalStore().NOTIFICATION_TYPES;
 const { notifications } = storeToRefs(useModalStore());

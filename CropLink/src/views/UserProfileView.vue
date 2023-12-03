@@ -18,14 +18,14 @@
                     </div>
                     <div class="flex flex-col gap-4">
                         <span class="space-y-1">
-                            <div class="p-4 rounded-md bg-sky-500 h-8 flex items-center justify-center">
+                            <div class="p-4 rounded-md bg-blue-500 h-8 flex items-center justify-center">
                                 <h2 @click="triggerFileInput('profilePic')" class="cursor-pointer text-white">Change Avatar</h2>
                                 <input type="file" @change="onFileChange" ref="profilePic" name="profilePic" class="hidden"/>
                             </div>
                             <p class="text-xs">1MB max.</p>
                         </span>
                         <span class="space-y-1">
-                            <div class="p-4 rounded-md bg-sky-500 h-8 flex items-center justify-center">
+                            <div class="p-4 rounded-md bg-blue-500 h-8 flex items-center justify-center">
                                 <h2 @click="triggerFileInput('bannerPic')" class="cursor-pointer  text-white">Change Banner</h2>
                                 <input type="file" @change="onFileChange" ref="bannerPic" name="bannerPic" class="hidden"/>
                             </div>
@@ -33,7 +33,7 @@
                         </span>
                     </div>
                 </span>
-                <div class="flex flex-col gap-2">
+                <div class="relative flex flex-col gap-2">
                     <span class="flex flex-row gap-2 w-full">
                         <span class="space-y-2 w-full">
                             <label class="block text-sm font-medium text-gray-700" for="name">Name</label>
@@ -41,7 +41,7 @@
                         </span>
                         <span class="space-y-2 w-full">
                             <label class="block text-sm font-medium text-gray-700" for="name">Last Name</label>
-                            <input type="text" v-model="profileChanges.lastname" class="bg-gray-200/70 p-2 rounded-md border-1 w-full" />
+                            <input type="text" v-model="profileChanges.lastName" class="bg-gray-200/70 p-2 rounded-md border-1 w-full" />
                         </span>
                     </span>
                     <span class="space-y-2 w-3/4">
@@ -56,10 +56,15 @@
                     </span>
                 </div>
                 <div class="flex justify-end">
-                    <button @click="onAcceptProfileChanges" class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-36">
+                    <ButtonWithLoading :isLoading="isLoadingProfileChanges" @click="onAcceptProfileChanges" class="mt-2 mb-2 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 w-36">
                         Save
-                    </button>
+                    </ButtonWithLoading>
                 </div>
+                <template v-if="isLoadingProfileChanges">
+                    <div class="absolute top-0 left-0 w-full h-full bg-slate-200/50 z-10 flex justify-center items-center">
+                        <LoadingSpinner :isLoading="isLoadingProfileChanges" class="z-20"/>
+                    </div>
+                </template>
             </span>
             <div v-if="loading">
                 <LoadingSpinner :isLoading="loading" />
@@ -79,14 +84,14 @@
                     <span class="flex flex-row gap-4">
                         <div class="flex flex-col gap-4">
                             <span class="space-y-1">
-                                <div class="p-4 rounded-md bg-sky-500 h-8 flex items-center justify-center">
+                                <div class="p-4 rounded-md bg-blue-500 h-8 flex items-center justify-center">
                                     <h2 @click="triggerFileInput('storeLogo')" class="cursor-pointer text-white">Change Logo</h2>
                                     <input type="file" @change="onFileChange" ref="storeLogo" name="storeLogo" class="hidden"/>
                                 </div>
                                 <p class="text-xs">1MB max.</p>
                             </span>
                             <span class="space-y-1">
-                                <div class="p-4 rounded-md bg-sky-500 h-8 flex items-center justify-center">
+                                <div class="p-4 rounded-md bg-blue-500 h-8 flex items-center justify-center">
                                     <h2 @click="triggerFileInput('storeBannerPic')" class="cursor-pointer  text-white">Change Banner</h2>
                                     <input type="file" @change="onFileChange" ref="storeBannerPic" name="storeBannerPic" class="hidden"/>
                                 </div>
@@ -285,6 +290,7 @@ import { storeToRefs } from 'pinia';
 import { useDocumentSubscription, useFirebaseFunctionCall } from '@/firebase/utils';
 import type { Profile } from '@/types';
 import EscrowAccountComponent from '@/components/userboard_components/EscrowAccountComponent.vue';
+import ButtonWithLoading from '@/components/props/ButtonWithLoading.vue';
 import { useModalStore } from '@/stores/modals';
 import LoadingSpinner from '@/components/props/LoadingSpinner.vue';
 import Listbox from '@/components/props/Listbox.vue';
@@ -309,7 +315,7 @@ const { subscribe:profileSub, unsubscribe:profileUnsub } = useDocumentSubscripti
     user.value.uid,
     (data) => {
         profile.value = data as Profile;
-        profileChanges.value = data as Profile;
+        profileChanges.value = JSON.parse(JSON.stringify(data));
     },
     (error) => {
         notifications.value.show = true;
@@ -325,7 +331,9 @@ const { subscribe:storeSub, unsubscribe:storeUnsub } = useDocumentSubscription(
     user.value.uid,
     (data) => {
         store.value = data;
-        storeChange.value = JSON.parse(JSON.stringify(data));
+        for (const key in Object.keys(JSON.parse(JSON.stringify(data)))) {
+            storeChange.value[key] = data[key];
+        }
     },
     (error) => {
         notifications.value.show = true;
@@ -511,6 +519,7 @@ const onAcceptProfileChanges = async () => {
     deepCopy.profilePic = profileChanges.value.profilePic ? profileChanges.value.profilePic.split(",")[1] : null;
     deepCopy.bannerPic = profileChanges.value.bannerPic ? profileChanges.value.bannerPic.split(",")[1] : null;
     Object.keys(deepCopy).forEach((key) => (deepCopy[key] == null) && delete deepCopy[key]);
+    console.log("deepCopy", deepCopy)
     const { callFunction } = useFirebaseFunctionCall(
         'updateProfile',
         deepCopy,

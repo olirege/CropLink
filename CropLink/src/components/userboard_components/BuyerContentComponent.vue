@@ -32,7 +32,7 @@ import BuyerAdCard from '../cards/BuyerAdCard.vue';
 import { useModalStore } from '@/stores/modals';
 import { useMainStore } from '@/stores/main';
 import { storeToRefs } from 'pinia';
-import { ref, type Ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, type Ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useQuerySubscription } from '@/firebase/utils';
 import CardButton from '../props/CardButton.vue';
 import LoadingSpinner from '../props/LoadingSpinner.vue';

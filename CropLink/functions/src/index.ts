@@ -8,8 +8,10 @@ import * as admin from "firebase-admin";
 import { ERROR_CODES } from "./errors";
 import { deleteFileFromBucket, generateTransaction } from "./utils";
 import type { Ad, Contract, Transaction, Gig } from "./types";
-import * as sharp from "sharp";
+import sharp from "sharp";
 import axios from "axios";
+import casual from "casual";
+
 const service = require("../service/service.json");
 admin.initializeApp({
     credential: admin.credential.cert(service as admin.ServiceAccount),
@@ -863,6 +865,7 @@ export const terminateBidSession = onSchedule({
                 endedAt: "",
                 ready: [],
                 userSignature: userSignature,
+                total: highestBid.data().price,
             };
             logger.info("terminateBidSession", "chatRoomData", chatRoomData);
             await admin.firestore().collection("chatrooms").doc(chatroomId).set(chatRoomData);
@@ -1613,6 +1616,9 @@ export const increaseAdViewCount = onCall(callableOptions, async (request:Callab
     if (!request.data) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
     try {
         const adId = request.data.adId;
         const adRef = admin.firestore().collectionGroup("ads").where("id", "==", adId);
@@ -1633,6 +1639,9 @@ export const increaseSellerStoreViewCount = onCall(callableOptions, async (reque
     logger.info("increaseSellerStoreViewCount", request);
     if (!request.data) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
     }
     try {
         const sellerId = request.data.sellerId;
@@ -1655,6 +1664,9 @@ export const increaseGigViewCount = onCall(callableOptions, async (request:Calla
     if (!request.data) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
     try {
         const gigId = request.data.gigId;
         const gigRef = admin.firestore().collectionGroup("gigs").where("gigId", "==", gigId);
@@ -1676,6 +1688,9 @@ export const increaseJobViewCount = onCall(callableOptions, async (request:Calla
     if (!request.data) {
         throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
     }
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", ERROR_CODES["unauthenticated"]);
+    }
     try {
         const jobId = request.data.jobId;
         const jobRef = admin.firestore().collectionGroup("jobs").where("jobId", "==", jobId);
@@ -1691,4 +1706,265 @@ export const increaseJobViewCount = onCall(callableOptions, async (request:Calla
         logger.error(error);
         throw new HttpsError("internal", error);
     }
+});
+// dev
+const getProfilePic = async (bucket:any) => {
+    const BUCKET_PREFIX = process.env.BUCKETURL as string;
+    const num = Math.floor(Math.random() * 4) + 1;
+    const imagePath = `${BUCKET_PREFIX + `dev/person/farmer_pp${num}.png`}`;
+    logger.info("getProfilePic imagePath", imagePath);
+    const _imageUrl = new URL(imagePath);
+    logger.info("getProfilePic _imageUrl", _imageUrl);
+    const imageUrl = _imageUrl.pathname.substring(1);
+    logger.info("getProfilePic imageUrl", imageUrl);
+    const imageRef = bucket.file(imageUrl);
+    logger.info("getProfilePic imageRef", imageRef);
+    const [url] = await imageRef.getSignedUrl({ action: "read", expires: "03-09-2491" });
+    return url;
+};
+export const createTestUser = onSchedule({
+    schedule: "every day 17:00",
+    region: "northamerica-northeast1",
+    timeZone: "America/Toronto",
+    memory: "1GB" as MemoryOption,
+    }, async () => {
+    logger.info("createTestUser", casual.email);
+    // get images in storage ("/dev/persons/farmer_pp{num}.png")
+    const bucket = admin.storage().bucket();
+    logger.info("createTestUser bucker", bucket );
+    const users = [];
+    const promises = [];
+    const accountTypes = ["buyer", "seller"];
+    for ( let i = 0; i < 10; i++ ) {
+        const profilePic = await getProfilePic(bucket);
+        const uid = `test_${Math.floor(Math.random() * 1000000)}`;
+        const user = {
+            accountType: accountTypes[Math.floor(Math.random() * accountTypes.length)],
+            profilePic: profilePic,
+            profilePicResized: profilePic,
+            uid: uid,
+            escrowAuth: {
+                apiKey: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+                email: casual.email,
+            },
+            hasEscrow: true,
+            name: casual.first_name,
+            email: casual.email,
+            lastname: casual.last_name,
+            streetAddress: casual.address,
+            website: casual.url,
+        };
+        logger.info("createTestUser user", user);
+        users.push(user);
+    }
+    for ( const user of users ) {
+        promises.push(admin.firestore().collection("users").doc(user.uid).set(user));
+    }
+    await Promise.all(promises);
+});
+
+const getImages = async (imgs:string[]) => {
+    const bucket = admin.storage().bucket();
+    const BUCKET_PREFIX = process.env.BUCKETURL as string;
+    const images = [];
+    for ( const image of imgs ) {
+        const imagePath = `${BUCKET_PREFIX + `dev/crops/${image}`}`;
+        const _imageUrl = new URL(imagePath);
+        const imageUrl = _imageUrl.pathname.substring(1);
+        const imageRef = bucket.file(imageUrl);
+        const [url] = await imageRef.getSignedUrl({ action: "read", expires: "03-09-2491" });
+        images.push(url);
+    }
+    return images;
+};
+const getCompanyLogoAndBannerAndStore = async () => {
+    const bucket = admin.storage().bucket();
+    const BUCKET_PREFIX = process.env.BUCKETURL as string;
+    const randomInt = Math.floor(Math.random() * 4) + 1;
+    const logoPath = `${BUCKET_PREFIX + `dev/company/company_logo_${randomInt}.png`}`;
+    const bannerPath = `${BUCKET_PREFIX + `dev/company/banner_${randomInt}.png`}`;
+    const storeUrls = [];
+    const tractorPath = `${BUCKET_PREFIX + `dev/company/farm_tractor_${randomInt}.png`}`;
+    const _imageUrl = new URL(tractorPath);
+    const imageUrl = _imageUrl.pathname.substring(1);
+    const imageRef = bucket.file(imageUrl);
+    const [url] = await imageRef.getSignedUrl({ action: "read", expires: "03-09-2491" });
+    storeUrls.push(url);
+    const worker = bucket.file(`dev/company/farm_worker_${randomInt}.png`);
+    const [workerUrl] = await worker.getSignedUrl({ action: "read", expires: "03-09-2491" });
+    storeUrls.push(workerUrl);
+    const equipment = bucket.file(`dev/company/farm_equipment_${randomInt}.png`);
+    const [equipmentUrl] = await equipment.getSignedUrl({ action: "read", expires: "03-09-2491" });
+    storeUrls.push(equipmentUrl);
+    const _logoUrl = new URL(logoPath);
+    const templogoUrl = _logoUrl.pathname.substring(1);
+    const logoRef = bucket.file(templogoUrl);
+    const [logoUrl] = await logoRef.getSignedUrl({ action: "read", expires: "03-09-2491" });
+    const _bannerUrl = new URL(bannerPath);
+    const tempbannerUrl = _bannerUrl.pathname.substring(1);
+    const bannerRef = bucket.file(tempbannerUrl);
+    const [bannerUrl] = await bannerRef.getSignedUrl({ action: "read", expires: "03-09-2491" });
+    return { logoUrl, bannerUrl, storeUrls };
+};
+const dateBetweenTodayAndLastYear = () => {
+    const today = new Date();
+    const lastYear = new Date();
+    lastYear.setFullYear(today.getFullYear() - 1);
+    const randomDate = new Date(lastYear.getTime() + Math.random() * (today.getTime() - lastYear.getTime()));
+    return randomDate;
+};
+const dateBetweenTodayAndNextYear = () => {
+    const today = new Date();
+    const nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
+    const randomDate = new Date(today.getTime() + Math.random() * (nextYear.getTime() - today.getTime()));
+    return randomDate;
+};
+const dateBetweenTodayAndNextMonth = () => {
+    const today = new Date();
+    const nextMonth = new Date();
+    nextMonth.setMonth(today.getMonth() + 1);
+    const randomDate = new Date(today.getTime() + Math.random() * (nextMonth.getTime() - today.getTime()));
+    return randomDate;
+};
+const dateBetweenTodayAndLastMonth = () => {
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+    const randomDate = new Date(lastMonth.getTime() + Math.random() * (today.getTime() - lastMonth.getTime()));
+    return randomDate;
+};
+export const createTestAds = onSchedule({
+    schedule: "every day 17:00",
+    region: "northamerica-northeast1",
+    timeZone: "America/Toronto",
+    memory: "1GB" as MemoryOption,
+    }, async () => {
+    const testUsersRef = admin.firestore().collection("users").where("uid", ">=", "test_");
+    const testUsersDocs = await testUsersRef.get();
+    if ( testUsersDocs.empty ) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    const testUsers = testUsersDocs.docs.map((doc) => doc.data());
+    const promises = [];
+    const sellers = testUsers.filter((user) => user.accountType === "seller");
+    const buyers = testUsers.filter((user) => user.accountType === "buyer");
+    const prodTypes = {
+        "Wine Grapes": { variety: "Merlot", images: ["merlot_1.png", "merlot_2.png"], resizedImages: ["merlot_1_resized.jpg", "merlot_2_resized.jpg"] },
+        "Table Grapes": { variety: "Red Globe", images: ["chard_1.png"], resizedImages: ["chard_1_resized.jpg"] },
+        "Apples": { variety: "Ambrosia", images: ["apples_1.png"], resizedImages: ["apples_1_resized.jpg"] },
+        "Peaches": { variety: "Gloha ven", images: ["peach_1.png"], resizedImages: ["peach_1_resized.jpg"] },
+        "Pears": { variety: "Anjou", images: ["pear_1.png"], resizedImages: ["pear_1_resized.jpg"] },
+        "Strawberries": { variety: "Albion", images: ["strawberry_1.png"], resizedImages: ["strawberry_1_resized.jpg"] },
+        "Cherries": { variety: "Bing", images: ["cherries_1.png"], resizedImages: ["cherries_1_resized.jpg"] },
+        "Peppers": { variety: "Bell", images: ["peppers_1.png"], resizedImages: ["peppers_1_resized.jpg"] },
+        "Plums": { variety: "Black Amber", images: ["plums_1.png"], resizedImages: ["plums_1_resized.jpg"] },
+        "Tomatoes": { variety: "Beefsteak", images: ["tomato_1.png"], resizedImages: ["tomato_1_resized.jpg"] },
+        "Eggplants": { variety: "Black Beauty", images: ["eggplant_1.png"], resizedImages: ["eggplant_1_resized.jpg"] },
+    };
+    for (const seller in sellers) {
+        const chosenProductKey = Object.keys(prodTypes)[Math.floor(Math.random() * Object.keys(prodTypes).length)] as keyof typeof prodTypes;
+        const images = await getImages(prodTypes[chosenProductKey].images as string[]);
+        const resizedImages = await getImages(prodTypes[chosenProductKey].resizedImages as string[]);
+        const ad = {
+            adType: "seller",
+            biddingEndTime: dateBetweenTodayAndNextMonth(),
+            createdAt: dateBetweenTodayAndLastYear(),
+            expectedHarvestDate: dateBetweenTodayAndNextYear(),
+            id: `testad_${Math.floor(Math.random() * 1000000)}`,
+            images: images,
+            resizedImages: resizedImages,
+            live: true,
+            type: chosenProductKey,
+            uid: sellers[seller].uid,
+            variety: prodTypes[chosenProductKey].variety,
+            pricePerTon: casual.integer(100, 1000),
+            tons: casual.integer(100, 1000),
+            postedOn: dateBetweenTodayAndLastMonth(),
+        };
+        const { logoUrl, bannerUrl, storeUrls } = await getCompanyLogoAndBannerAndStore();
+        const updateStoreFront = {
+            createdAt: dateBetweenTodayAndLastYear(),
+            id: sellers[seller].uid,
+            companyName: casual.company_name,
+            companyEmail: casual.email,
+            companyWebsite: casual.url,
+            verifiedSeller: Math.random() >= 0.5,
+            bannerPic: bannerUrl,
+            bannerPicResized: bannerUrl,
+            profilePic: sellers[seller].profilePic,
+            profilePicResized: sellers[seller].profilePic,
+            updatedAt: new Date(),
+            staffNumber: Math.floor(Math.random() * 100),
+            acreage: Math.floor(Math.random() * 100),
+            plants: [
+                { "name": "Apples", "variety": "Ambrosia", "amount": Math.floor(Math.random() * 3000) },
+                { "name": "Peaches", "variety": "Glohaven", "amount": Math.floor(Math.random() * 3000) },
+                { "name": "Pears", "variety": "Anjou", "amount": Math.floor(Math.random() * 3000) },
+                { "name": "Strawberries", "variety": "Albion", "amount": Math.floor(Math.random() * 3000) },
+                { "name": "Wine Grapes", "variety": "Merlot", "amount": Math.floor(Math.random() * 3000) },
+                { "name": "Table Grapes", "variety": "Red Globe", "amount": Math.floor(Math.random() * 3000) },
+            ],
+            capabilities: [
+                "Harvesting",
+                "Pruning",
+                "Planting",
+                "Packing",
+                "Weeding",
+                "Fertilizing",
+                "Spraying",
+                "Irrigation",
+                "Tractor Work",
+                "Machinery Work",
+                "Other",
+            ],
+            machinery: [
+                "Tractor",
+                "Sprayer",
+                "Forklift",
+                "Loader",
+                "Other",
+            ],
+            shipping: [
+                { "distance": Math.floor(Math.random() * 100), "type": "Trailer", "weight": Math.floor(Math.random() * 1000) },
+                { "distance": Math.floor(Math.random() * 100), "type": "Truck", "weight": Math.floor(Math.random() * 25000) },
+            ],
+            rating: Math.floor(Math.random() * 5),
+            reviewsCount: Math.floor(Math.random() * 100),
+            location: casual.city,
+            storeImagesResized: storeUrls,
+            storeBannerPic: bannerUrl,
+            storeLogo: logoUrl,
+            storeLogoResized: logoUrl,
+            storeBannerResized: bannerUrl,
+        };
+        promises.push(admin.firestore().collection("ads").doc(sellers[seller].uid).collection("ads").doc(ad.id).set(ad));
+        promises.push(admin.firestore().collection("ads").doc(sellers[seller].uid).set(updateStoreFront, { merge: true }));
+    }
+    for (const buyer in buyers) {
+        const chosenProductKey = Object.keys(prodTypes)[Math.floor(Math.random() * Object.keys(prodTypes).length)] as keyof typeof prodTypes;
+        const ad = {
+            adType: "buyer",
+            createdAt: dateBetweenTodayAndLastMonth(),
+            id: `testad_${Math.floor(Math.random() * 1000000)}`,
+            uid: buyers[buyer].uid,
+            type: chosenProductKey,
+            variety: prodTypes[chosenProductKey].variety,
+            minCostPerTon: casual.integer(100, 500),
+            maxCostPerTon: casual.integer(500, 1000),
+            tons: casual.integer(100, 500),
+            certifiedOrganic: Math.random() >= 0.5,
+            verifiedBuyer: Math.random() >= 0.5,
+            offersShipping: Math.random() >= 0.5,
+            live: true,
+            postedOn: dateBetweenTodayAndLastMonth(),
+            updatedAt: new Date(),
+            status: "pending",
+            location: casual.city,
+        };
+        promises.push(admin.firestore().collection("ads").doc(buyers[buyer].uid).collection("ads").doc(ad.id).set(ad));
+        promises.push(admin.firestore().collection("ads").doc(buyers[buyer].uid).set({ id: buyers[buyer].uid, profilePic: buyers[buyer].profilePic, profilePicResized: buyers[buyer].profilePic }, { merge: true }));
+    }
+    await Promise.all(promises);
+    logger.log("test");
 });

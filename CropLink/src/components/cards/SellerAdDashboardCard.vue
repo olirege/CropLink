@@ -40,7 +40,7 @@
                 <template v-if="showButtons">
                     <ArrowUpTrayIcon class="h-5 w-5 text-cyan-600" v-if="!ad.live" @click="onPostAd(ad.id)" title="Post ad'"/>
                     <ArrowDownTrayIcon class="h-5 w-5 text-cyan-600" v-if="ad.live" @click="onTakedownAd(ad.id)" title="Take down ad"/>
-                    <EnvelopeIcon class="h-5 w-5 text-cyan-600" @click="onContactWinner(ad.id)" title="Contact"/>
+                    <EnvelopeIcon class="h-5 w-5 text-cyan-600" @click="onContactWinner(ad.id)" title="Contact" v-if="ad.status =='sold'"/>
                     <TrashIcon class="h-5 w-5 text-cyan-600" @click="onRemoveAd(ad.id)" title="Remove"/>
                     <PencilIcon class="h-5 w-5 text-cyan-600" @click="onEditAd(ad.id)" title="Edit"/>
                 </template>

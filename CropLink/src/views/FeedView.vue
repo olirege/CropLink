@@ -9,15 +9,18 @@
         <div class="absolute top-0 left-0 h-48 md:h-64 w-full bg-slate-800/80 rounded-md z-1"></div>
         <div class="z-[7] flex items-center flex-col gap-4">
             <span class="flex flex-row gap-1 sm:gap-2 ">
-                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 0" :class="tab == 0 ? 'text-cyan-500 underline' : ''">Producers</h1>
-                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 1" :class="tab == 1 ? 'text-cyan-500 underline' : ''">Products</h1>
-                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 2" :class="tab == 2 ? 'text-cyan-500 underline' : ''">Buyers</h1>
-                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 3" :class="tab == 3 ? 'text-cyan-500 underline' : ''">Jobs</h1>
-                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 4" :class="tab == 4 ? 'text-cyan-500 underline' : ''">Gigs</h1>
+                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 0" :class="tab == 0 ? 'text-purple-500 underline' : ''">Producers</h1>
+                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 1" :class="tab == 1 ? 'text-purple-500 underline' : ''">Products</h1>
+                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 2" :class="tab == 2 ? 'text-purple-500 underline' : ''">Buyers</h1>
+                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 3" :class="tab == 3 ? 'text-purple-500 underline' : ''">Jobs</h1>
+                <h1 class="text-lg sm:text-2xl md:text-3xl font-bold hover:underline" @click="()=>tab = 4" :class="tab == 4 ? 'text-purple-500 underline' : ''">Gigs</h1>
             </span>
-            <div class="relative w-64">
-                <input type="text" class="w-full h-10 rounded-2xl bg-white text-white px-2" placeholder="Search..." />
-                <MagnifyingGlassCircleIcon class="w-6 h-6 absolute top-2 right-2"/>
+            <div class="relative w-80">
+                <input type="text" class="w-full h-10 rounded-2xl bg-white text-white"/>
+                <MagnifyingGlassCircleIcon class="w-6 h-6 absolute top-2 left-2"/>
+                <button class="w-24 h-8 rounded-xl bg-blue-600 absolute top-1 right-1">
+                    <p class="font-bold text-white">Search</p>
+                </button>
             </div>
         </div>
     </div>

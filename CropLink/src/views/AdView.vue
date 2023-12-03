@@ -1,5 +1,5 @@
 <template>
-    <div v-if="ad && !isLoadingAd" class="grid grid-cols-2 gap-x-4 p-5">
+    <div v-if="ad && !isLoadingAd" class="flex flex-col sm:grid sm:grid-cols-2 sm:gap-x-4 sm:p-4">
         <SellerAdCard :ad="ad" :showButtons="false"/>
         <div v-if="ad.live || ad.status == AD_STATUSES.SOLD" class="p-4">
             <CardButton v-if="(profile?.accountType == ACCOUNT_TYPES.BUYER)" @click="onPlaceBid">Place a bid</CardButton>

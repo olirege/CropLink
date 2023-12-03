@@ -16,7 +16,7 @@
             </div>
             <p class="text-sm bg-slate-200/50 p-2 italic rounded-md text-end">{{ isFirestoreTimestamp(job.createdAt) ? fromNow(job.createdAt) : job.createdAt  }}</p>
         </div>
-        <div class="flex flex-row gap-4 bg-gradient-to-r from-sky-600/50 mb-2">
+        <div class="flex flex-row gap-4 bg-gradient-to-r from-blue-600/50 mb-2">
             <p class="text-xl capitalize my-2 text-white pl-2 sm:pl-4 truncate">{{ job.title }}</p>
         </div>
         <div class="flex flex-row gap-1 pl-2 sm:pl-4 mb-2">

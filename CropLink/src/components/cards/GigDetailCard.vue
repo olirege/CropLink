@@ -14,7 +14,7 @@
                     <span v-for="(milestone,index) in gig.milestones" class="w-full p-2 border rounded-md resize-none focus:border-blue-500 focus:ring-0 flex flex-col gap-2">
                         <span class="flex flex-row justify-between">
                             <span class="flex flex-row items-center gap-2"><p class="font-bold text-xl">{{ index + 1 +'.' }}</p><p class="italic text-xl">{{milestone.name}}</p></span>
-                            <span class="flex flex-row gap-4"><CurrencyDollarIcon class="h-6 w-6"/><p>{{ milestone.price }}</p></span>
+                            <span class="flex flex-row gap-4"><CurrencyDollarIcon class="h-6 w-6"/><p v-currency="milestone.price"/></span>
                         </span>
                         <p>{{ milestone.description.substring(0,300) + '...' }}</p>
                     </span>

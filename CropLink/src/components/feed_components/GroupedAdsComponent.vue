@@ -2,19 +2,19 @@
     <div v-if="!isLoadingAds">
         <span v-if="adGroups && adGroups.docs && adGroups.docs.length > 0" class="grid grid grid-cols-1 gap-4">
             <GroupAdCard :adGroup="adGroup" v-for="adGroup in adGroups.docs" :key="adGroup.id"/>
+            <div class="flex flex-row justify-end">
+                <p @click="onViewMore" class="font-sm underline font-bold">
+                    View more
+                </p>
+            </div>
         </span>
-        <div class="flex flex-row justify-end">
-            <p @click="onViewMore" class="font-sm underline font-bold">
-                View more
-            </p>
-        </div>
-        <div v-if="adGroups.docs && adGroups.docs.length > 0" class="w-full">
+        <div v-if="adGroups.docs && adGroups.docs.length == 0" class="w-full">
             <div class="h-96 w-full flex items-center justify-center col-span-2 md:col-span-3 lg:col-span-4">
                 <p class="text-xl font-bold">No Ads Found</p>
             </div>
         </div>
     </div>
-    <div v-if="!isLoadingAds" class="w-full">
+    <div v-if="isLoadingAds" class="w-full">
         <div class="h-96 w-full flex items-center justify-center col-span-2 md:col-span-3 lg:col-span-4">
             <LoadingSpinner :isLoading="isLoadingAds"/>
         </div>

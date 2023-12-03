@@ -1,6 +1,6 @@
 <template>
     <template v-if="!isLoading">
-        <div class="grid grid-cols-6 h-64 w-full mt-4 shadow border rounded-md overflow-hidden">
+        <div class="grid grid-rows-2 grid-cols-6 h-64 w-full mt-4 shadow border rounded-md overflow-hidden">
             <span v-for="(variety) in produce" class="relative inline-block" @click="()=>{selectedCategory = variety.id; onScrollToTable()}">
                 <span class="absolute inset-0 flex items-center justify-center bg-slate-300/20 opacity-0 hover:opacity-100 transform duration-200 ease-in-out">
                     <span class="text-sm font-bold capitalize text-white">{{ variety.id }}</span>

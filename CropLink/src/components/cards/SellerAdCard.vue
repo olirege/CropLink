@@ -5,10 +5,14 @@
                 <img :src=sellerInfo.storeLogoResized class="w-10 h-10 rounded-md object-cover bg-slate-500 cursor-pointer" @click="goToSellerAds(sellerInfo.id, sellerInfo.companyName)">
                 <span class="flex flex-col">
                     <h1 class="text-md font-bold capitalize cursor-pointer" @click="goToSellerAds(sellerInfo.id, sellerInfo.companyName)">{{ `${sellerInfo.companyName}` }}</h1>
-                    <div v-if="sellerInfo.verifiedSeller" class="flex flex-row gap-1">
-                        <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
-                        <p class="text-xs italic"><span class="text-sky-500 font-bold">v</span>erified</p>
-                        <p class="text-xs italic">{{ amountOfTime }}</p>
+                    <div class="flex flex-row gap-1">
+                        <template v-if="sellerInfo.verifiedSeller">
+                            <CheckCircleIcon class="h-4 w-4 text-sky-500"/>
+                            <p class="text-xs italic"><span class="text-sky-500 font-bold">v</span>erified</p>
+                            <p class="text-xs italic">{{ amountOfTime }}</p>
+                        </template>
+                        <p class="text-xs italic pl-2">{{ sellerInfo.staffNumber }}+ staff</p>
+                        <p class="text-xs italic pl-2">{{ sellerInfo.acreage }}+ acres</p>
                     </div>
                 </span>
             </span>

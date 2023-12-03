@@ -1,8 +1,8 @@
 <template>
     <template v-if="chatRoom.id && !isLoadingChatRoom && user && profile">
-        <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4">
+        <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4 h-full">
             <h1 class="text-xl font-semibold border-b pb-2">Messaging</h1>
-            <div v-if="messages.length > 0 && !isLoadingMessages" class="flex flex-col space-y-2 overflow-y-auto h-full">
+            <div v-if="messages.length > 0 && !isLoadingMessages" class="flex flex-col space-y-2 overflow-y-auto h-[500px]">
                 <span v-for="(message,index) in messages" class="break-words">
                     <div class="flex justify-between mb-2" v-if="showIfPreviousMessageIsDifferent(index)">
                         <p class="text-sm font-medium">{{ message.senderId.substring(0,5) }} says:</p>
@@ -117,7 +117,7 @@ const loadChatroom = async () => {
     const conditions = [
         ['adId', '==', props.adId],
     ];
-    const order = [];
+    const order = ['createdAt', 'desc']
     const { subscribe, unsubscribe } = useCollectionQuerySubscription(
         collectionName,
         conditions,

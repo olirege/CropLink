@@ -34,12 +34,16 @@
                                         </CardButton>
                                     </span>
                                     <template v-if="!showApplyResponse">
-                                    <div class="w-full border-t-2 h-64 overflow-y-scroll">
+                                    <div class="w-full border-t-2 h-32 overflow-y-scroll">
                                         <p class="text-md text-left p-5">{{ gig.description }}</p>
                                     </div>
                                         <div class="w-full flex flex-col gap-2 justify-start items-start px-5 pb-5">
-                                            <div v-for="milestone in gig.milestones">
-                                                <p class="text-md">{{ milestone }}</p>
+                                            <div v-for="(milestone,index) in gig.milestones" class="w-full">
+                                                <span class="flex flex-row justify-between w-full mb-2">
+                                                    <p class="text-md font-bold">{{index + 1}}. {{ milestone.name }}</p>
+                                                    <p v-currency="milestone.price" />
+                                                </span>
+                                                <p class="pl-2 text-base">{{ milestone.description }}</p>
                                             </div>
                                         </div>
                                     </template>
@@ -192,6 +196,7 @@ const onSubmitResume = async () => {
             notifications.value.show = true;
             notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
             notifications.value.message = 'Application submitted';
+            useModalStore().resetModals();
         },
         ()=> {
             notifications.value.show = true;

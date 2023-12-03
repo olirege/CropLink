@@ -7,8 +7,9 @@
       <div class="flex flex-col gap-2 items-center justify-center">
         <p class="text-6xl font-bold">CropLink</p>
         <p class="text-lg sm:text-2xl pl-2 italic">Connect Farmers and Buyers now</p>
+        <p class="italic text-red-500">Sign up currently disabled.</p>
       </div>
-      <div id="firebaseui-auth-container"></div>
+      <!-- <div id="firebaseui-auth-container"></div> -->
     </div>
   </div>
 </template>

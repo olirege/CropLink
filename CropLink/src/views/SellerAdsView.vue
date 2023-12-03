@@ -1,5 +1,5 @@
 <template>
-    <div class="sm:p-4 flex flex-col gap-2 sm:gap-4">
+    <div class="sm:p-2 flex flex-col gap-2 sm:gap-4">
         <span class="rounded-md">
             <div id="seller-ad-banner" class="w-full h-96 relative">
                 <img :src="sellerSignature.storeBannerPic" class="bg-slate-500 w-full h-80 object-cover rounded-md" ref="bannerPic" v-if="!isLoadingProfile">
@@ -147,7 +147,7 @@
             <div class="flex flex-col gap-6 w-full sm:p-2">
                 <div class="relative flex flex-col h-full w-full h-96" v-if="liveJobs.length > 0">
                     <h2 class="text-xl font-bold italic my-2 pl-2">Job Openings</h2>
-                    <div class="grid gap-x-2 sm:gap-x-6 gap-y-2 sm:gap-y-10 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveJobs.length > 0">
+                    <div class="grid gap-x-2 sm:gap-x-6 gap-y-2 sm:gap-y-10 grid-cols-2 md:grid-cols-3" v-if="liveJobs.length > 0">
                         <JobCard :job="(job as Job)" v-for="job in liveJobs.slice(0,MAX_JOBS)"/>
                     </div>
                     <div v-else-if="liveJobs.length == 0">
@@ -164,7 +164,7 @@
                 </div>
                 <div class="flex flex-col h-full w-full relative h-96" v-if="liveGigs.length > 0">
                     <h2 class="text-xl font-bold italic my-2 pl-2">Small Gigs</h2>
-                    <div class="grid grid-cols-2 gap-x-2 sm:gap-x-6 gap-y-2 sm:gap-y-10 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8" v-if="liveGigs.length > 0">
+                    <div class="grid gap-x-2 sm:gap-x-6 gap-y-2 sm:gap-y-10 grid-cols-2 md:grid-cols-3" v-if="liveGigs.length > 0">
                         <GigCard :gig="(gig as Gig)" v-for="gig in liveGigs.slice(0,MAX_GIGS)"/>
                     </div>
                     <div v-else-if="liveGigs.length == 0">
@@ -228,8 +228,8 @@ const isLoadingJobs = ref(false);
 const isLoadingGigs = ref(false);
 const isLoadingProfile = ref(false);
 const tab = ref('Information');
-const MAX_JOBS = ref(2);
-const MAX_GIGS = ref(2);
+const MAX_JOBS = ref(3);
+const MAX_GIGS = ref(3);
 const props = defineProps({
     id: {
         type: String,
@@ -328,11 +328,11 @@ const storeRating = computed(() => {
     if (rating >= 4 && rating < 5) return 'Excellent'
 })
 const increasingStoreViewCount = ref(false);
-const increaseStoreViewCount = async (adId:string) => {
-    if(!adId) return;
+const increaseStoreViewCount = async (sellerId:string) => {
+    if(!sellerId) return;
     const { callFunction } = useFirebaseFunctionCall(
-            'increaseStoreViewCount',
-            {adId},
+            'increaseSellerStoreViewCount',
+            {sellerId},
             increasingStoreViewCount,
         );
         await callFunction();

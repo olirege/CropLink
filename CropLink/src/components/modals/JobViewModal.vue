@@ -46,61 +46,61 @@
                                         </div>
                                     </template>
                                     <template v-else>
-                                        <div class="w-full border-t-2 h-96 overflow-y-scroll">
-                                            <div>
-                                                <label for="name" class="block text-sm font-medium text-gray-700">
-                                                    Name
-                                                </label>
-                                                <div class="mt-1">
-                                                    <input
-                                                        type="text"
-                                                        name="name"
-                                                        id="name"
-                                                        autocomplete="given-name"
-                                                        v-model="application.name"
-                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    />
-                                                </div>
-                                                <label for="email" class="block text-sm font-medium text-gray-700">
-                                                    Email
-                                                </label>
-                                                <div class="mt-1">
-                                                    <input
-                                                        id="email"
-                                                        name="email"
-                                                        type="email"
-                                                        v-model="application.email"
-                                                        autocomplete="email"
-                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    />
-                                                </div>
-                                                <label from="phone" class="block text-sm font-medium text-gray-700">
-                                                    Phone
-                                                </label>
-                                                <div class="mt-1">
-                                                    <input
-                                                        id="phone"
-                                                        name="phone"
-                                                        type="tel"
-                                                        autocomplete="tel"
-                                                        v-model="application.phone"
-                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    />
-                                                </div>
-                                                <label for="resume" class="block text-sm font-medium text-gray-700">
-                                                    Resume
-                                                </label>
-                                                <div class="mt-1">
-                                                    <input
-                                                        id="resume"
-                                                        name="resume"
-                                                        type="file"
-                                                        ref="resume"
-                                                        class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                        @change="onFileChange"
-                                                    />
-                                                </div>
-                                               <ButtonWithLoading :isLoading="isLoadingSubmit" @click="onSubmitResume" classes="w-full">
+                                        <div class="flex flex-col gap-2 w-full p-4">
+                                            <label for="name" class="block text-sm font-medium text-gray-700">
+                                                Name
+                                            </label>
+                                            <div class="mt-1">
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    id="name"
+                                                    autocomplete="given-name"
+                                                    v-model="application.name"
+                                                    class="bg-gray-200/70 p-2 rounded-md border-1 w-full"
+                                                />
+                                            </div>
+                                            <label for="email" class="block text-sm font-medium text-gray-700">
+                                                Email
+                                            </label>
+                                            <div class="mt-1">
+                                                <input
+                                                    id="email"
+                                                    name="email"
+                                                    type="email"
+                                                    v-model="application.email"
+                                                    autocomplete="email"
+                                                    class="bg-gray-200/70 p-2 rounded-md border-1 w-full"
+                                                />
+                                            </div>
+                                            <label from="phone" class="block text-sm font-medium text-gray-700">
+                                                Phone
+                                            </label>
+                                            <div class="mt-1">
+                                                <input
+                                                    id="phone"
+                                                    name="phone"
+                                                    type="tel"
+                                                    autocomplete="tel"
+                                                    v-model="application.phone"
+                                                    class="bg-gray-200/70 p-2 rounded-md border-1 w-full"
+                                                />
+                                            </div>
+                                            <label for="resume" class="block text-sm font-medium text-gray-700">
+                                                Resume
+                                            </label>
+                                            <div class="mt-1">
+                                                <input
+                                                    id="resume"
+                                                    name="resume"
+                                                    type="file"
+                                                    ref="resume"
+                                                    class="bg-gray-200/70 p-2 rounded-md border-1 w-full"
+                                                    @change="onFileChange"
+                                                />
+                                            </div>
+                                            <div class="flex justify-end w-full">
+                                                <ButtonWithLoading :isLoading="isLoadingSubmit" @click="onSubmitResume" classes="w-18">
                                                     Submit
                                                 </ButtonWithLoading>
                                             </div>
@@ -193,6 +193,8 @@ const onSubmitResume = async () => {
             notifications.value.show = true;
             notifications.value.type = NOTIFICATION_TYPES.SUCCESS;
             notifications.value.message = 'Application submitted';
+            useModalStore().resetModals();
+
         },
         ()=> {
             notifications.value.show = true;
