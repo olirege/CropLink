@@ -1,34 +1,34 @@
 <template>
-  <header  class="relative bg-blue-600 text-white sticky top-0 z-10 w-full" id="header__main">
+  <header  class="relative sticky bg-white top-0 z-10 w-full" id="header__main">
     <div class="pb-3 px-2 sm:px-6  max-w-[1000px] mx-auto">
-      <div class="mx-auto flex items-center h-16 border-blue-700/50 border-b justify-between">
+      <div class="mx-auto flex items-center h-16 border-b justify-between">
         <div class="flex items-center gap-2">
           <img src="@/assets/croplink_logo_small.png" alt="CropLink Logo" class="w-12 h-12 sm:mx-10 rounded-full">
           <span class="sm:hidden flex items-center gap-2">
-            <RouterLink class="hover:bg-blue-500/50 p-2 rounded-md" :class="{'bg-blue-700/50 text-white': selectedPage == 4}" to="/" @click="selectedPage = 4">
-              <HomeIcon class="h-6 w-6 text-white cursor-pointer"/>
+            <RouterLink class="hover:underline p-2 rounded-md" :class="{'underline text-blue-500': selectedPage == 4}" to="/" @click="selectedPage = 4">
+              <HomeIcon class="h-6 w-6 cursor-pointer"/>
             </RouterLink>
-            <RouterLink class="hover:bg-blue-500/50 p-2 rounded-md" :class="{'bg-blue-700/50 text-white': selectedPage == 1}" to="/userboard" v-if="user" @click="selectedPage = 1">
-              <NewspaperIcon class="h-6 w-6 text-white cursor-pointer"/>
+            <RouterLink class="hover:underline p-2 rounded-md" :class="{'underline text-blue-500': selectedPage == 1}" to="/userboard" v-if="user" @click="selectedPage = 1">
+              <NewspaperIcon class="h-6 w-6 cursor-pointer"/>
             </RouterLink>
-            <RouterLink class="hover:bg-blue-500/50 p-2 rounded-md" :class="{'bg-blue-700/50 text-white': selectedPage == 2}" to="/signup" v-if="!user" @click="selectedPage = 2">
-              <ArrowDownOnSquareIcon class="h-6 w-6 text-white cursor-pointer"/>
+            <RouterLink class="hover:underline p-2 rounded-md" :class="{'underline text-blue-500': selectedPage == 2}" to="/signup" v-if="!user" @click="selectedPage = 2">
+              <ArrowDownOnSquareIcon class="h-6 w-6 cursor-pointer"/>
             </RouterLink>
           </span>
         </div>
         <nav class="flex flex-row justify-between items-center sm:w-full">
           <span class="hidden sm:block sm:space-x-2 md:space-x-4 lg:space-x-6">
-            <RouterLink class="hover:bg-blue-500/50 p-2 rounded-md" :class="{'bg-blue-700/50 text-white': selectedPage == 4}" to="/" @click="selectedPage = 4">Home</RouterLink>
-            <RouterLink class="hover:bg-blue-500/50 p-2 rounded-md" :class="{'bg-blue-700/50 text-white': selectedPage == 1}" to="/userboard" v-if="user" @click="selectedPage = 1">Dashboard</RouterLink>
-            <RouterLink class="hover:bg-blue-500/50 p-2 rounded-md" :class="{'bg-blue-700/50 text-white': selectedPage == 2}" to="/signup" v-if="!user" @click="selectedPage = 2">Signin</RouterLink>
+            <RouterLink class="hover:underline p-2 rounded-md" :class="{'underline text-blue-500': selectedPage == 4}" to="/" @click="selectedPage = 4">Home</RouterLink>
+            <RouterLink class="hover:underline p-2 rounded-md" :class="{'underline text-blue-500': selectedPage == 1}" to="/userboard" v-if="user" @click="selectedPage = 1">Dashboard</RouterLink>
+            <RouterLink class="hover:underline p-2 rounded-md" :class="{'underline text-blue-500': selectedPage == 2}" to="/signup" v-if="!user" @click="selectedPage = 2">Signin</RouterLink>
           </span>
           <span class="flex flex-row gap-2 items-center justify-between">
             <div class="p-2 bg-slate-500/40 rounded-md hidden sm:block">
               Alpha v.1.7.3
             </div>
-            <a class="hover:bg-blue-500 p-2 rounded-md" @click="onSignout" v-if="user"><ArrowTopRightOnSquareIcon class="h-6 w-6 text-white cursor-pointer" /></a>
-            <RouterLink class="hover:bg-blue-500/50 p-2 rounded-md" :class="{'bg-blue-700/50 text-white': selectedPage == 3}" to="/profile" v-if="user" @click="selectedPage = 3">
-              <Cog6ToothIcon class="h-6 w-6 text-white cursor-pointer"/>
+            <a class="hover:bg-blue-500 p-2 rounded-md" @click="onSignout" v-if="user"><ArrowTopRightOnSquareIcon class="h-6 w-6 cursor-pointer" /></a>
+            <RouterLink class="hover:bg-blue-500 p-2 rounded-md" :class="{'bg-blue-700 text-white': selectedPage == 3}" to="/profile" v-if="user" @click="selectedPage = 3">
+              <Cog6ToothIcon class="h-6 w-6 cursor-pointer"/>
             </RouterLink>
             <img v-if="profile" :src="profile.profilePicResized" alt="Profile Photo" class="w-10 h-10 rounded-full bg-slate-500"/>
           </span>
@@ -49,7 +49,7 @@
   <GigViewModal v-if="modals['viewgig']"/>
   <StateNotificationToast v-show="notifications.show"/>
   <div class="relative h-screen">
-    <div class="hidden sm:block h-24 w-full absolute top-0 left-0 bg-blue-600 -z-10"/>
+    <div class="hidden sm:block h-24 w-full absolute top-0 left-0 -z-10"/>
     <div class="flex flex-col border rounded-md z-1 bg-white p-1 sm:p-4 mx-auto max-w-[1000px] pb-10 sm:pb-0" v-if="!isLoading">
       <RouterView />
     </div>

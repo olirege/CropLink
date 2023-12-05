@@ -35,7 +35,7 @@
                         <p class="truncate">{{ transaction.parties[1].customer }}</p>
                     </td>
                     <td class="py-2 sm:text-base text-xs space-y-1">
-                        <div class="flex flex-row gap-2 items-center w-1/2 justify-center rounded-md"
+                        <div class="flex flex-row gap-2 items-center w-1/2 justify-between px-2 rounded-md"
                         :class="{
                             'text-green-500': fetchTransactionStatus(transaction).payment_sent == true,
                             'text-red-500': fetchTransactionStatus(transaction).payment_sent == false,
@@ -49,7 +49,7 @@
                             <CheckIcon class="w-4 h-4 text-green-500" v-if="fetchTransactionStatus(transaction).payment_sent == true"/>
                             <XMarkIcon class="w-4 h-4 text-red-500" v-else/>
                         </div>
-                        <div class="flex flex-row gap-2 items-center w-1/2 justify-center rounded-md"
+                        <div class="flex flex-row gap-2 items-center w-1/2 justify-between px-2 rounded-md"
                         :class="{
                             'text-green-500': fetchTransactionStatus(transaction).payment_received == true,
                             'text-red-500': fetchTransactionStatus(transaction).payment_received == false,
@@ -63,7 +63,7 @@
                             <CheckIcon class="w-4 h-4 text-green-500" v-if="fetchTransactionStatus(transaction).payment_received == true"/>
                             <XMarkIcon class="w-4 h-4 text-red-500" v-else/>
                         </div>
-                        <div class="flex flex-row gap-2 items-center w-1/2 justify-center rounded-md"
+                        <div class="flex flex-row gap-2 items-center w-1/2 justify-between px-2 rounded-md"
                         :class="{
                             'text-green-500': fetchTransactionStatus(transaction).disbursed_to_beneficiary == true,
                             'text-red-500': fetchTransactionStatus(transaction).disbursed_to_beneficiary == false,

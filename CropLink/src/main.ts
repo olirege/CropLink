@@ -6,7 +6,7 @@ import { useMainStore } from './stores/main';
 import currency from './directives/currency';
 let app: any;
 let profile: any;
-const dev = process.env.NODE_ENV === 'development';
+const dev = import.meta.env.NODE_ENV === 'development';
 onAuthStateChanged(auth, async (user) => {
     if (!dev) {
         devByPass()

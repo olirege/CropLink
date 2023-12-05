@@ -2,7 +2,7 @@
     <div class="p-4 w-full mx-auto bg-white rounded-lg shadow-md flex flex-col space-y-4" v-if="contract.id && !isLoadingContract">
         <h1 class="text-xl font-semibold border-b pb-2">Contract Draft</h1>
         <div>
-            <p>Last Updated: {{ isFirestoreTimestamp(contract.updatedAt) ? convertTimestampToDate(contract.updatedAt) : contract.updatedAt }}</p>
+            <p class="text-xs">Last Updated: {{ isFirestoreTimestamp(contract.updatedAt) ? convertTimestampToDate(contract.updatedAt) : contract.updatedAt }}</p>
         </div>
         <div v-if="contract.context">
             <template v-if="contract.type == 'gig'">

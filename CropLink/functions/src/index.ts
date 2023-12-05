@@ -345,6 +345,9 @@ export const updateStoreChanges = onCall(callableOptions, async (request:Callabl
         }
         request.data.storeImages ? request.data.storeImages = [...request.data.storeImages, ...newStoreImagesSignedUrls] : request.data.storeImages = [...newStoreImagesSignedUrls];
         request.data.storeImagesResized ? request.data.storeImagesResized = [...request.data.storeImagesResized, ...newStoreImagesResizedSignedUrls] : request.data.storeImagesResized = [...newStoreImagesResizedSignedUrls];
+        if (request.data.companyName) {
+            request.data.companyName = request.data.companyName.toLowerCase();
+        }
         const changes = {
             ...request.data,
             storeLogo: logoSignedUrls[0] ? logoSignedUrls[0] : "",
@@ -426,6 +429,12 @@ export const createAd = onCall(callableOptions, async (request:CallableRequest) 
                 });
                 resizedSignedUrls.push(resizedSignedUrl);
             }
+        }
+        if (request.data.variety) {
+            request.data.variety = request.data.variety.toLowerCase();
+        }
+        if (request.data.type) {
+            request.data.type = request.data.type.toLowerCase();
         }
         logger.info(typeof request.data, JSON.stringify(request.data));
         const ad = {
@@ -601,6 +610,12 @@ export const editAd = onCall(callableOptions, async (request:CallableRequest) =>
                 }
                 request.data.changes.images = [...request.data.changes.images, ...signedUrls];
                 request.data.changes.resizedImages = [...request.data.changes.resizedImages, ...resizedSignedUrls];
+            }
+            if (request.data.changes.variety) {
+                request.data.changes.variety = request.data.changes.variety.toLowerCase();
+            }
+            if (request.data.changes.type) {
+                request.data.changes.type = request.data.changes.type.toLowerCase();
             }
             await adRef.set({ ...request.data.changes, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
             return { success: true };
@@ -1850,17 +1865,17 @@ export const createTestAds = onSchedule({
     const sellers = testUsers.filter((user) => user.accountType === "seller");
     const buyers = testUsers.filter((user) => user.accountType === "buyer");
     const prodTypes = {
-        "Wine Grapes": { variety: "Merlot", images: ["merlot_1.png", "merlot_2.png"], resizedImages: ["merlot_1_resized.jpg", "merlot_2_resized.jpg"] },
-        "Table Grapes": { variety: "Red Globe", images: ["chard_1.png"], resizedImages: ["chard_1_resized.jpg"] },
-        "Apples": { variety: "Ambrosia", images: ["apples_1.png"], resizedImages: ["apples_1_resized.jpg"] },
-        "Peaches": { variety: "Gloha ven", images: ["peach_1.png"], resizedImages: ["peach_1_resized.jpg"] },
-        "Pears": { variety: "Anjou", images: ["pear_1.png"], resizedImages: ["pear_1_resized.jpg"] },
-        "Strawberries": { variety: "Albion", images: ["strawberry_1.png"], resizedImages: ["strawberry_1_resized.jpg"] },
-        "Cherries": { variety: "Bing", images: ["cherries_1.png"], resizedImages: ["cherries_1_resized.jpg"] },
-        "Peppers": { variety: "Bell", images: ["peppers_1.png"], resizedImages: ["peppers_1_resized.jpg"] },
-        "Plums": { variety: "Black Amber", images: ["plums_1.png"], resizedImages: ["plums_1_resized.jpg"] },
-        "Tomatoes": { variety: "Beefsteak", images: ["tomato_1.png"], resizedImages: ["tomato_1_resized.jpg"] },
-        "Eggplants": { variety: "Black Beauty", images: ["eggplant_1.png"], resizedImages: ["eggplant_1_resized.jpg"] },
+        "wine Grapes": { variety: "merlot", images: ["merlot_1.png", "merlot_2.png"], resizedImages: ["merlot_1_resized.jpg", "merlot_2_resized.jpg"] },
+        "table Grapes": { variety: "red globe", images: ["chard_1.png"], resizedImages: ["chard_1_resized.jpg"] },
+        "apples": { variety: "ambrosia", images: ["apples_1.png"], resizedImages: ["apples_1_resized.jpg"] },
+        "peaches": { variety: "gloha ven", images: ["peach_1.png"], resizedImages: ["peach_1_resized.jpg"] },
+        "pears": { variety: "anjou", images: ["pear_1.png"], resizedImages: ["pear_1_resized.jpg"] },
+        "strawberries": { variety: "albion", images: ["strawberry_1.png"], resizedImages: ["strawberry_1_resized.jpg"] },
+        "cherries": { variety: "bing", images: ["cherries_1.png"], resizedImages: ["cherries_1_resized.jpg"] },
+        "peppers": { variety: "bell", images: ["peppers_1.png"], resizedImages: ["peppers_1_resized.jpg"] },
+        "plums": { variety: "black amber", images: ["plums_1.png"], resizedImages: ["plums_1_resized.jpg"] },
+        "tomatoes": { variety: "beefsteak", images: ["tomato_1.png"], resizedImages: ["tomato_1_resized.jpg"] },
+        "eggplants": { variety: "black beauty", images: ["eggplant_1.png"], resizedImages: ["eggplant_1_resized.jpg"] },
     };
     for (const seller in sellers) {
         const chosenProductKey = Object.keys(prodTypes)[Math.floor(Math.random() * Object.keys(prodTypes).length)] as keyof typeof prodTypes;
@@ -1875,9 +1890,9 @@ export const createTestAds = onSchedule({
             images: images,
             resizedImages: resizedImages,
             live: true,
-            type: chosenProductKey,
+            type: chosenProductKey.toLowerCase(),
             uid: sellers[seller].uid,
-            variety: prodTypes[chosenProductKey].variety,
+            variety: prodTypes[chosenProductKey].variety.toLowerCase(),
             pricePerTon: casual.integer(100, 1000),
             tons: casual.integer(100, 1000),
             postedOn: dateBetweenTodayAndLastMonth(),
@@ -1886,7 +1901,7 @@ export const createTestAds = onSchedule({
         const updateStoreFront = {
             createdAt: dateBetweenTodayAndLastYear(),
             id: sellers[seller].uid,
-            companyName: casual.company_name,
+            companyName: casual.company_name.toLowerCase(),
             companyEmail: casual.email,
             companyWebsite: casual.url,
             verifiedSeller: Math.random() >= 0.5,
@@ -1967,4 +1982,41 @@ export const createTestAds = onSchedule({
     }
     await Promise.all(promises);
     logger.log("test");
+});
+
+export const searchQuery = onCall(callableOptions, async (request:CallableRequest) => {
+    logger.info("searchQuery", request);
+    if (!request.data) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    if (!request.data.query) {
+        throw new HttpsError("invalid-argument", ERROR_CODES["invalid-argument"]);
+    }
+    try {
+        const query = request.data.query.toLowerCase();
+        const promises = [];
+        const companyNameRef = admin.firestore().collection("ads").where("companyName", ">=", query);
+        promises.push(companyNameRef.get());
+        logger.info("searchQuery promises", promises);
+        const getResults = await Promise.all(promises);
+        logger.info("searchQuery getResults", getResults);
+        const results = [];
+        for ( const result of getResults ) {
+            if (result.empty) {
+                continue;
+            }
+            for ( const doc of result.docs ) {
+                logger.info("searchQuery doc", doc);
+                if (doc.exists) {
+                    logger.info("searchQuery doc exists", doc);
+                    results.push({ id: doc.id, ...doc.data() });
+                }
+            }
+        }
+        logger.info("searchQuery results", results);
+        return results;
+    } catch (error:any) {
+        logger.error(error);
+        throw new HttpsError("internal", error);
+    }
 });

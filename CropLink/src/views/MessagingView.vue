@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-row gap-2 h-16 border-b items-center pl-2 sticky top-16 bg-white">
+    <div class="flex flex-row gap-2 h-16 border-b items-center pl-2 sticky top-16 bg-white sm:hidden">
         <p @click="scrollTo('messaging_content')" class="font-bold hover:underline" :class="tab == 'messaging_content' ? 'text-cyan-600 underline' : ''">Messaging</p>
         <p @click="scrollTo('contract_content')" class="font-bold hover:underline" :class="tab == 'contract_content' ? 'text-cyan-600 underline' : ''" >Contract</p>
     </div>

@@ -16,7 +16,7 @@
             </template>
         </div>
         <div class="sm:mt-4 space-y-2">
-            <h3 class="text-2xl font-bold">{{ ad.variety }}</h3>
+            <h3 class="text-2xl font-bold capitalize">{{ ad.variety }}</h3>
             <div>
                 <div class="flex flex-row gap-2 items-center justify-center mb-2 rounded-md h-10 border-y">
                     <p class="text-xs">{{ biddingTimeLeft }}</p>

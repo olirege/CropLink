@@ -89,9 +89,7 @@ const message = ref({} as Message);
 const messages = ref([] as Message[])
 let stopChatRoomMessagesSubscription:any;
 const loadMessages = async () => {
-    const order = [
-        ['createdAt', 'asc']
-    ];
+    const order = ['createdAt', 'asc'];
     const conditions = [];
     const collectionName = `${CHATROOMS_COLLECTION}/${chatRoom.value.id}/${MESSAGES_COLLECTION}`;
     const { subscribe, unsubscribe } = useCollectionQuerySubscription(
@@ -117,7 +115,7 @@ const loadChatroom = async () => {
     const conditions = [
         ['adId', '==', props.adId],
     ];
-    const order = ['createdAt', 'desc']
+    const order = ['createdAt', 'asc']
     const { subscribe, unsubscribe } = useCollectionQuerySubscription(
         collectionName,
         conditions,

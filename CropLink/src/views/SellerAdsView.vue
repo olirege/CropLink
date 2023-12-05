@@ -9,7 +9,7 @@
                     <div v-else class="z-10 border-4 border-white rounded-full w-36 h-36 bg-indigo-500 animate-pulse"></div>
                     <div class="relative ml-5 p-1 hidden sm:block">
                         <div class="absolute bottom-1 truncate flex flex-row">
-                            <p class="text-4xl font-bold">{{ props.sellerName }}</p>
+                            <p class="text-4xl font-bold capitalize">{{ props.sellerName }}</p>
                         </div>
                     </div>
                 </div>
